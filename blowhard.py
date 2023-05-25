@@ -18,6 +18,7 @@ def main():
 
     resloader = ResourceLoader("data/try.bin")
     sm = SurfaceManager(SCR_W, SCR_H)
+    resloader.initMap(sm)
 
     running = True
     while running:
@@ -33,6 +34,7 @@ def main():
         if not running:
             break
 
+        sm.drawScreen(pygame.display.get_surface() )
         pygame.display.flip()
 
     pygame.quit()
