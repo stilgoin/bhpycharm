@@ -74,6 +74,25 @@ class ResourceLoader:
         return json.loads(tilemaps_strr,
                    object_hook=self.decodeMapsJson)
 
+    def loadAnims(self, anim_dict):
+        sheet = Image.open("data/master.bmp")
+        sheet = sheet.convert("RGBA")
+        for anim_data in anim_dict:
+            size = int(anim_data.size)
+            for anim_seq in anim_data.animations:
+                for frame in anim_seq:
+                    xloc = int(frame.xloc)
+                    yloc = int(frame.yloc)
+                    sprite = sm.surfaceFromImage(sheet, (xloc, yloc, size, size))
+                    pass
+        """
+        for anim in anim_dict.player.animations:
+            for seq in anim:
+                xloc = seq.xloc
+                yloc = seq.yloc
+                size = anim_dict.player.size
+                sprite = sm.surfaceFromImage(sheet, )
+        """
 
     def __init__(self, filename):
 
@@ -87,6 +106,11 @@ class ResourceLoader:
         maps_dict = json.load(maps_file,
                               object_hook=lambda d: SimpleNamespace(**d))
         maps_file.close()
+
+        anim_file = io.FileIO("data/anims.json", "r")
+        anim_dict = json.load(anim_file,
+                              object_hook=lambda d: SimpleNamespace(**d))
+        self.loadAnims(anim_dict)
 
         self.tileMaps = self.loadTileMaps(maps_dict)
 

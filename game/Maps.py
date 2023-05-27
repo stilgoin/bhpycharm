@@ -1,4 +1,16 @@
 
+from enum import Enum
+class AnimationSequence:
+
+    class Terminators(Enum):
+        HOLD = 0xFD
+        REPEAT = 0xFE
+        NULL = 0xFF
+
+    def __init__(self):
+        self.frames = []
+        self.terminator = self.Terminators.REPEAT
+
 class TilePlacement:
     xloc = 0
     yloc = 0

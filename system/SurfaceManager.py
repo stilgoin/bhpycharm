@@ -2,7 +2,7 @@ import pygame
 
 from enum import Enum
 from system.defs import *
-from PIL import Image
+from PIL import Image, ImageMode
 
 class SurfaceManager:
     class Surfaces(Enum):
@@ -15,6 +15,7 @@ class SurfaceManager:
         tx, ty, tw, th = rect
         crop_image = image.crop(
             (tx, ty, tx + tw, ty + th) )
+
         return pygame.image.frombuffer(
             crop_image.tobytes(),
             crop_image.size, SURF_FORMAT)
