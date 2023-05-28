@@ -2,12 +2,14 @@ import pygame
 
 from enum import Enum
 from system.defs import *
-from PIL import Image, ImageMode
+from PIL import Image
+
+class Surfaces(Enum):
+    MAP = 0
+    SPRITE = 1
+    FINAL = 2
 
 class SurfaceManager:
-    class Surfaces(Enum):
-        MAP = 0
-        FINAL = 1
 
     @classmethod
     def surfaceFromImage(self, image : Image,
@@ -20,11 +22,25 @@ class SurfaceManager:
             crop_image.tobytes(),
             crop_image.size, SURF_FORMAT)
 
+    def drawSprite(self, sprite, xloc, yloc):
+        sprite_surf = self.surfaces[Surfaces.SPRITE.value]
+        sprite_surf.blit(sprite, (xloc, yloc))
+
+    def clearSpriteSurf(self):
+        sprite_surf = self.surfaces[Surfaces.SPRITE.value]
+        sprite_surf.fill( (BG_CLEAR) )
+
     def drawScreen(self, screen : pygame.Surface):
-        final_surf = self.surfaces[self.Surfaces.FINAL.value]
-        map_surf = self.surfaces[self.Surfaces.MAP.value]
+
+        final_surf = self.surfaces[Surfaces.FINAL.value]
+        map_surf = self.surfaces[Surfaces.MAP.value]
+        sprite_surf = self.surfaces[Surfaces.SPRITE.value]
+        final_surf.fill( (BG_FILL) )
         final_surf.blit(map_surf, (0, 0) )
+        final_surf.blit(sprite_surf, (0, 0) )
         screen.blit(final_surf, (0, 0) )
+
+
 
     def blitSurface(self, surfIdx : int, onSurf : pygame.Surface, rect : () = (0, 0)):
         surface = self.surfaces[surfIdx]
@@ -42,5 +58,5 @@ class SurfaceManager:
         self.width = width
         self.height = height
         self.surfaces = []
-        for surfIdx in self.Surfaces:
+        for surfIdx in Surfaces:
             self.surfaces.append(self.initSurface(width, height) )

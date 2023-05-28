@@ -1,3 +1,7 @@
+
+from game.Modes import GameMode
+
+from system.Control import Control
 from system.defs import *
 from system.resload import ResourceLoader
 from system.SurfaceManager import SurfaceManager
@@ -15,10 +19,14 @@ def main():
     pygame.key.set_repeat(True)
     pyg_screen.set_colorkey( BG_CLEAR )
     pyg_clock = pygame.time.Clock()
+    control = Control()
 
     resloader = ResourceLoader("data/try.bin")
     sm = SurfaceManager(SCR_W, SCR_H)
     resloader.initMap(sm)
+    game = GameMode()
+    resloader.initMoverAnims(game)
+
 
     running = True
     while running:
@@ -34,6 +42,10 @@ def main():
         if not running:
             break
 
+        control.control(pygame)
+        game.Loop(control.controls)
+        sm.clearSpriteSurf()
+        resloader.drawAnims(sm, game)
         sm.drawScreen(pygame.display.get_surface() )
         pygame.display.flip()
 

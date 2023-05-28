@@ -7,9 +7,9 @@ class AnimationSequence:
         REPEAT = 0xFE
         NULL = 0xFF
 
-    def __init__(self):
-        self.frames = []
-        self.terminator = self.Terminators.REPEAT
+    def __init__(self, frames = [], terminator = Terminators.REPEAT):
+        self.frames = frames
+        self.terminator = terminator
 
 class TilePlacement:
     xloc = 0

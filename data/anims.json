@@ -2,7 +2,7 @@
     {
     "id": "player",
     "size": "16",
-    "animations":
+    "sequences":
         [
             [{"xloc": 0,"yloc": 0}],
             [{"xloc": 16,"yloc": 0},{"xloc": 32,"yloc": 0},{"xloc": 48,"yloc": 0},

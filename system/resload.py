@@ -7,9 +7,10 @@ from types import SimpleNamespace
 import pygame
 from PIL import Image
 
-from game.Maps import TilePlacement, MapLayer, TileMap
+from game.Maps import TilePlacement, MapLayer, TileMap, AnimationSequence
+from game.Modes import GameMode
 
-from system.SurfaceManager import SurfaceManager as sm
+from system.SurfaceManager import SurfaceManager as sm, Surfaces
 class ResourceLoader:
 
     tileMaps : list
@@ -30,7 +31,7 @@ class ResourceLoader:
                 tileSurf = self.tileSets[tkey][tipl.tileId]
                 xloc = tipl.xloc
                 yloc = tipl.yloc
-                surfMgmt.blitSurface(sm.Surfaces.MAP.value, tileSurf, (xloc, yloc) )
+                surfMgmt.blitSurface(Surfaces.MAP.value, tileSurf, (xloc, yloc) )
 
     def loadTiles(self, image, tile_size, tileset_key):
         ty = 0
@@ -74,30 +75,56 @@ class ResourceLoader:
         return json.loads(tilemaps_strr,
                    object_hook=self.decodeMapsJson)
 
+    def drawAnims(self, surfMgmt : sm, game : GameMode):
+        display_list = game.display_list
+        for entry in display_list:
+            animation = self.animations[entry.id]
+            sprite = animation[entry.animIdx].frames[entry.frameIdx]
+            xloc = entry.xloc
+            yloc = entry.yloc
+            surfMgmt.drawSprite(sprite, xloc, yloc)
+
+
+        #sprite = self.animations["player"][0].frames[0]
+        #surfMgmt.blitSurface(Surfaces.SPRITE.value, sprite, (0x80, 0x80))
+
+    def initMoverAnims(self, game : GameMode):
+        anim_seqs = self.animations[game.player_id.value]
+        maxFrames = []
+        terminators = []
+        for anim_seq in anim_seqs:
+            maxFrames.append(len(anim_seq.frames) )
+            terminators.append(anim_seq.terminator)
+        game.Init( (maxFrames, terminators) )
+
     def loadAnims(self, anim_dict):
         sheet = Image.open("data/master.bmp")
         sheet = sheet.convert("RGBA")
+
         for anim_data in anim_dict:
+            anim_seqs = []
             size = int(anim_data.size)
-            for anim_seq in anim_data.animations:
+            terminators = anim_data.terminators
+            id = anim_data.id
+            ti = 0
+            for anim_seq in anim_data.sequences:
+                frames = []
+                terminator = terminators[ti]
+                ti += 1
                 for frame in anim_seq:
                     xloc = int(frame.xloc)
                     yloc = int(frame.yloc)
                     sprite = sm.surfaceFromImage(sheet, (xloc, yloc, size, size))
-                    pass
-        """
-        for anim in anim_dict.player.animations:
-            for seq in anim:
-                xloc = seq.xloc
-                yloc = seq.yloc
-                size = anim_dict.player.size
-                sprite = sm.surfaceFromImage(sheet, )
-        """
+                    frames.append(sprite)
+                anim_seqs.append(AnimationSequence(frames, terminator))
+            self.animations[id] = anim_seqs
+
 
     def __init__(self, filename):
 
         self.tiles_map = {}
         self.tile_sheets = []
+        self.animations = {}
         tileset_keys = ["8x8", "16x16", "32x32"]
         self.tileset_keys = tileset_keys
         self.tileSets = defaultdict(list)
