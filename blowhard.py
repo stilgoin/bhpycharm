@@ -25,6 +25,7 @@ def main():
     sm = SurfaceManager(SCR_W, SCR_H)
     resloader.initMap(sm)
     game = GameMode()
+    game.bghits = resloader.tileMaps[0].hitboxes
     resloader.initMoverAnims(game)
 
 
@@ -44,7 +45,6 @@ def main():
 
         control.control(pygame)
         game.Loop(control.controls)
-        sm.clearSpriteSurf()
         resloader.drawAnims(sm, game)
         sm.drawScreen(pygame.display.get_surface() )
         pygame.display.flip()

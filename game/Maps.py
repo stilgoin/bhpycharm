@@ -1,5 +1,6 @@
 
 from enum import Enum
+from system.data import CollisionIndex
 class AnimationSequence:
 
     class Terminators(Enum):
@@ -10,6 +11,33 @@ class AnimationSequence:
     def __init__(self, frames = [], terminator = Terminators.REPEAT):
         self.frames = frames
         self.terminator = terminator
+
+class Rect:
+    x0 = 0.0
+    x1 = 0.0
+    y0 = 0.0
+    y1 = 0.0
+
+    def __init__(self, x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0):
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+
+class Hitbox(Rect):
+    solid = 0
+    xoffs = 0.0
+    yoffs = 0.0
+    width = 0.0
+    height = 0.0
+    def __init__(self, x0 = 0, y0 = 0,
+                 xoffs = 0, yoffs = 0, width = 0, height = 0, solid = 0):
+        super().__init__(x0+xoffs, y0+yoffs, x0+width, y0+height)
+        self.width = width
+        self.height = height
+        self.xoffs = xoffs
+        self.yoffs = yoffs
+        self.solid = solid
 
 class TilePlacement:
     xloc = 0
@@ -32,5 +60,22 @@ class MapLayer:
         self.tile_placements = tile_placements.copy()
 
 class TileMap:
+
+    def initHitBoxes(self):
+        tile_sizes = [8, 16, 24, 32]
+        for layer in self.layers:
+            for tipl in layer.tile_placements:
+                hb = Hitbox()
+                hb.x0 = tipl.xloc
+                hb.y0 = tipl.yloc
+                hb.x1 = hb.x0 + tile_sizes[tipl.tileSize - 1]
+                hb.y1 = hb.y0 + tile_sizes[tipl.tileSize - 1]
+                tileId = tipl.tileId
+                hb.solid = CollisionIndex[tipl.tileSize][tileId]
+                self.hitboxes.append(hb)
+
+
     def __init__(self, layers):
         self.layers = layers.copy()
+        self.hitboxes = []
+        self.initHitBoxes()

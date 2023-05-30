@@ -1,12 +1,13 @@
 from enum import Enum
 from system.defs import Key
+from game.Maps import Hitbox
 
 class Push(Enum):
     NOPUSH = 1
     NUDGE = 2
     ROLLBACK = 4
     STEP = 8
-    SKID = 0X10
+    SKID = 0x10
 
 class Facing(Enum):
     LEFT = -1
@@ -87,9 +88,16 @@ class Mover:
         self.xloc += (self.xvel * self.facing)
         self.yloc += (self.yvel * self.vertical)
 
-    def go(self):
+    def go(self, exec):
+        self.oldXloc = self.xloc
+        self.oldYloc = self.yloc
         self.animation_state.add_frameticks()
         self.move()
+        self.hb = Hitbox(self.xloc, self.yloc,
+                         4.0, 1.0, 12.0, 15.0)
+        self.phb = Hitbox(self.oldXloc, self.oldYloc,
+                          4.0, 1.0, 12.0, 15.0)
+        exec()
         return self.animation_state\
             .display_entry(self.id, self.xloc, self.yloc)
 

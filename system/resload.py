@@ -76,6 +76,7 @@ class ResourceLoader:
                    object_hook=self.decodeMapsJson)
 
     def drawAnims(self, surfMgmt : sm, game : GameMode):
+        surfMgmt.clearSpriteSurf()
         display_list = game.display_list
         for entry in display_list:
             animation = self.animations[entry.id]

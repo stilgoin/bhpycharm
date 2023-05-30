@@ -31,11 +31,10 @@ class SurfaceManager:
         sprite_surf.fill( (BG_CLEAR) )
 
     def drawScreen(self, screen : pygame.Surface):
-
         final_surf = self.surfaces[Surfaces.FINAL.value]
         map_surf = self.surfaces[Surfaces.MAP.value]
         sprite_surf = self.surfaces[Surfaces.SPRITE.value]
-        final_surf.fill( (BG_FILL) )
+        final_surf.fill( (BG_CLEAR) )
         final_surf.blit(map_surf, (0, 0) )
         final_surf.blit(sprite_surf, (0, 0) )
         screen.blit(final_surf, (0, 0) )

@@ -1,4 +1,5 @@
 from movers.movers import Mover, AnimationState, Id
+from game.Overlap import spriteToBG
 class GameMode:
 
     def Loop(self, controls):
@@ -6,7 +7,9 @@ class GameMode:
         keys_this_frame, keys_last_frame, keys_pressed, keys_released = controls
         self.mPlayer.proc_input(controls)
         for mover in self.movers:
-            display_entry = mover.go()
+            display_entry = mover.go(
+                exec = lambda : spriteToBG(mover, self.bghits)
+            )
             self.display_list.append(display_entry)
 
     @property
@@ -20,4 +23,5 @@ class GameMode:
     def __init__(self):
         self.display_list = []
         self.movers = []
+        self.bghits = []
 
