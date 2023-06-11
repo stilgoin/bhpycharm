@@ -13,8 +13,8 @@ from game.Modes import GameMode
 from system.SurfaceManager import SurfaceManager as sm, Surfaces
 class ResourceLoader:
 
-    tileMaps : list
-    tileSets : dict
+    tileMaps : list[TileMap]
+    tileSets : dict[str, list[pygame.Surface]]
     def __getitem__(self, item):
         if item in self.tileset_keys:
             return self.tileSets[item]
@@ -59,7 +59,7 @@ class ResourceLoader:
         return Image.open(bin_image,
                           formats=["PNG"])
 
-    def decodeMapsJson(self, fields_dict : dict) -> dict:
+    def decodeMapsJson(self, fields_dict : dict) -> dict[str, pygame.Surface]:
         if 'xloc' in fields_dict:
             return TilePlacement(**fields_dict)
         if 'tilePlacements' in fields_dict.keys():
@@ -68,7 +68,7 @@ class ResourceLoader:
             return TileMap(fields_dict['mapLayers']['shadowList'])
         return fields_dict
 
-    def loadTileMaps(self, maps_dict) -> list:
+    def loadTileMaps(self, maps_dict) -> list[TileMap]:
         json_strr = "[{\"xloc\":0,\"yloc\":224,\"tileSize\":2,\"tileId\":0,\"flipTile\":false,\"vflipTile\":false}" \
                     ",{\"xloc\":80,\"yloc\":240,\"tileSize\":2,\"tileId\":1,\"flipTile\":false,\"vflipTile\":false}]"
         tilemaps_strr = maps_dict.tileMapEditor
@@ -79,6 +79,8 @@ class ResourceLoader:
         surfMgmt.clearSpriteSurf()
         display_list = game.display_list
         for entry in display_list:
+            if 0xFF == entry.frameIdx:
+                continue
             animation = self.animations[entry.id]
             sprite = animation[entry.animIdx].frames[entry.frameIdx]
             xloc = entry.xloc

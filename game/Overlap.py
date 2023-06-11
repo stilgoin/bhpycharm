@@ -78,19 +78,23 @@ def vert(hbsa, hbb, adjust = 0):
     return up, down, vert
 
 def spriteToBG(mover, bghits):
-
+    floor_found = False
     for hit in bghits:
-        if overlap(mover.hb, hit):
+        if overlap(mover.hb, hit) or contact(mover.hb, hit):
             left, right, sideh = side( (mover.hb, mover.phb), hit)
             if left:
                 rollbackXRight(mover, hit)
             if right:
                 rollbackXLeft(mover, hit)
 
-            up, down, verth = vert( (mover.hb, mover.phb), hit)
-            if up:
+            upa, downa, vertha = vert( (mover.hb, mover.phb), hit)
+            upb, downb, verthb = vert( (mover.hb, mover.phb), hit, 1)
+            if upa:
                 rollbackYDown(mover, hit)
-            if down:
+            if downa or downb:
                 rollbackYUp(mover, hit)
+                floor_found = True
+
+    return floor_found
 
 

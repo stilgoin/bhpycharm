@@ -1,7 +1,7 @@
 import pygame
 from pygame.constants import *
 
-from enum import Enum
+from enum import Enum, IntEnum
 
 BG_CLEAR = pygame.Color(0,0,1,0)
 BG_FILL = pygame.Color(96,160,255)
@@ -9,7 +9,7 @@ SCR_W = 256
 SCR_H = 256
 SURF_FORMAT = "RGBA"
 
-class Key(Enum):
+class Key(IntEnum):
     JUMP = 1
     FIRE = 2
     ENTER = 4

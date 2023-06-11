@@ -8,7 +8,7 @@ class GameMode:
         self.mPlayer.proc_input(controls)
         for mover in self.movers:
             display_entry = mover.go(
-                exec = lambda : spriteToBG(mover, self.bghits)
+                moverToBGFunc = lambda : spriteToBG(mover, self.bghits)
             )
             self.display_list.append(display_entry)
 
