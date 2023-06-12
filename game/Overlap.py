@@ -65,13 +65,13 @@ def vert(hbsa, hbb, adjust = 0):
     down = False
     vert = False
 
-    if phba.y1 + adjust <= hbb.y0 and \
-        hba.y1 + adjust > hbb.y0:
+    if phba.y1 + adjust <= hbb.y0 - adjust and \
+        hba.y1 + adjust > hbb.y0 - adjust:
         down = True
         vert = True
 
-    if phba.y0 - adjust >= hbb.y1 and \
-        hba.y0 - adjust < hbb.y1:
+    if phba.y0 - adjust >= hbb.y1 + adjust and \
+        hba.y0 - adjust < hbb.y1 + adjust:
         up = True
         vert = True
 
@@ -80,16 +80,22 @@ def vert(hbsa, hbb, adjust = 0):
 def spriteToBG(mover, bghits):
     floor_found = False
     for hit in bghits:
-        if overlap(mover.hb, hit) or contact(mover.hb, hit):
-            left, right, sideh = side( (mover.hb, mover.phb), hit)
-            if left:
-                rollbackXRight(mover, hit)
-            if right:
-                rollbackXLeft(mover, hit)
+
+        if contact(mover.hb, hit) and vertContact(mover.hb, hit):
+            rollbackYUp(mover, hit)
+            floor_found = True
+
+        if overlap(mover.hb, hit):
+            if 1 == hit.solid:
+                left, right, sideh = side( (mover.hb, mover.phb), hit)
+                if left:
+                    rollbackXRight(mover, hit)
+                if right:
+                    rollbackXLeft(mover, hit)
 
             upa, downa, vertha = vert( (mover.hb, mover.phb), hit)
             upb, downb, verthb = vert( (mover.hb, mover.phb), hit, 1)
-            if upa:
+            if upa and 1 == hit.solid:
                 rollbackYDown(mover, hit)
             if downa or downb:
                 rollbackYUp(mover, hit)

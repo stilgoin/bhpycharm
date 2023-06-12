@@ -7,6 +7,8 @@ BG_CLEAR = pygame.Color(0,0,1,0)
 BG_FILL = pygame.Color(96,160,255)
 SCR_W = 256
 SCR_H = 256
+SCALE_W = 1080
+SCALE_H = 768
 SURF_FORMAT = "RGBA"
 
 class Key(IntEnum):

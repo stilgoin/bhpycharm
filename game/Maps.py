@@ -65,13 +65,17 @@ class TileMap:
         tile_sizes = [8, 16, 24, 32]
         for layer in self.layers:
             for tipl in layer.tile_placements:
+                tileId = tipl.tileId
+                solid = CollisionIndex[tipl.tileSize][tileId]
+                if not solid:
+                    continue
                 hb = Hitbox()
                 hb.x0 = tipl.xloc
                 hb.y0 = tipl.yloc
                 hb.x1 = hb.x0 + tile_sizes[tipl.tileSize - 1]
                 hb.y1 = hb.y0 + tile_sizes[tipl.tileSize - 1]
                 tileId = tipl.tileId
-                hb.solid = CollisionIndex[tipl.tileSize][tileId]
+                hb.solid = solid
                 self.hitboxes.append(hb)
 
 

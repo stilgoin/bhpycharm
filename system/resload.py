@@ -85,6 +85,7 @@ class ResourceLoader:
             sprite = animation[entry.animIdx].frames[entry.frameIdx]
             xloc = entry.xloc
             yloc = entry.yloc
+            sprite = pygame.transform.flip(sprite, entry.fliph, entry.flipv)
             surfMgmt.drawSprite(sprite, xloc, yloc)
 
 

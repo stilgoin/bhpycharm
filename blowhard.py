@@ -12,7 +12,7 @@ def main():
     font_obj = pygame.font.SysFont("arial",14)
 
     pyg_screen = \
-        pygame.display.set_mode( (SCR_W,SCR_H) )
+        pygame.display.set_mode( (SCALE_W, SCALE_H) )
 
     pygame.display.set_caption("Blowhard")
     pygame.mouse.set_visible(0)
