@@ -45,6 +45,7 @@ class Terminators(IntEnum):
 
 class Id(Enum):
     PLAYER = "player"
+    BLOCK = "block"
 
 class DisplayEntry:
     id = ""
@@ -128,6 +129,10 @@ class Mover:
     facing = Facing.LEFT
     vertical = Vertical.UP
 
+    hitoffs = (4.0, 1.0, 12.0, 14.0)
+    hb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
+    phb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
+
     def __str__(self):
         return str(self.animation_state)
 
@@ -140,6 +145,9 @@ class Mover:
         self.jump_state = Jump.FALL
         self.vertical = Vertical.DOWN
         self.yvel = yvel
+
+    def moverToMovers(self):
+        pass
 
     def move(self):
         self.xloc += (self.xvel * self.facing)
@@ -170,9 +178,11 @@ class Mover:
         self.animation_state.add_frameticks()
         self.move()
         self.hb = Hitbox(self.xloc, self.yloc,
-                         4.0, 1.0, 12.0, 14.0)
+                         self.hitoffs)
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
-                          4.0, 1.0, 12.0, 14.0)
+                          self.hitoffs)
+
+        self.moverToMovers()
 
         floor_found = moverToBGFunc()
         if floor_found and self.jump_state == Jump.FALL:
@@ -195,16 +205,24 @@ class Mover:
         this_frame_control, last_frame_control,\
             keys_pressed, keys_released = control
 
-        self.xvel = 1.25
+        do_accl = False
+
         #self.yvel = 1.25
         if this_frame_control & Key.LEFT:
             self.facing = Facing.LEFT
             self.move_state = Status.WALK
+            do_accl = True
         elif this_frame_control & Key.RIGHT:
             self.facing = Facing.RIGHT
             self.move_state = Status.WALK
+            do_accl = True
         else:
             self.xvel = 0.0
+
+        if do_accl:
+            self.xvel += 0.10
+            if self.xvel >= 1.0:
+                self.xvel = 1.0
 
         if self.jump_state == Jump.FLOOR:
             if not this_frame_control & Key.LEFT \

@@ -1,4 +1,17 @@
 from game.Handlers import *
+from movers.movers import Jump, Facing, Vertical
+from enum import IntEnum
+
+class Result(IntEnum):
+    NULL = 0xFF
+    OVERLAP = 0
+    CONTACT = 1
+
+class OverlapResult:
+    side = 0
+    vert = 0
+    result = Result.NULL
+
 def contact(recta, rectb):
     if recta.x0 - 1 > rectb.x1 or \
             recta.x1 + 1 < rectb.x0 or \
@@ -77,11 +90,40 @@ def vert(hbsa, hbb, adjust = 0):
 
     return up, down, vert
 
+def moverToMover(mva, mvb):
+    result = OverlapResult()
+    if overlap(mva.hb, mvb.hb):
+        result.result = Result.OVERLAP
+        upa, downa, vertha = vert((mva.hb, mva.phb), mvb.hb)
+        upb, downb, verthb = vert((mva.hb, mva.phb), mvb.hb, 1)
+
+        if upa or upb:
+            result.vert = Vertical.UP
+        if downa or downb:
+            result.vert = Vertical.DOWN
+
+        la, ra, sidea = side((mva.hb, mva.phb), mvb.hb)
+        lb, rb, sideb = side((mva.hb, mva.phb), mvb.hb, 1)
+
+        if la or lb:
+            result.side = Facing.LEFT
+        if lb or rb:
+            result.side = Facing.RIGHT
+
+    if contact(mva.hb, mvb.hb):
+        result.result = Result.CONTACT
+        if sideContact(mva.hb, mvb.hb):
+            result.facing = mva.facing * -1
+        if vertContact(mva.hb, mvb.hb):
+            result.facing = mva.vertical * -1
+
+
 def spriteToBG(mover, bghits):
     floor_found = False
     for hit in bghits:
 
-        if contact(mover.hb, hit) and vertContact(mover.hb, hit):
+        if contact(mover.hb, hit) and vertContact(mover.hb, hit)\
+                and mover.jump_state == Jump.FLOOR:
             rollbackYUp(mover, hit)
             floor_found = True
 

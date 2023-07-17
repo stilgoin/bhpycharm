@@ -93,13 +93,17 @@ class ResourceLoader:
         #surfMgmt.blitSurface(Surfaces.SPRITE.value, sprite, (0x80, 0x80))
 
     def initMoverAnims(self, game : GameMode):
-        anim_seqs = self.animations[game.player_id.value]
-        maxFrames = []
-        terminators = []
-        for anim_seq in anim_seqs:
-            maxFrames.append(len(anim_seq.frames) )
-            terminators.append(anim_seq.terminator)
-        game.Init( (maxFrames, terminators) )
+        anim_inits = {}
+        for id in game.ids:
+            #anim_seqs = self.animations[game.player_id.value]
+            anim_seqs = self.animations[id.value]
+            maxFrames = []
+            terminators = []
+            for anim_seq in anim_seqs:
+                maxFrames.append(len(anim_seq.frames) )
+                terminators.append(anim_seq.terminator)
+            anim_inits[id] = (maxFrames, terminators)
+        game.Init( anim_inits )
 
     def loadAnims(self, anim_dict):
         sheet = Image.open("data/master.bmp")

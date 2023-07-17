@@ -11,5 +11,14 @@
             [{"xloc": 80,"yloc": 0},{"xloc": 96,"yloc": 0}]
         ],
     "terminators": [253,254,253,253,253]
+    },
+    {
+        "id": "block",
+        "size": "16",
+        "sequences":
+                [
+                    [{"xloc":  0, "yloc":  112}]
+                ],
+        "terminators": [253]
     }
 ]

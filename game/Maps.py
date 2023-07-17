@@ -1,6 +1,9 @@
 
+import math
+
 from enum import Enum
 from system.data import CollisionIndex
+
 class AnimationSequence:
 
     class Terminators(Enum):
@@ -31,7 +34,14 @@ class Hitbox(Rect):
     width = 0.0
     height = 0.0
     def __init__(self, x0 = 0, y0 = 0,
-                 xoffs = 0, yoffs = 0, width = 0, height = 0, solid = 0):
+                 hitoffs = (0, 0, 0, 0), solid = 0):
+        xoffs = hitoffs[0]
+        yoffs = hitoffs[1]
+        width = hitoffs[2]
+        height = hitoffs[3]
+        x0 = math.floor(x0)
+        y0 = math.floor(y0)
+
         super().__init__(x0+xoffs, y0+yoffs, x0+width, y0+height)
         self.width = width
         self.height = height
