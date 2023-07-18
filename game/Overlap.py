@@ -1,5 +1,5 @@
 from game.Handlers import *
-from movers.movers import Jump, Facing, Vertical
+from system.defs import Jump, Facing, Vertical
 from enum import IntEnum
 
 class Result(IntEnum):
@@ -10,6 +10,8 @@ class Result(IntEnum):
 class OverlapResult:
     side = 0
     vert = 0
+    facing = 0
+    standing = 0
     result = Result.NULL
 
 def contact(recta, rectb):
@@ -90,7 +92,7 @@ def vert(hbsa, hbb, adjust = 0):
 
     return up, down, vert
 
-def moverToMover(mva, mvb):
+def moverToMover(mva, mvb) -> OverlapResult:
     result = OverlapResult()
     if overlap(mva.hb, mvb.hb):
         result.result = Result.OVERLAP
@@ -110,12 +112,14 @@ def moverToMover(mva, mvb):
         if lb or rb:
             result.side = Facing.RIGHT
 
-    if contact(mva.hb, mvb.hb):
+    elif contact(mva.hb, mvb.hb):
         result.result = Result.CONTACT
         if sideContact(mva.hb, mvb.hb):
-            result.facing = mva.facing * -1
+            result.facing = mva.facing
         if vertContact(mva.hb, mvb.hb):
-            result.facing = mva.vertical * -1
+            result.standing = mva.vertical
+
+    return result
 
 
 def spriteToBG(mover, bghits):
