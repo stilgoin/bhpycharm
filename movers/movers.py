@@ -1,5 +1,6 @@
 from system.defs import *
 from game.Maps import Hitbox
+from game.Overlap import OverlapResult
 
 JUMPVEL = 1.75
 GRAVITY = .046875
@@ -104,7 +105,7 @@ class Mover:
         self.yvel = yvel
 
     def moverToMovers(self):
-        pass
+        return False, OverlapResult()
 
     def move(self):
         self.xloc += (self.xvel * self.facing)
@@ -139,7 +140,7 @@ class Mover:
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
                           self.hitoffs)
 
-        floor_found = self.moverToMovers()
+        floor_found, result = self.moverToMovers()
 
         floor_found = floor_found or moverToBGFunc()
         if floor_found and self.jump_state == Jump.FALL:
@@ -148,6 +149,8 @@ class Mover:
             self.jump_lock = False
             if self.move_state == Status.WALK:
                 self.set_anim_idx(Anim.WALK)
+            else:
+                self.set_anim_idx(Anim.STILL)
 
         if not floor_found and self.jump_state == Jump.FLOOR:
             self.set_fall(JUMPVEL)
@@ -175,6 +178,7 @@ class Mover:
             do_accl = True
         else:
             self.xvel = 0.0
+            self.move_state = 0
 
         if do_accl:
             self.xvel += 0.10
@@ -200,7 +204,8 @@ class Mover:
             and self.jump_state == Jump.FLOOR:
             self.jump_lock = False
 
-        if keys_released & Key.JUMP:
+        if keys_released & Key.JUMP \
+                and self.jump_state == Jump.JUMP:
             self.set_fall(1.75)
             self.set_anim_idx(Anim.STILL)
 

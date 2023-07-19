@@ -31,7 +31,7 @@ def main():
 
     running = True
     while running:
-        pyg_clock.tick(60)
+        pyg_clock.tick(20)
 
         pyg_screen.fill((BG_FILL))
 
