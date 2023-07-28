@@ -1,7 +1,7 @@
 import sys
 
 from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover
+from movers.mover_classes import PushingMover, InteractiveMover, InteractionListener
 from game.Overlap import spriteToBG
 class GameMode:
 
@@ -10,6 +10,7 @@ class GameMode:
     def Loop(self, controls):
         self.loopcounter += 1
         self.display_list.clear()
+        InteractionListener.evalInteractions()
         keys_this_frame, keys_last_frame, keys_pressed, keys_released = controls
         self.mPlayer.proc_input(controls)
         for mover in self.movers:
@@ -35,7 +36,7 @@ class GameMode:
         self.mPlayer = PushingMover(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value)
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value)
-        block.xloc = 0x40
+        block.xloc = 0xA0
         block.yloc = 0xA0
         InteractiveMover.movers.append(block)
         self.movers.append(block)

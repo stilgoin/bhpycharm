@@ -2,6 +2,8 @@ from system.defs import *
 from game.Maps import Hitbox
 from game.Overlap import OverlapResult
 
+import uuid
+
 JUMPVEL = 1.75
 GRAVITY = .046875
 
@@ -60,6 +62,8 @@ class AnimationState:
 
     def display_entry(self, id, xloc, yloc, fliph = False, flipv = False):
         frameIdx = self.current_frame
+        if id == Id.BLOCK.value:
+            fliph = False
         return DisplayEntry(id=id, animIdx=self.animIdx,
                             frameIdx=frameIdx, xloc=xloc, yloc=yloc,
                             fliph=fliph, flipv=flipv)
@@ -79,6 +83,9 @@ class Mover:
     yvel = 0.0
     xaccl = 0.0
     yaccl = 0.0
+
+    auuid = uuid.uuid4()
+    id = ""
 
     move_state = 0
     push_state = 0
@@ -130,11 +137,17 @@ class Mover:
     def set_anim_idx(self, state):
         self.animation_state.set_anim_idx(state)
 
+    def call_lambdas(self):
+        for call_lambda in self.lambdas:
+            call_lambda()
+        self.lambdas.clear()
+
     def go(self, moverToBGFunc):
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.animation_state.add_frameticks()
         self.move()
+        self.call_lambdas()
         self.hb = Hitbox(self.xloc, self.yloc,
                          self.hitoffs)
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
@@ -223,3 +236,4 @@ class Mover:
         self.id = id
         self.set_fall(1.75)
         self.set_anim_idx(Anim.STILL)
+        self.lambdas = []

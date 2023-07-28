@@ -109,7 +109,7 @@ def moverToMover(mva, mvb) -> OverlapResult:
 
         if la or lb:
             result.side = Facing.LEFT
-        if lb or rb:
+        if ra or rb:
             result.side = Facing.RIGHT
 
     elif contact(mva.hb, mvb.hb):
