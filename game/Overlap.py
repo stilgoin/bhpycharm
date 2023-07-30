@@ -14,6 +14,10 @@ class OverlapResult:
     standing = 0
     result = Result.NULL
 
+    def __str__(self):
+        return str(self.result) + " " + str(self.side) + " " + str(self.vert) \
+            + " " + str(self.facing) + " " + str(self.standing)
+
 def contact(recta, rectb):
     if recta.x0 - 1 > rectb.x1 or \
             recta.x1 + 1 < rectb.x0 or \

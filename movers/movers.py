@@ -142,12 +142,15 @@ class Mover:
             call_lambda()
         self.lambdas.clear()
 
-    def go(self, moverToBGFunc):
+    def go(self):
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.animation_state.add_frameticks()
-        self.move()
         self.call_lambdas()
+        self.move()
+
+
+    def check(self, moverToBGFunc):
         self.hb = Hitbox(self.xloc, self.yloc,
                          self.hitoffs)
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
@@ -169,6 +172,7 @@ class Mover:
             self.set_fall(JUMPVEL)
             self.set_anim_idx(Anim.STILL)
 
+    def animate(self):
         return self.animation_state\
             .display_entry(self.id, self.xloc, self.yloc,
                            True if self.facing == Facing.RIGHT else False,

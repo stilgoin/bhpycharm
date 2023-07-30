@@ -33,6 +33,9 @@ class Hitbox(Rect):
     yoffs = 0.0
     width = 0.0
     height = 0.0
+
+    def __str__(self):
+        return "(%.4f,%.4f) (%.4f,%.4f)" % (self.x0, self.y0, self.x1, self.y1)
     def __init__(self, x0 = 0, y0 = 0,
                  hitoffs = (0, 0, 0, 0), solid = 0):
         xoffs = hitoffs[0]

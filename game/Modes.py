@@ -14,10 +14,13 @@ class GameMode:
         keys_this_frame, keys_last_frame, keys_pressed, keys_released = controls
         self.mPlayer.proc_input(controls)
         for mover in self.movers:
-            display_entry = mover.go(
-                moverToBGFunc = lambda : spriteToBG(mover, self.bghits)
-            )
-            self.display_list.append(display_entry)
+            mover.go()
+
+        for mover in self.movers:
+            mover.check(moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
+
+        for mover in self.movers:
+            self.display_list.append(mover.animate())
             self.output += str(mover)
 
         print("\rloops: " + str(self.output), end="")
