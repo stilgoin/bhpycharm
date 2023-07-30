@@ -19,6 +19,7 @@ class GameMode:
             )
             self.display_list.append(display_entry)
             self.output += str(mover)
+
         print("\rloops: " + str(self.output), end="")
         self.output = ""
 

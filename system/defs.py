@@ -21,11 +21,11 @@ class Key(IntEnum):
     DOWN = 0x80
 
 class Push(IntEnum):
-    NOPUSH = 1
-    NUDGE = 2
-    ROLLBACK = 4
-    STEP = 8
-    SKID = 0x10
+    NOPUSH = 0
+    NUDGE = 1
+    ROLLBACK = 2
+    STEP = 4
+    SKID = 8
 
 class Facing(IntEnum):
     LEFT = -1

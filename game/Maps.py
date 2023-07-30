@@ -39,10 +39,11 @@ class Hitbox(Rect):
         yoffs = hitoffs[1]
         width = hitoffs[2]
         height = hitoffs[3]
-        x0 = math.floor(x0)
-        y0 = math.floor(y0)
         x1 = math.ceil(x0+width)
         y1 = math.ceil(y0+height)
+        x0 = math.floor(x0)
+        y0 = math.floor(y0)
+
 
         super().__init__(x0+xoffs, y0+yoffs, x1, y1)
         self.width = width

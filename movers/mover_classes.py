@@ -18,25 +18,33 @@ class InteractionListener:
         mva : PushingMover = self.mva
         mvb : InteractiveMover = self.mvb
         result: OverlapResult = moverToMover(mva, mvb)
-        if result.result == Result.NULL \
-                or mva.xvel == 0:
+        if result.result == Result.NULL or \
+                mva.xvel == 0:
             mvb.lambdas.append(lambda : mvb.nudge_release())
-            self.expired = True
         else:
             mvb.lambdas.append(lambda : mvb.nudge_continue())
 
-            """
-            if result.result == Result.CONTACT:
-                if result.facing == Facing.RIGHT:
-                    mva.lambdas.append(lambda : rollbackXLeft(mva, mvb.hb))
-                if result.facing == Facing.LEFT:
-                    mva.lambdas.append(lambda : rollbackXRight(mva, mvb.hb))
-            if result.result == Result.OVERLAP:
-                if result.side == Facing.RIGHT:
-                    mva.lambdas.append(lambda : rollbackXLeft(mva, mvb.hb))
-                if result.side == Facing.LEFT:
-                    mva.lambdas.append(lambda : rollbackXRight(mva, mvb.hb))
-            """
+        if result.result == Result.CONTACT:
+            if result.facing == Facing.RIGHT:
+                #mva.lambdas.append(lambda : rollbackXLeft(mva, mvb.hb))
+                rollbackXLeft(mva, mvb.hb)
+            if result.facing == Facing.LEFT:
+                #mva.lambdas.append(lambda : rollbackXRight(mva, mvb.hb))
+                rollbackXRight(mva, mvb.hb)
+        if result.result == Result.OVERLAP:
+            if result.side == Facing.RIGHT:
+                #mva.lambdas.append(lambda : rollbackXLeft(mva, mvb.hb))
+                rollbackXLeft(mva, mvb.hb)
+            if result.side == Facing.LEFT:
+                #mva.lambdas.append(lambda : rollbackXRight(mva, mvb.hb))
+                rollbackXRight(mva, mvb.hb)
+
+        if result.result == Result.NULL:
+            self.expired = True
+
+
+
+
 
 
 
@@ -102,17 +110,23 @@ class InteractiveMover(Mover):
                 self.pvel += 1
 
     def process_pushing(self):
-        if self.push_state == Push.ROLLBACK:
-            if self.facing == Facing.LEFT \
-                and self.xloc <= self.push_xloc \
-                or self.facing == Facing.RIGHT \
-                and self.xloc >= self.push_xloc:
+        # halt pushing
+        if self.push_state == Push.ROLLBACK \
+            or self.push_state == Push.STEP:
 
-                self.xloc = self.push_xloc
+            check_val = self.snap_xloc
+            if self.push_state == Push.ROLLBACK:
+                check_val = self.push_xloc
+
+            if self.facing == Facing.LEFT \
+                and self.xloc <= check_val \
+                or self.facing == Facing.RIGHT \
+                and self.xloc >= check_val:
+
+                self.xloc = check_val
                 self.xvel = 0
                 self.push_state = Push.NOPUSH
-
-
+                self.pvel = 0
 
     def go(self, moverToBGFunc):
         #self.xvel = 0.5
@@ -146,6 +160,7 @@ class PushingMover(Mover):
             rollbackYUp(self, interact_mover.hb)
             floor_found = True
 
+        """
         if result.result == Result.CONTACT:
             if result.facing == Facing.RIGHT:
                 rollbackXLeft(self, interact_mover.hb)
@@ -156,15 +171,16 @@ class PushingMover(Mover):
                 rollbackXLeft(self, interact_mover.hb)
             if result.side == Facing.LEFT:
                 rollbackXRight(self, interact_mover.hb)
+        """
 
-        if result.result == Result.CONTACT \
-            and result.facing == 0 \
-            or result.result == Result.OVERLAP \
-            and result.side != 0:
-            pass
-            self.initInteraction(interact_mover)
-
-
+        if self.xvel > 0 \
+                and interact_mover.push_state == Push.NOPUSH:
+            if result.result == Result.CONTACT \
+                and result.facing != 0 \
+                or result.result == Result.OVERLAP \
+                and result.side != 0:
+                pass
+                self.initInteraction(interact_mover)
 
         return floor_found
 
@@ -173,6 +189,11 @@ class PushingMover(Mover):
         floor_found = False
         result = OverlapResult()
         for interact_mover in InteractiveMover.movers:
+            uuida = self.auuid
+            uuidb = interact_mover.auuid
+            if (uuida, uuidb) in InteractionListener.listeners.keys():
+                continue
+
             result : OverlapResult = moverToMover(self, interact_mover)
             floor_found = floor_found or \
                           self.findInteraction(interact_mover, result)

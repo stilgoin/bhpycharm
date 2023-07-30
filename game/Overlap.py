@@ -63,12 +63,12 @@ def side(hbsa, hbb, adjust = 0):
     side = False
 
     if phba.x1 + adjust <= hbb.x0 and \
-        hba.x1 + adjust > hbb.x0:
+        hba.x1 + adjust >= hbb.x0:
         right = True
         side = True
 
     if phba.x0 - adjust >= hbb.x1 and \
-        hba.x0 - adjust < hbb.x1:
+        hba.x0 - adjust <= hbb.x1:
         left = True
         side = True
 
@@ -81,12 +81,12 @@ def vert(hbsa, hbb, adjust = 0):
     vert = False
 
     if phba.y1 + adjust <= hbb.y0 - adjust and \
-        hba.y1 + adjust > hbb.y0 - adjust:
+        hba.y1 + adjust >= hbb.y0 - adjust:
         down = True
         vert = True
 
     if phba.y0 - adjust >= hbb.y1 + adjust and \
-        hba.y0 - adjust < hbb.y1 + adjust:
+        hba.y0 - adjust <= hbb.y1 + adjust:
         up = True
         vert = True
 
