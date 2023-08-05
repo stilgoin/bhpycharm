@@ -9,6 +9,12 @@ class Control:
     last_frame_ctrl = 0
     keys_pressed = 0
     keys_released = 0
+    autoLeft = False
+    autoRight = False
+    ext_keys_pressed = 0
+    ext_keys_released = 0
+    ext_frame_ctrl = 0
+    ext_last_frame = 0
 
     @property
     def controls(self):
@@ -20,6 +26,20 @@ class Control:
 
         self.last_frame_ctrl = self.this_frame_ctrl
         self.this_frame_ctrl = 0
+        self.ext_last_frame = self.ext_frame_ctrl
+        self.ext_frame_ctrl = 0
+
+        if keys_pressed[K_a]:
+            self.ext_frame_ctrl |= 0x1
+
+        if keys_pressed[K_d]:
+            self.ext_frame_ctrl |= 0x2
+
+        self.ext_keys_released = (self.ext_frame_ctrl ^ self.ext_last_frame) & self.ext_last_frame
+        if self.ext_keys_released & 0x2:
+            self.autoRight = not self.autoRight
+        if self.ext_keys_released & 0x1:
+            self.autoLeft = not self.autoLeft
 
         if keys_pressed[K_z]:
             self.this_frame_ctrl |= Key.JUMP.value
@@ -27,10 +47,10 @@ class Control:
         if keys_pressed[K_x]:
             self.this_frame_ctrl |= Key.FIRE.value
 
-        if keys_pressed[K_LEFT]:
+        if keys_pressed[K_LEFT] or self.autoLeft:
             self.this_frame_ctrl |= Key.LEFT.value
 
-        if keys_pressed[K_RIGHT]:
+        if keys_pressed[K_RIGHT] or self.autoRight:
             self.this_frame_ctrl |= Key.RIGHT.value
 
         if keys_pressed[K_UP]:
@@ -41,6 +61,7 @@ class Control:
 
         if keys_pressed[K_RETURN]:
             self.this_frame_ctrl |= Key.ENTER.value
+
         """
         if keys_pressed[K_s]:
             self.this_frame_ctrl |= BTN_SWITCH

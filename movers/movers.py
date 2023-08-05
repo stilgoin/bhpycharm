@@ -118,17 +118,13 @@ class Mover:
         self.xloc += (self.xvel * self.facing)
         self.yloc += (self.yvel * self.vertical)
 
+        self.xvel += self.xaccl
+
         if self.jump_state == Jump.JUMP:
             self.yvel -= GRAVITY
             if self.yvel < 0.0:
                 self.set_fall(1.75)
                 self.set_anim_idx(Anim.STILL)
-
-            if self.yvel <= 1.50\
-                    and not self.animation_state\
-                    .check_anim_idx(Anim.PEAK):
-                pass
-                self.set_anim_idx(Anim.PEAK)
 
     def anim_state(self):
         if self.jump_state == Jump.FLOOR:
@@ -195,9 +191,11 @@ class Mover:
             do_accl = True
         else:
             self.xvel = 0.0
+            self.pvel = 0.0
             self.move_state = 0
+            self.push_state = Push.NOPUSH
 
-        if do_accl:
+        if do_accl and self.push_state == Push.NOPUSH:
             self.xvel += 0.10
             if self.xvel >= 1.0:
                 self.xvel = 1.0
@@ -241,3 +239,4 @@ class Mover:
         self.set_fall(1.75)
         self.set_anim_idx(Anim.STILL)
         self.lambdas = []
+

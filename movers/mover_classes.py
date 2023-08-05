@@ -1,7 +1,9 @@
+from math import floor, ceil
+
 from movers.movers import Mover
 from game.Handlers import *
 from game.Overlap import moverToMover, OverlapResult, Result
-from system.defs import Vertical, Facing, Push, Id
+from system.defs import Vertical, Facing, Push, Id, Anim, Jump
 
 from collections import defaultdict
 
@@ -9,20 +11,28 @@ class InteractionListener:
 
     listeners = {}
     expired = False
+    facing = 0
 
     def __init__(self, mva, mvb):
         self.mva = mva
         self.mvb = mvb
+        self.facing = mva.facing
 
     def pushingMoverToBlock(self):
         mva : PushingMover = self.mva
         mvb : InteractiveMover = self.mvb
         result: OverlapResult = moverToMover(mva, mvb)
-        if result.result == Result.NULL or \
-                mva.xvel == 0:
+        if result.result == Result.NULL \
+                or mva.xvel == 0 and mva.push_state != Push.NUDGE \
+                or mva.facing != self.facing:
             mvb.lambdas.append(lambda : mvb.nudge_release())
+            mva.lambdas.append(lambda : mva.haltPushing())
         else:
+            mva.pvel = mvb.pvel
             mvb.lambdas.append(lambda : mvb.nudge_continue())
+            mva.lambdas.append(lambda : mva.nudge_continue())
+
+        print(mva.xloc, " ", mvb.xloc, " ", mva.hb.x0, " ", mvb.hb.x1, " ", mva.phb.x0, " ", mvb.phb.x1, " ", result.result)
 
         """
         if result.result == Result.CONTACT:
@@ -41,7 +51,8 @@ class InteractionListener:
                 rollbackXRight(mva, mvb.hb)
         """
 
-        if result.result == Result.NULL:
+        if result.result == Result.NULL \
+                or self.facing != mva.facing:
             self.expired = True
 
     handlers = {(Id.PLAYER.value, Id.BLOCK.value) : pushingMoverToBlock}
@@ -75,14 +86,21 @@ class InteractiveMover(Mover):
     pvel = 0.0
 
     def nudge_release(self):
+
+        if self.push_state != Push.NUDGE:
+            return
+
         self.xvel = 1.0
-        self.xaccl = -0.175
+        #self.xaccl = -0.175
 
         if abs(self.push_xloc - self.xloc) <= 4:
             self.push_state = Push.ROLLBACK
             self.facing *= -1
         elif abs(self.push_xloc - self.xloc) > 4:
             self.push_state = Push.STEP
+
+    def snapToX8(self, val):
+        pass
 
     def init_nudge(self, facing):
 
@@ -93,6 +111,7 @@ class InteractiveMover(Mover):
         self.facing = facing
         self.push_xloc = self.xloc
         self.snap_xloc = self.xloc + (8 * self.facing)
+        pass
 
     def nudge_continue(self):
         if not self.pvel:
@@ -102,10 +121,22 @@ class InteractiveMover(Mover):
         if self.pvel >= 1 and self.pvel <= 3:
             self.xvel += 0.175
             if self.xvel >= 1:
-                self.xvel = 0
+                self.xvel = 0.175
                 self.pvel += 1
+        else:
+            self.push_state = Push.SKID
+            self.xvel = 1.75
+            self.xaccl = -0.05
 
     def process_pushing(self):
+
+        if self.push_state == Push.SKID:
+            if self.xvel <= 0:
+                self.push_state = Push.NOPUSH
+                self.xvel = 0
+                self.xaccl = 0
+                self.pvel = 0
+
         # halt pushing
         if self.push_state == Push.ROLLBACK \
             or self.push_state == Push.STEP:
@@ -136,6 +167,28 @@ class PushingMover(Mover):
     movers = []
     count = 0
 
+    def initPushing(self):
+        self.xvel = 0.0
+        self.pvel = 0
+        self.push_state = Push.NUDGE
+
+    def haltPushing(self):
+        self.pvel = 0
+        self.push_state = Push.NOPUSH
+
+    def nudge_continue(self):
+        if not self.pvel:
+            self.xvel = 1
+            self.pvel += 1
+
+        if self.pvel >= 1 and self.pvel <= 3:
+            self.xvel += 0.175
+            if self.xvel >= 1:
+                self.xvel = 0.175
+                self.pvel += 1
+        else:
+            self.push_state = Push.NOPUSH
+
     def initInteraction(self, interact_mover : InteractiveMover):
         uuida = self.auuid
         uuidb = interact_mover.auuid
@@ -143,6 +196,7 @@ class PushingMover(Mover):
             InteractionListener.listeners[(uuida, uuidb)] =\
                 InteractionListener(self, interact_mover)
             interact_mover.init_nudge(self.facing)
+            self.initPushing()
 
 
     def findInteraction(self, interact_mover : InteractiveMover,
@@ -159,9 +213,11 @@ class PushingMover(Mover):
 
         if result.result == Result.CONTACT:
             if result.facing == Facing.RIGHT:
-                rollbackXLeft(self, interact_mover.hb)
+                pass
+                #rollbackXLeft(self, interact_mover.hb)
             if result.facing == Facing.LEFT:
-                rollbackXRight(self, interact_mover.hb)
+                pass
+                #rollbackXRight(self, interact_mover.hb)
             PushingMover.count += 1
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
@@ -171,6 +227,7 @@ class PushingMover(Mover):
             PushingMover.count += 1
         else:
             if PushingMover.count > 0:
+                """
                 print("\nno hit found: ", str(self.xloc), " ", interact_mover.xloc, "\n",
                       interact_mover.push_state, "\n",
                       interact_mover.xvel, "\n",
@@ -179,8 +236,14 @@ class PushingMover(Mover):
                       self.hb, "\n", self.phb, "\n",
                       interact_mover.hb, "\n", interact_mover.phb, "\n",
                       str(result))
+                """
                 PushingMover.count = 0
 
+        if self.facing == Facing.RIGHT \
+            and self.hb.x0 >= interact_mover.hb.x1 \
+            or self.facing == Facing.LEFT \
+            and self.hb.x1 <= interact_mover.hb.x0:
+            return
 
         if self.xvel > 0 \
                 and interact_mover.push_state == Push.NOPUSH:
@@ -200,8 +263,8 @@ class PushingMover(Mover):
         for interact_mover in InteractiveMover.movers:
             uuida = self.auuid
             uuidb = interact_mover.auuid
-            #if (uuida, uuidb) in InteractionListener.listeners.keys():
-            #    continue
+            if (uuida, uuidb) in InteractionListener.listeners.keys():
+                continue
 
             result : OverlapResult = moverToMover(self, interact_mover)
             floor_found = floor_found or \
@@ -211,6 +274,21 @@ class PushingMover(Mover):
 
 
     def __init__(self, anim_init, id):
+        super().__init__(anim_init, id)
+
+class Player(PushingMover):
+
+    def move(self):
+        super().move()
+
+        if self.jump_state == Jump.JUMP:
+            if self.yvel <= 1.50 \
+                    and not self.animation_state \
+                    .check_anim_idx(Anim.PEAK):
+                pass
+                self.set_anim_idx(Anim.PEAK)
+
+    def __init__(self, anim_init, id = Id.PLAYER.value):
         super().__init__(anim_init, id)
 
 

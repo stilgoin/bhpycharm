@@ -13,6 +13,10 @@ class OverlapResult:
     facing = 0
     standing = 0
     result = Result.NULL
+    hba = None
+    phba = None
+    phbb = None
+    hbb = None
 
     def __str__(self):
         return str(self.result) + " " + str(self.side) + " " + str(self.vert) \
@@ -98,6 +102,11 @@ def vert(hbsa, hbb, adjust = 0):
 
 def moverToMover(mva, mvb) -> OverlapResult:
     result = OverlapResult()
+    result.hba = mva.hb
+    result.hbb = mvb.hb
+    result.phba = mva.phb
+    result.phbb = mvb.phb
+
     if overlap(mva.hb, mvb.hb):
         result.result = Result.OVERLAP
         upa, downa, vertha = vert((mva.hb, mva.phb), mvb.hb)
