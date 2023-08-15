@@ -25,6 +25,13 @@ class SurfaceManager:
             crop_image.tobytes(),
             crop_image.size, SURF_FORMAT)
 
+    @classmethod
+    def surfaceFromPlaceholder(self, color, rect:()) -> pygame.Surface:
+        tx, ty, tw, th = rect
+        surface = self.initSurface(self, tw, th)
+        pygame.draw.rect(surface, color, pygame.Rect(tx,ty,tw,th))
+        return surface
+
     def drawSprite(self, sprite, xloc, yloc):
         sprite_surf = self.surfaces[Surfaces.SPRITE.value]
         sprite_surf.blit(sprite, (xloc, yloc))

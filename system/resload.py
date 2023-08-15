@@ -59,6 +59,10 @@ class ResourceLoader:
         return Image.open(bin_image,
                           formats=["PNG"])
 
+
+    """
+    Recursively builds an object from json starting with the inner-most json {} string
+    """
     def decodeMapsJson(self, fields_dict : dict) -> dict[str, pygame.Surface]:
         if 'xloc' in fields_dict:
             return TilePlacement(**fields_dict)
@@ -105,6 +109,18 @@ class ResourceLoader:
             anim_inits[id] = (maxFrames, terminators)
         game.Init( anim_inits )
 
+    def loadAnimSeq(self, anim_seqs, sheet, terminators, anim_seq, ti, size):
+        frames = []
+        terminator = terminators[ti]
+        ti += 1
+        for frame in anim_seq:
+            xloc = int(frame.xloc)
+            yloc = int(frame.yloc)
+            sprite = sm.surfaceFromImage(sheet, (xloc, yloc, size, size))
+            frames.append(sprite)
+        anim_seqs.append(AnimationSequence(frames, terminator))
+
+
     def loadAnims(self, anim_dict):
         sheet = Image.open("data/master.bmp")
         sheet = sheet.convert("RGBA")
@@ -115,16 +131,17 @@ class ResourceLoader:
             terminators = anim_data.terminators
             id = anim_data.id
             ti = 0
-            for anim_seq in anim_data.sequences:
+            if anim_data.placeholder:
                 frames = []
-                terminator = terminators[ti]
-                ti += 1
-                for frame in anim_seq:
-                    xloc = int(frame.xloc)
-                    yloc = int(frame.yloc)
-                    sprite = sm.surfaceFromImage(sheet, (xloc, yloc, size, size))
+                terminator = terminators[0]
+                for anim_seq in anim_data.sequences:
+                    sprite = sm.surfaceFromPlaceholder(anim_data.color,(0,0,size,size))
                     frames.append(sprite)
                 anim_seqs.append(AnimationSequence(frames, terminator))
+            else:
+                for anim_seq in anim_data.sequences:
+                    self.loadAnimSeq(anim_seqs, sheet, terminators, anim_seq, ti, size)
+                    ti += 1
             self.animations[id] = anim_seqs
 
 

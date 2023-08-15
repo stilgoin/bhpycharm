@@ -61,3 +61,13 @@ class Terminators(IntEnum):
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
+    STATUE = "statue"
+    HAMMER = "hammer"
+
+class Statue(IntEnum):
+    PASSIVE = 0
+    ARMED = 1
+
+
+class Vel(float, Enum):
+    SHOVE = 0.175

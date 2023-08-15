@@ -1,7 +1,7 @@
 import sys
 
 from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover, InteractionListener, Player
+from movers.mover_classes import PushingMover, InteractiveMover, InteractionListener, Player, Statue
 from game.Overlap import spriteToBG
 class GameMode:
 
@@ -11,16 +11,18 @@ class GameMode:
         self.loopcounter += 1
         self.display_list.clear()
         InteractionListener.evalInteractions()
-        keys_this_frame, keys_last_frame, keys_pressed, keys_released = controls
+
         self.mPlayer.proc_input(controls)
         for mover in self.movers:
+            if mover.id == Id.BLOCK.value:
+                mover.proc_auto(controls)
             mover.go()
 
         for mover in self.movers:
             mover.check(moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
         for mover in self.movers:
-            self.display_list.append(mover.animate())
+            self.display_list.extend(mover.animate())
             self.output += str(mover)
 
         #print("\rloops: " + str(self.output), end="")
@@ -37,13 +39,20 @@ class GameMode:
         return Id
 
     def Init(self, anim_inits):
-        self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value)
+        self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.movers.append(self.mPlayer)
-        block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value)
+        block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0xA0
         block.yloc = 0xA0
         InteractiveMover.movers.append(block)
+
+        statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
+        statue.xloc = 0x80
+        statue.yloc = 0x80
+        InteractiveMover.movers.append(statue)
+
         self.movers.append(block)
+        self.movers.append(statue)
 
 
     def __init__(self):

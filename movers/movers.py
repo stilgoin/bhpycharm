@@ -90,9 +90,12 @@ class Mover:
     move_state = 0
     push_state = 0
     jump_state = 0
+    action_timer = 0
     jump_lock = False
     facing = Facing.LEFT
     vertical = Vertical.UP
+
+    placeholder = False
 
     hitoffs = (4.0, 1.0, 12.0, 14.0)
     hb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
@@ -169,14 +172,25 @@ class Mover:
             self.set_anim_idx(Anim.STILL)
 
     def animate(self):
-        return self.animation_state\
+        return [self.animation_state\
             .display_entry(self.id, self.xloc, self.yloc,
                            True if self.facing == Facing.RIGHT else False,
-                           False)
+                           False)]
+
+    def proc_auto(self, control):
+        this_frame_control, last_frame_control, \
+            keys_pressed, keys_released, launch = control
+        if self.id == Id.BLOCK.value:
+            if launch:
+                self.facing = Facing.RIGHT
+                self.xvel = 5.25
+                self.xaccl = -0.05
+                self.push_state = Push.SKID
+            return
 
     def proc_input(self, control):
         this_frame_control, last_frame_control,\
-            keys_pressed, keys_released = control
+            keys_pressed, keys_released, launch = control
 
         do_accl = False
 
@@ -233,10 +247,11 @@ class Mover:
             self.yvel = 0.0
         """
 
-    def __init__(self, anim_init, id = Id.PLAYER.value):
+    def __init__(self, anim_init, id = Id.PLAYER.value, placeholder = False):
         self.animation_state = AnimationState(anim_init)
         self.id = id
         self.set_fall(1.75)
         self.set_anim_idx(Anim.STILL)
         self.lambdas = []
+        self.placeholder = placeholder
 

@@ -11,6 +11,7 @@ class Control:
     keys_released = 0
     autoLeft = False
     autoRight = False
+    launch = False
     ext_keys_pressed = 0
     ext_keys_released = 0
     ext_frame_ctrl = 0
@@ -19,7 +20,7 @@ class Control:
     @property
     def controls(self):
         return (self.this_frame_ctrl, self.last_frame_ctrl,
-                self.keys_pressed, self.keys_released)
+                self.keys_pressed, self.keys_released, self.launch)
 
     def control(self, pygame):
         keys_pressed = pygame.key.get_pressed()
@@ -35,11 +36,18 @@ class Control:
         if keys_pressed[K_d]:
             self.ext_frame_ctrl |= 0x2
 
+        if keys_pressed[K_e]:
+            self.ext_frame_ctrl |= 0x4
+
+        self.launch = False
+
         self.ext_keys_released = (self.ext_frame_ctrl ^ self.ext_last_frame) & self.ext_last_frame
         if self.ext_keys_released & 0x2:
             self.autoRight = not self.autoRight
         if self.ext_keys_released & 0x1:
             self.autoLeft = not self.autoLeft
+        if self.ext_keys_released & 0x4:
+            self.launch = True
 
         if keys_pressed[K_z]:
             self.this_frame_ctrl |= Key.JUMP.value

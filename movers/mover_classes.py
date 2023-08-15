@@ -1,11 +1,15 @@
 from math import floor, ceil
 
+from game.Maps import Hitbox
 from movers.movers import Mover
 from game.Handlers import *
 from game.Overlap import moverToMover, OverlapResult, Result
-from system.defs import Vertical, Facing, Push, Id, Anim, Jump
+from system.defs import Vertical, Facing, Push, Id, Anim, Jump, Vel
 
 from collections import defaultdict
+
+class MiscMover(Mover):
+    movers = []
 
 class InteractionListener:
 
@@ -55,7 +59,9 @@ class InteractionListener:
                 or self.facing != mva.facing:
             self.expired = True
 
-    handlers = {(Id.PLAYER.value, Id.BLOCK.value) : pushingMoverToBlock}
+    handlers = {(Id.PLAYER.value, Id.BLOCK.value) : pushingMoverToBlock,
+                (Id.PLAYER.value, Id.STATUE.value) : pushingMoverToBlock
+    }
 
     def processInteraction(self):
         ida = self.mva.id
@@ -119,9 +125,9 @@ class InteractiveMover(Mover):
             self.pvel += 1
 
         if self.pvel >= 1 and self.pvel <= 3:
-            self.xvel += 0.175
+            self.xvel += Vel.SHOVE.value
             if self.xvel >= 1:
-                self.xvel = 0.175
+                self.xvel = Vel.SHOVE.value
                 self.pvel += 1
         else:
             self.push_state = Push.SKID
@@ -130,12 +136,44 @@ class InteractiveMover(Mover):
 
     def process_pushing(self):
 
+        snapTo8 = False
+
         if self.push_state == Push.SKID:
             if self.xvel <= 0:
+                snapTo8 = True
+
+            if self.xvel > 0.5:
+                if self.facing == Facing.RIGHT:
+                    if self.xloc > self.snap_xloc + 8:
+                        self.snap_xloc += 8
+                else:
+                    if self.xloc < self.snap_xloc - 8:
+                        self.snap_xloc -= 8
+
+            if self.xvel <= 0.5:
+                self.xaccl += (2 ** -8)
+                if self.xaccl > 0:
+                    self.xaccl = 0
+                if self.facing == Facing.LEFT \
+                    and self.xloc <= self.snap_xloc - 8:
+                    snapTo8 = True
+                    self.snap_xloc -= 8
+                    if int(self.snap_xloc) & 0x7:
+                        self.snap_xloc &= 0xFFF8
+                if self.facing == Facing.RIGHT \
+                    and self.xloc >= self.snap_xloc + 8:
+                    snapTo8 = True
+                    self.snap_xloc += 8
+                    if int(self.snap_xloc) & 0x7:
+                        self.snap_xloc &= 0xFFF8
+
+            if snapTo8:
+                self.xloc = self.snap_xloc
                 self.push_state = Push.NOPUSH
                 self.xvel = 0
-                self.xaccl = 0
                 self.pvel = 0
+                self.xaccl = 0
+                self.snap_xloc = 0
 
         # halt pushing
         if self.push_state == Push.ROLLBACK \
@@ -159,8 +197,8 @@ class InteractiveMover(Mover):
         self.lambdas.append(lambda : self.process_pushing())
         super().go()
 
-    def __init__(self, anim_init, id):
-        super().__init__(anim_init, id)
+    def __init__(self, anim_init, id, placeholder):
+        super().__init__(anim_init, id, placeholder)
 
 class PushingMover(Mover):
 
@@ -169,7 +207,6 @@ class PushingMover(Mover):
 
     def initPushing(self):
         self.xvel = 0.0
-        self.pvel = 0
         self.push_state = Push.NUDGE
 
     def haltPushing(self):
@@ -182,9 +219,9 @@ class PushingMover(Mover):
             self.pvel += 1
 
         if self.pvel >= 1 and self.pvel <= 3:
-            self.xvel += 0.175
+            self.xvel += Vel.SHOVE.value
             if self.xvel >= 1:
-                self.xvel = 0.175
+                self.xvel = Vel.SHOVE.value
                 self.pvel += 1
         else:
             self.push_state = Push.NOPUSH
@@ -246,7 +283,7 @@ class PushingMover(Mover):
             return
 
         if self.xvel > 0 \
-                and interact_mover.push_state == Push.NOPUSH:
+                and interact_mover.push_state in (Push.NOPUSH, Push.SKID):
             if result.result == Result.CONTACT \
                 and result.facing != 0 \
                 or result.result == Result.OVERLAP \
@@ -273,8 +310,59 @@ class PushingMover(Mover):
         return floor_found, result
 
 
-    def __init__(self, anim_init, id):
-        super().__init__(anim_init, id)
+    def __init__(self, anim_init, id, placeholder):
+        super().__init__(anim_init, id, placeholder)
+
+class Statue(InteractiveMover):
+
+    class Hammer(Mover):
+        active = False
+
+        def check(self, moverToBGFunc = lambda : None):
+            pass
+
+    hammer : Hammer = None
+
+    def check(self, moverToBGFunc):
+        #self.trigger_box = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
+        if self.action_timer > 0:
+            self.action_timer -= 1
+            if self.action_timer <= 30:
+                self.hammer.xloc = 0xFFFF
+        else:
+            self.hammer.xloc = 0xFFFF
+
+        self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
+        for mover in InteractiveMover.movers + PushingMover.movers:
+            result = moverToMover(self, mover)
+            if result.result == Result.CONTACT \
+                or result.result == Result.OVERLAP:
+
+                if not self.action_timer:
+                    self.action_timer = 60
+                    self.hammer.yloc = self.yloc - 0x4
+                    if result.facing == Facing.LEFT \
+                        or result.side == Facing.LEFT:
+                        self.hammer.xloc = self.xloc - 0x10
+                    else:
+                        self.hammer.xloc = self.xloc + 0x10
+
+        super().check(moverToBGFunc)
+
+    def animate(self):
+        return [self.animation_state \
+                    .display_entry(self.id, self.xloc, self.yloc,
+                                   True if self.facing == Facing.RIGHT else False,
+                                   False),
+                self.hammer.animation_state.display_entry(self.hammer.id, self.hammer.xloc, self.hammer.yloc,
+                                   True if self.hammer.facing == Facing.RIGHT else False,
+                                   False)]
+
+    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
+        self.hammer = self.Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)
+        MiscMover.movers.append(self.hammer)
+        super().__init__(anim_init, id, placeholder)
+
 
 class Player(PushingMover):
 
@@ -288,8 +376,8 @@ class Player(PushingMover):
                 pass
                 self.set_anim_idx(Anim.PEAK)
 
-    def __init__(self, anim_init, id = Id.PLAYER.value):
-        super().__init__(anim_init, id)
+    def __init__(self, anim_init, id = Id.PLAYER.value, placeholder = False):
+        super().__init__(anim_init, id, placeholder)
 
 
 

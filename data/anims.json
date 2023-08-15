@@ -2,6 +2,7 @@
     {
     "id": "player",
     "size": "16",
+    "placeholder" : false,
     "sequences":
         [
             [{"xloc": 0,"yloc": 0}],
@@ -15,10 +16,27 @@
     {
         "id": "block",
         "size": "16",
+        "placeholder" : false,
         "sequences":
                 [
                     [{"xloc":  0, "yloc":  112}]
                 ],
+        "terminators": [253]
+    },
+    {
+        "id": "statue",
+        "placeholder" : true,
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "color": "#A0522DFF",
+        "terminators": [253]
+    },
+        {
+        "id": "hammer",
+        "placeholder" : true,
+        "size": "8",
+        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "color": "#F5DEB3FF",
         "terminators": [253]
     }
 ]
