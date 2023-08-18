@@ -93,6 +93,7 @@ class Mover:
     action_timer = 0
     jump_lock = False
     facing = Facing.LEFT
+    direction = Facing.LEFT
     vertical = Vertical.UP
 
     placeholder = False
@@ -118,7 +119,7 @@ class Mover:
         return False, OverlapResult()
 
     def move(self):
-        self.xloc += (self.xvel * self.facing)
+        self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl
@@ -208,6 +209,8 @@ class Mover:
             self.pvel = 0.0
             self.move_state = 0
             self.push_state = Push.NOPUSH
+
+        self.direction = self.facing
 
         if do_accl and self.push_state == Push.NOPUSH:
             self.xvel += 0.10

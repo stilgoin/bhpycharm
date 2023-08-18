@@ -64,6 +64,10 @@ class Id(Enum):
     STATUE = "statue"
     HAMMER = "hammer"
 
+class Ability(Enum):
+    PUSHING = "pushing"
+    ITEM = "item"
+
 class Statue(IntEnum):
     PASSIVE = 0
     ARMED = 1

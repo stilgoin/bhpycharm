@@ -40,6 +40,8 @@ class GameMode:
 
     def Init(self, anim_inits):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
+        self.mPlayer.xloc = 0x20
+        self.mPlayer.yloc = 0xA0
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0xA0
@@ -49,10 +51,10 @@ class GameMode:
         statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
         statue.xloc = 0x80
         statue.yloc = 0x80
-        InteractiveMover.movers.append(statue)
+        #InteractiveMover.movers.append(statue)
 
         self.movers.append(block)
-        self.movers.append(statue)
+        #self.movers.append(statue)
 
 
     def __init__(self):

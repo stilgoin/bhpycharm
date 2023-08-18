@@ -17,6 +17,8 @@ class OverlapResult:
     phba = None
     phbb = None
     hbb = None
+    mva = None
+    mvb = None
 
     def __str__(self):
         return str(self.result) + " " + str(self.side) + " " + str(self.vert) \
