@@ -149,14 +149,15 @@ class Mover:
         self.call_lambdas()
         self.move()
 
-
-    def check(self, moverToBGFunc):
+    def make_hitboxes(self):
         self.hb = Hitbox(self.xloc, self.yloc,
                          self.hitoffs)
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
                           self.hitoffs)
 
-        floor_found, result = self.moverToMovers()
+    def check(self, floor_found, moverToBGFunc):
+
+        #floor_found, result = self.moverToMovers()
 
         floor_found = floor_found or moverToBGFunc()
         if floor_found and self.jump_state == Jump.FALL:
