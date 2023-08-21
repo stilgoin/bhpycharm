@@ -67,9 +67,9 @@ class InteractiveMover(Mover):
             #    snapTo8 = True
 
             if self.xvel <= 0.5:
-                if self.xvel <= 0.0:
+                if self.xvel <= 0.5:
                     self.xvel = 0.5
-                self.xaccl += (2 ** -8)
+                #self.xaccl += (2 ** -8)
                 if self.xaccl > 0:
                     self.xaccl = 0
                 if int(self.xloc) == self.snap_xloc:
@@ -126,7 +126,7 @@ class InteractiveMover(Mover):
         self.xvel = 2.5
         self.direction = Facing.LEFT
         self.snap_xloc = self.xloc - 8
-        self.xaccl = -0.05
+        #self.xaccl = -0.05
 
     def __init__(self, anim_init, id, placeholder):
         super().__init__(anim_init, id, placeholder)

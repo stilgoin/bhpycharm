@@ -84,7 +84,6 @@ class Mover:
     xaccl = 0.0
     yaccl = 0.0
 
-    auuid = uuid.uuid4()
     id = ""
 
     move_state = 0
@@ -258,4 +257,5 @@ class Mover:
         self.set_anim_idx(Anim.STILL)
         self.lambdas = []
         self.placeholder = placeholder
+        self.auuid = uuid.uuid4()
 

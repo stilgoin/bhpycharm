@@ -29,6 +29,13 @@ class InteractionListener:
             self.expired = True
             return
 
+        if self.mva.direction == Facing.RIGHT \
+            and self.mva.hb.x0 >= self.mvb.hb.x1 \
+            or self.mva.direction == Facing.LEFT \
+            and self.mva.hb.x1 <= self.mvb.hb.x0:
+            self.expired = True
+            return
+
         self.mva.initPushing()
         self.mvb.initNudge(self.mva.direction)
 
@@ -54,6 +61,7 @@ class InteractionListener:
 
     def initBlockToMover(self):
         self.mvb.initSkid()
+        self.mvb.xaccl = self.mva.xaccl
 
     def blockToMover(self):
         mva : InteractiveMover = self.mva
@@ -63,14 +71,17 @@ class InteractionListener:
         if result.result == Result.NULL:
             self.expired = True
         else:
-
-            if mva.push_state == Push.NOPUSH:
-                self.expired = True
-                return
-
             if mvb.move_state == Status.WALK \
                 and mvb.facing == mva.direction * -1:
-                mva.xaccl += -0.005
+
+                if mva.xvel != mvb.xvel:
+                    pass
+                else:
+                    pass
+
+                if mva.xvel > 0.5:
+                    mva.xaccl += -0.01
+                    mvb.xaccl += -0.01
             xvel = mva.xvel
             direction = mva.direction
             mvb.lambdas.append(lambda: mvb.continueSkid(xvel, direction))
@@ -85,6 +96,30 @@ class InteractionListener:
         (Ability.ITEM.value, Ability.PUSHING.value) : initBlockToMover
     }
 
+    def termBlockToMover(self):
+        mva = self.mva
+        mvb = self.mvb
+        if mva.push_state == Push.NOPUSH:
+            mvb.xaccl = 0
+            mvb.xvel = 0
+            self.expired = True
+            return
+
+    def dummy(self):
+        pass
+
+    term_table = {
+        (Ability.PUSHING.value, Ability.ITEM.value): dummy,
+        (Ability.ITEM.value, Ability.PUSHING.value): termBlockToMover
+    }
+
+    def checkTerm(self):
+        ida = self.mva.ability
+        idb = self.mvb.ability
+        if (ida, idb) in self.term_table.keys():
+            term = self.term_table[(ida, idb)]
+            term(self)
+
     def processInteraction(self):
         ida = self.mva.ability
         idb = self.mvb.ability
@@ -94,12 +129,21 @@ class InteractionListener:
 
     @classmethod
     def evalInteractions(cls):
-        # delete dict entry without exception
-        cls.listeners = dict(filter(lambda x : not x[1].expired, cls.listeners.items()))
-
         for key in cls.listeners.keys():
             listener = cls.listeners[key]
             listener.processInteraction()
+
+        # delete dict entry without exception
+        cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))
+
+    @classmethod
+    def evalTerminations(cls):
+        for key in cls.listeners.keys():
+            listener = cls.listeners[key]
+            listener.checkTerm()
+
+        # delete dict entry without exception
+        cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))
 
     @classmethod
     def initInteraction(self, pushing_mover : PushingMover, interact_mover : InteractiveMover,
@@ -127,16 +171,23 @@ class InteractionListener:
         if result.result == Result.CONTACT:
             if result.facing == Facing.RIGHT:
                 pass
-                #rollbackXLeft(self, interact_mover.hb)
+                rollbackXLeft(result.mva, result.mvb.hb)
             if result.facing == Facing.LEFT:
                 pass
-                #rollbackXRight(self, interact_mover.hb)
+                rollbackXRight(result.mva, result.mvb.hb)
             PushingMover.count += 1
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-            if result.side == Facing.LEFT:
+            elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
+            else:
+                if result.mva.direction != result.mva.facing \
+                        and result.mva.facing == Facing.LEFT:
+                    rollbackXRight(result.mva, result.mvb.hb)
+                if result.mva.direction != result.mva.facing \
+                        and result.mva.facing == Facing.RIGHT:
+                    rollbackXLeft(result.mva, result.mvb.hb)
             PushingMover.count += 1
         else:
             if PushingMover.count > 0:
@@ -152,11 +203,7 @@ class InteractionListener:
                 """
                 PushingMover.count = 0
 
-        if pushing_mover.direction == Facing.RIGHT \
-            and pushing_mover.hb.x0 >= interact_mover.hb.x1 \
-            or pushing_mover.direction == Facing.LEFT \
-            and pushing_mover.hb.x1 <= interact_mover.hb.x0:
-            return
+
 
 
         if result.result == Result.CONTACT \
@@ -178,7 +225,8 @@ class InteractionListener:
         for interact_mover in InteractiveMover.movers:
             uuida = pushing_mover.auuid
             uuidb = interact_mover.auuid
-            if (uuida, uuidb) in InteractionListener.listeners.keys():
+            if (uuida, uuidb) in InteractionListener.listeners.keys()\
+                    or uuida == uuidb:
                 continue
 
             if pushing_mover.xvel > interact_mover.xvel \

@@ -20,9 +20,11 @@ class GameMode:
             if mover.id == Id.BLOCK.value:
                 mover.proc_auto(controls)
             mover.go()
+            mover.make_hitboxes()
+
+        InteractionListener.evalTerminations()
 
         for mover in self.movers:
-            mover.make_hitboxes()
             floor_found, result = InteractionListener.moverToMovers(mover)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
@@ -47,6 +49,7 @@ class GameMode:
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
+
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0xA0
