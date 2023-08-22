@@ -94,6 +94,7 @@ class Mover:
     facing = Facing.LEFT
     direction = Facing.LEFT
     vertical = Vertical.UP
+    lock = 0
 
     placeholder = False
 

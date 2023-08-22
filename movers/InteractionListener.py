@@ -54,6 +54,9 @@ class InteractionListener:
             mva.lambdas.append(lambda : mva.nudge_continue())
 
         #print(mva.xloc, " ", mvb.xloc, " ", mva.hb.x0, " ", mvb.hb.x1, " ", mva.phb.x0, " ", mvb.phb.x1, " ", result.result)
+        result.mva = self.mva
+        result.mvb = self.mvb
+        #self.check_sides(result)
 
         if result.result == Result.NULL \
                 or self.direction != mva.direction:
@@ -105,11 +108,11 @@ class InteractionListener:
             self.expired = True
             return
 
-    def dummy(self):
+    def termMoverToBlock(self):
         pass
 
     term_table = {
-        (Ability.PUSHING.value, Ability.ITEM.value): dummy,
+        (Ability.PUSHING.value, Ability.ITEM.value): termMoverToBlock,
         (Ability.ITEM.value, Ability.PUSHING.value): termBlockToMover
     }
 
@@ -121,6 +124,10 @@ class InteractionListener:
             term(self)
 
     def processInteraction(self):
+
+        if self.expired:
+            return
+
         ida = self.mva.ability
         idb = self.mvb.ability
         if (ida, idb) in self.handlers.keys():
@@ -156,18 +163,7 @@ class InteractionListener:
                 InteractionListener(result.mva, result.mvb)
 
     @classmethod
-    def findInteraction(self, pushing_mover : PushingMover, interact_mover : InteractiveMover,
-                        result : OverlapResult) -> bool:
-        floor_found = False
-        if result.result == Result.CONTACT \
-            and result.standing == Vertical.DOWN \
-            or result.result == Result.OVERLAP \
-            and result.vert == Vertical.DOWN:
-
-            rollbackYUp(pushing_mover, interact_mover.hb)
-            floor_found = True
-
-
+    def check_sides(cls, result: OverlapResult):
         if result.result == Result.CONTACT:
             if result.facing == Facing.RIGHT:
                 pass
@@ -203,8 +199,19 @@ class InteractionListener:
                 """
                 PushingMover.count = 0
 
+    @classmethod
+    def findInteraction(self, pushing_mover : PushingMover, interact_mover : InteractiveMover,
+                        result : OverlapResult) -> bool:
+        floor_found = False
+        if result.result == Result.CONTACT \
+            and result.standing == Vertical.DOWN \
+            or result.result == Result.OVERLAP \
+            and result.vert == Vertical.DOWN:
 
+            rollbackYUp(pushing_mover, interact_mover.hb)
+            floor_found = True
 
+        self.check_sides(result)
 
         if result.result == Result.CONTACT \
             and result.facing != 0 \
@@ -234,6 +241,7 @@ class InteractionListener:
                 result : OverlapResult = moverToMover(pushing_mover, interact_mover)
                 result.mva = pushing_mover
                 result.mvb = interact_mover
+
             else:
                 result : OverlapResult = moverToMover(interact_mover, pushing_mover)
                 result.mva = interact_mover
