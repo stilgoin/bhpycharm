@@ -1,5 +1,6 @@
 from game.Maps import Hitbox
 from game.Overlap import moverToMover, OverlapResult, Result
+from movers.InteractionListener import InteractionListener
 from movers.InteractiveMover import InteractiveMover
 from movers.PushingMover import PushingMover
 from movers.movers import Mover
@@ -8,6 +9,7 @@ from system.defs import Facing, Push, Id, Anim, Jump, Ability
 
 class MiscMover(Mover):
     movers = []
+    postproc_movers = []
 
 class Statue(InteractiveMover):
 
@@ -19,8 +21,14 @@ class Statue(InteractiveMover):
 
     hammer : Hammer = None
 
-    def check(self, moverToBGFunc):
-        #self.trigger_box = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
+    def misc_hitbox(self):
+        self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
+
+    def check(self, floor_found, moverToBGFunc):
+        super().check(floor_found, moverToBGFunc)
+
+    def postproc(self):
+        # self.trigger_box = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
         if self.action_timer > 0:
             self.action_timer -= 1
             if self.action_timer <= 30:
@@ -28,22 +36,27 @@ class Statue(InteractiveMover):
         else:
             self.hammer.xloc = 0xFFFF
 
-        self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
+        # self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
         for mover in InteractiveMover.movers + PushingMover.movers:
+            if mover.id == Id.STATUE.value:
+                continue
+
             result = moverToMover(self, mover)
             if result.result == Result.CONTACT \
-                or result.result == Result.OVERLAP:
+                    or result.result == Result.OVERLAP:
 
                 if not self.action_timer:
                     self.action_timer = 60
                     self.hammer.yloc = self.yloc - 0x4
                     if result.facing == Facing.LEFT \
-                        or result.side == Facing.LEFT:
-                        self.hammer.xloc = self.xloc - 0x10
+                            or result.side == Facing.LEFT:
+                        self.hammer.xloc = self.xloc - 0x8
                     else:
                         self.hammer.xloc = self.xloc + 0x10
 
-        super().check(moverToBGFunc)
+        self.make_hitboxes()
+
+
 
     def animate(self):
         return [self.animation_state \
@@ -58,6 +71,7 @@ class Statue(InteractiveMover):
         self.hammer = self.Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)
         MiscMover.movers.append(self.hammer)
         super().__init__(anim_init, id, placeholder)
+        MiscMover.postproc_movers.append(self)
 
 
 class Player(PushingMover):

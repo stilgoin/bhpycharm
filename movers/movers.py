@@ -83,6 +83,8 @@ class Mover:
     yvel = 0.0
     xaccl = 0.0
     yaccl = 0.0
+    base_xaccl = 0.1
+    pforce = 1
 
     id = ""
 
@@ -209,11 +211,11 @@ class Mover:
             self.xvel = 0.0
             self.pvel = 0.0
             self.move_state = 0
-            self.push_state = Push.NOPUSH
+            self.push_state = Push.STILL
 
         self.direction = self.facing
 
-        if do_accl and self.push_state == Push.NOPUSH:
+        if do_accl and self.push_state == Push.STILL:
             self.xvel += 0.10
             if self.xvel >= 1.0:
                 self.xvel = 1.0

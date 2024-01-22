@@ -1,8 +1,10 @@
 import sys
 
+from movers.AllMovers import AllMovers
+from movers.Block import Block
 from movers.InteractionListener import InteractionListener
 from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover, Player, Statue
+from movers.mover_classes import PushingMover, InteractiveMover, MiscMover, Player, Statue
 from game.Overlap import spriteToBG
 
 
@@ -25,8 +27,18 @@ class GameMode:
         InteractionListener.evalTerminations()
 
         for mover in self.movers:
-            floor_found, result = InteractionListener.moverToMovers(mover)
+
+            floor_found = False
+            if mover.id == Id.PLAYER.value:
+                floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
+
+        for mover in MiscMover.postproc_movers:
+            mover.misc_hitbox()
+            mover.postproc()
+
+
+
 
         for mover in self.movers:
             self.display_list.extend(mover.animate())
@@ -49,21 +61,25 @@ class GameMode:
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
+        PushingMover.movers.append(self.mPlayer)
 
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-        block.xloc = 0xA0
-        block.yloc = 0xA0
+        block.xloc = 0x80
+        block.yloc = 0x80
         block.test()
-        InteractiveMover.movers.append(block)
+        #InteractiveMover.movers.append(block)
+        #self.movers.append(block)
 
         statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
         statue.xloc = 0x80
         statue.yloc = 0x80
-        #InteractiveMover.movers.append(statue)
+        statue.test()
+        Block.movers.append(statue)
+        self.movers.append(statue)
 
-        self.movers.append(block)
-        #self.movers.append(statue)
+
+
 
 
     def __init__(self):

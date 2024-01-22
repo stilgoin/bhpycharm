@@ -21,11 +21,11 @@ class Key(IntEnum):
     DOWN = 0x80
 
 class Push(IntEnum):
-    NOPUSH = 0
+    SKID = -1
+    STILL = 0
     NUDGE = 1
     ROLLBACK = 2
     STEP = 4
-    SKID = 8
 
 class Facing(IntEnum):
     LEFT = -1
@@ -71,7 +71,6 @@ class Ability(Enum):
 class Statue(IntEnum):
     PASSIVE = 0
     ARMED = 1
-
 
 class Vel(float, Enum):
     SHOVE = 0.175

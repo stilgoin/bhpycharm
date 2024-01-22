@@ -122,8 +122,8 @@ class InteractiveMover(Mover):
         super().go()
 
     def test(self):
-        self.push_state = Push.SKID
-        self.xvel = 2.5
+        #self.push_state = Push.SKID
+        #self.xvel = 2.5
         self.direction = Facing.LEFT
         self.snap_xloc = self.xloc - 8
         #self.xaccl = -0.05

@@ -2,6 +2,7 @@ from game.Handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.Overlap import OverlapResult, moverToMover, Result
 from movers.InteractiveMover import InteractiveMover
 from movers.PushingMover import PushingMover
+from movers.movers import Mover
 from system.defs import Push, Ability, Vertical, Facing, Status
 
 
@@ -211,45 +212,31 @@ class InteractionListener:
             rollbackYUp(pushing_mover, interact_mover.hb)
             floor_found = True
 
-        self.check_sides(result)
+        #self.check_sides(result)
 
         if result.result == Result.CONTACT \
             and result.facing != 0 \
             or result.result == Result.OVERLAP \
             and result.side != 0:
             pass
-            InteractionListener\
-                .initInteraction(pushing_mover, interact_mover, result)
+            #InteractionListener\
+            #    .initInteraction(pushing_mover, interact_mover, result)
 
         return floor_found
 
 
     @classmethod
-    def moverToMovers(self, pushing_mover : PushingMover) -> tuple[bool, OverlapResult]:
+    def moverToMovers(self, ma : Mover,
+                      movers : [Mover]) -> tuple[bool, OverlapResult]:
 
         floor_found = False
         result = OverlapResult()
-        for interact_mover in InteractiveMover.movers:
-            uuida = pushing_mover.auuid
-            uuidb = interact_mover.auuid
-            if (uuida, uuidb) in InteractionListener.listeners.keys()\
-                    or uuida == uuidb:
-                continue
+        for mb in movers:
+            result : OverlapResult = moverToMover(ma, mb)
 
-            if pushing_mover.xvel > interact_mover.xvel \
-                    or interact_mover.push_state < Push.SKID:
-                result : OverlapResult = moverToMover(pushing_mover, interact_mover)
-                result.mva = pushing_mover
-                result.mvb = interact_mover
-
-            else:
-                result : OverlapResult = moverToMover(interact_mover, pushing_mover)
-                result.mva = interact_mover
-                result.mvb = pushing_mover
-
-            floor_found = floor_found or \
-                          InteractionListener\
-                              .findInteraction(pushing_mover, interact_mover, result)
+        floor_found = floor_found or \
+                      InteractionListener \
+                          .findInteraction(ma, mb, result)
 
         return floor_found, result
 
