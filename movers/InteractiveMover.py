@@ -115,10 +115,18 @@ class InteractiveMover(Mover):
                 self.xloc = check_val
                 self.xvel = 0
                 self.push_state = Push.NOPUSH
+
                 self.pvel = 0
 
+    def clamp_pvel(self):
+        if self.push_state == Push.STILL:
+            return
+
+        if self.xvel >= self.max_pvel:
+            self.xvel = self.max_pvel
+
     def go(self):
-        self.lambdas.append(lambda : self.process_pushing())
+        self.lambdas.append(lambda : self.clamp_pvel())
         super().go()
 
     def test(self):

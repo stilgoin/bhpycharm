@@ -1,10 +1,10 @@
 import sys
 
 from movers.AllMovers import AllMovers
-from movers.Block import Block
+from movers.Block import Block, Statue
 from movers.InteractionListener import InteractionListener
 from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover, MiscMover, Player, Statue
+from movers.mover_classes import PushingMover, InteractiveMover, MiscMover, Player
 from game.Overlap import spriteToBG
 
 
@@ -42,11 +42,11 @@ class GameMode:
 
         for mover in self.movers:
             self.display_list.extend(mover.animate())
-            self.output += str(mover)
-
-        #print("\rloops: " + str(self.output), end="")
+            if mover.xvel > 0.0:
+                self.output += str(mover)
+        if self.output != "":
+            print(str(self.output), end="\n")
         self.output = ""
-
         #sys.stdout.flush()
 
     @property

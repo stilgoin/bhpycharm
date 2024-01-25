@@ -37,6 +37,7 @@ class AnimationState:
     def __str__(self):
         return "animIdx: " + str(self.animIdx) + ", frameTicks: " + str(self.frameTicks)
 
+
     def process_terminator(self):
         terminator = self.terminators[self.animIdx]
         if terminator == Terminators.HOLD:
@@ -85,6 +86,9 @@ class Mover:
     yaccl = 0.0
     base_xaccl = 0.1
     pforce = 1
+    mass = 1
+    friction = 1
+    max_pvel = 1.00
 
     id = ""
 
@@ -100,12 +104,13 @@ class Mover:
 
     placeholder = False
 
-    hitoffs = (4.0, 1.0, 12.0, 14.0)
     hb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
     phb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
 
     def __str__(self):
-        return str(self.animation_state)
+        #return str(self.animation_state)
+        return f"xloc: %.4f xvel: %.4f, xaccl: %.4f status: {self.push_state} " % \
+            (self.xloc, self.xvel, self.xaccl)
 
     def set_jump(self, yvel):
         self.jump_state = Jump.JUMP
@@ -197,6 +202,10 @@ class Mover:
             keys_pressed, keys_released, launch = control
 
         do_accl = False
+
+        if keys_released & Key.LEFT \
+            or keys_released & Key.RIGHT:
+            self.push_state = Push.STILL
 
         #self.yvel = 1.25
         if this_frame_control & Key.LEFT:

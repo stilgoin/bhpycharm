@@ -139,7 +139,8 @@ def moverToMover(mva, mvb) -> OverlapResult:
             #result.facing = mva.facing
         if vertContact(mva.hb, mvb.hb):
             result.standing = mva.vertical
-
+    result.mva = mva
+    result.mvb = mvb
     return result
 
 
