@@ -1,8 +1,7 @@
 from game.Maps import Hitbox
 from game.Overlap import Result, moverToMover
 from movers.InteractiveMover import InteractiveMover
-from movers.PushingMover import PushingMover
-from movers.mover_classes import MiscMover
+from movers.mover_classes import MiscMover, Player
 from movers.movers import Mover
 from system.defs import Id, Facing, Push
 
@@ -51,7 +50,7 @@ class Statue(Block):
             self.hammer.xloc = 0xFFFF
 
         # self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
-        for mover in InteractiveMover.movers + PushingMover.movers:
+        for mover in InteractiveMover.movers + Player.movers:
             if mover.id == Id.STATUE.value:
                 continue
 
@@ -86,3 +85,41 @@ class Statue(Block):
         MiscMover.movers.append(self.hammer)
         super().__init__(anim_init, id, placeholder)
         MiscMover.postproc_movers.append(self)
+
+class SpringBox(Block):
+    base_xaccl = 0.0    # disable pushing, but keep the capability
+
+    def go(self):
+        super().go()
+
+        if self.spring.xloc <= self.xloc + 4:
+            self.spring.xloc = self.xloc + 4
+
+        if self.spring.push_state == Push.ROLLBACK:
+            if self.spring.xloc > self.xloc + 0x10:
+                self.spring.xloc = self.xloc + 0x10
+                self.spring.push_state = Push.STILL
+
+    class SideSpring(Block):
+        base_xaccl = 0.05
+        max_pvel = 0.25
+
+        def clamp_pvel(self):
+            if self.push_state == Push.STILL \
+                    or self.push_state == Push.ROLLBACK:
+                return
+
+            if self.xvel >= self.max_pvel:
+                self.xvel = self.max_pvel
+
+    def animate(self):
+        return [self.animation_state \
+                    .display_entry(self.id, self.xloc, self.yloc,
+                                   True if self.facing == Facing.RIGHT else False,
+                                   False),
+                self.spring.animation_state.display_entry(self.spring.id, self.spring.xloc, self.spring.yloc,
+                                   True if self.spring.facing == Facing.RIGHT else False,
+                                   False)]
+    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
+        self.spring = self.SideSpring(anim_inits[Id.SIDECOIL], Id.SIDECOIL.value, True)
+        super().__init__(anim_init, id, placeholder)

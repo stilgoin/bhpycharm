@@ -26,6 +26,7 @@
     {
         "id": "statue",
         "placeholder" : true,
+        "rects": [],
         "size": "16",
         "sequences": [[{"xloc":  0, "yloc":  0}]],
         "color": "#A0522DFF",
@@ -34,9 +35,37 @@
         {
         "id": "hammer",
         "placeholder" : true,
+        "rects": [],
         "size": "8",
         "sequences": [[{"xloc":  0, "yloc":  0}]],
         "color": "#F5DEB3FF",
+        "terminators": [253]
+    },
+        {
+        "id": "sidecoil",
+        "placeholder" : true,
+        "rects": [[0,6,16,4],[13,0,16,16]],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "color": "#808080FF",
+        "terminators": [253]
+    },
+    {
+        "id": "vertcoil",
+        "placeholder" : true,
+        "rects": [[0,8,16,4],[12,0,16,16]],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "color": "#808080FF",
+        "terminators": [253]
+    },
+    {
+        "id": "springbox",
+        "placeholder" : true,
+        "rects": [],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "color": "#808080FF",
         "terminators": [253]
     }
 ]

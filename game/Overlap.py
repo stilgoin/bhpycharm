@@ -21,8 +21,9 @@ class OverlapResult:
     mvb = None
 
     def __str__(self):
-        return str(self.result) + " " + str(self.side) + " " + str(self.vert) \
-            + " " + str(self.facing) + " " + str(self.standing)
+        return f"{self.hba}\n{self.phba}\n{self.hbb}\n{self.phbb}"
+        #return f"result: {self.result}, side: {self.side}, vert: {self.vert}, \
+        #facing: {self.facing}, standing: {self.standing}"
 
 def contact(recta, rectb):
     if recta.x0 - 1 > rectb.x1 or \

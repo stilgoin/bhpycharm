@@ -1,9 +1,9 @@
+from collections import defaultdict
+
 from game.Handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.Overlap import OverlapResult, moverToMover, Result
-from movers.InteractiveMover import InteractiveMover
-from movers.PushingMover import PushingMover
 from movers.movers import Mover
-from system.defs import Push, Ability, Vertical, Facing, Status
+from system.defs import Push, Vertical, Facing, Id
 
 
 class InteractionListener:
@@ -15,118 +15,30 @@ class InteractionListener:
     def __init__(self, mva, mvb):
         self.mva = mva
         self.mvb = mvb
-        """
-        self.direction = mva.direction
-        
-        ida = self.mva.ability
-        idb = self.mvb.ability
-        if (ida, idb) in self.init_table.keys():
-            init = self.init_table[(ida, idb)]
-            init(self)
-        """
 
-    def initPushingMoverToBlock(self):
+    def processMoverToCoil(self):
+        ma: Mover = self.mva
+        mb: Mover = self.mvb
 
-        if self.mva.xvel == 0 \
-            or self.mvb.push_state not in (Push.NOPUSH, Push.SKID):
-            self.expired = True
-            return
+        if ma.push_state == Push.STILL \
+                and mb.push_state == Push.NUDGE:
+            mb.push_state = Push.ROLLBACK
+            mb.xaccl = 0.1
+            mb.xvel = 0.5
+            mb.direction = mb.direction * -1
 
-        if self.mva.direction == Facing.RIGHT \
-            and self.mva.hb.x0 >= self.mvb.hb.x1 \
-            or self.mva.direction == Facing.LEFT \
-            and self.mva.hb.x1 <= self.mvb.hb.x0:
-            self.expired = True
-            return
+        if mb.push_state == Push.STILL:
+            ma.xvel = mb.xvel
+            mb.xvel = 0.0
+            mb.xaccl = 0.0
 
-        self.mva.initPushing()
-        self.mvb.initNudge(self.mva.direction)
-
-    def pushingMoverToBlock(self):
-        mva : PushingMover = self.mva
-        mvb : InteractiveMover = self.mvb
-        result: OverlapResult = moverToMover(mva, mvb)
-        if result.result == Result.NULL \
-                or mva.xvel == 0 and mva.push_state != Push.NUDGE \
-                or mva.direction != self.direction:
-            mvb.lambdas.append(lambda : mvb.nudge_release())
-            mva.lambdas.append(lambda : mva.haltPushing())
-        else:
-            mva.pvel = mvb.pvel
-            mvb.lambdas.append(lambda : mvb.nudge_continue())
-            mva.lambdas.append(lambda : mva.nudge_continue())
-
-        #print(mva.xloc, " ", mvb.xloc, " ", mva.hb.x0, " ", mvb.hb.x1, " ", mva.phb.x0, " ", mvb.phb.x1, " ", result.result)
-        result.mva = self.mva
-        result.mvb = self.mvb
-        #self.check_sides(result)
-
-        if result.result == Result.NULL \
-                or self.direction != mva.direction:
+            ma.direction *= -1
             self.expired = True
 
-    def initBlockToMover(self):
-        self.mvb.initSkid()
-        self.mvb.xaccl = self.mva.xaccl
-
-    def blockToMover(self):
-        mva : InteractiveMover = self.mva
-        mvb : PushingMover = self.mvb
-        result: OverlapResult = moverToMover(mva, mvb)
-
-        if result.result == Result.NULL:
-            self.expired = True
-        else:
-            if mvb.move_state == Status.WALK \
-                and mvb.facing == mva.direction * -1:
-
-                if mva.xvel != mvb.xvel:
-                    pass
-                else:
-                    pass
-
-                if mva.xvel > 0.5:
-                    mva.xaccl += -0.01
-                    mvb.xaccl += -0.01
-            xvel = mva.xvel
-            direction = mva.direction
-            mvb.lambdas.append(lambda: mvb.continueSkid(xvel, direction))
 
 
-    handlers = {(Ability.PUSHING.value, Ability.ITEM.value) : pushingMoverToBlock,
-                (Ability.ITEM.value, Ability.PUSHING.value) : blockToMover,
-    }
 
-    init_table = {
-        (Ability.PUSHING.value, Ability.ITEM.value) : initPushingMoverToBlock,
-        (Ability.ITEM.value, Ability.PUSHING.value) : initBlockToMover
-    }
-
-    def termBlockToMover(self):
-        mva = self.mva
-        mvb = self.mvb
-        if mva.push_state == Push.NOPUSH:
-            mvb.xaccl = 0
-            mvb.xvel = 0
-            self.expired = True
-            return
-
-    def termMoverToBlock(self):
-        pass
-
-    term_table = {
-        (Ability.PUSHING.value, Ability.ITEM.value): termMoverToBlock,
-        (Ability.ITEM.value, Ability.PUSHING.value): termBlockToMover
-    }
-
-    def checkTerm(self):
-        ida = self.mva.ability
-        idb = self.mvb.ability
-        if (ida, idb) in self.term_table.keys():
-            term = self.term_table[(ida, idb)]
-            term(self)
-
-    def processInteraction(self):
+    def processMoverToBlock(self):
 
         ma : Mover = self.mva
         mb : Mover = self.mvb
@@ -146,6 +58,7 @@ class InteractionListener:
             if not mb.move_state:
                 mb.xvel = 0.0
                 mb.xaccl = 0.0
+            return
 
         if ma.xvel >= ma.max_pvel \
             or mb.xvel >= mb.max_pvel:
@@ -159,27 +72,23 @@ class InteractionListener:
             mskid.push_state = Push.SKID
             mskid.xaccl = -0.05
             mskid.xvel = 1.75
-            mhalt.push_state = Push.STILL
+            #mhalt.push_state = Push.REST
+            #mhalt.action_timer = 5
             self.expired = True
 
-
-
-        """
-        if self.expired:
-            return
-
-        ida = self.mva.ability
-        idb = self.mvb.ability
-        if (ida, idb) in self.handlers.keys():
-            handler = self.handlers[(ida, idb)]
-            handler(self)
-        """
+    interactions = defaultdict(lambda : InteractionListener.processMoverToBlock,
+                               {Id.SIDECOIL.value : processMoverToCoil})
 
     @classmethod
     def evalInteractions(cls):
-        for key in cls.listeners.keys():
-            listener = cls.listeners[key]
-            listener.processInteraction()
+        for listener in cls.listeners.values():
+            key = listener.mvb.id
+            interaction = cls.interactions[key]
+            interaction(listener)
+
+        #for key in cls.listeners.keys():
+            #listener = cls.listeners[key]
+            #listener.processInteraction()
 
         # delete dict entry without exception
         cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))
@@ -204,7 +113,30 @@ class InteractionListener:
         if not ma.move_state and not mb.move_state:
             return
 
-        print("Interaction init")
+        if not ma.xaccl and not mb.xaccl:
+            return
+
+        """This check is to prevent pushing a block again immediately after launching it
+        (And still be able to reach the skidding block and resume pushing it)
+            It sucks but whaddya gonna do.
+        """
+        if Push.SKID == ma.push_state and ma.xvel >= 0.5:
+            if ma.hb.x0 >= mb.hb.x1 \
+                and ma.direction == Facing.RIGHT \
+                or ma.hb.x1 <= mb.hb.x0 \
+                and ma.direction == Facing.LEFT:
+                pass
+                return
+
+        if Push.SKID == mb.push_state and mb.xvel >= 0.5:
+            if mb.hb.x0 >= ma.hb.x1 \
+                and mb.direction == Facing.RIGHT \
+                or mb.hb.x1 <= ma.hb.x0 \
+                and mb.direction == Facing.LEFT:
+                pass
+                return
+
+        #print(result,'\n--------\n')
 
         InteractionListener.listeners[(uuida, uuidb)] =\
             InteractionListener(result.mva, result.mvb)
@@ -247,12 +179,29 @@ class InteractionListener:
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
             else:
+
+                if result.vert == Vertical.DOWN:
+                    return
+
+                if result.mva.xloc > result.mva.xloc:
+                    rollbackXLeft(result.mva, result.mvb.hb)
+                else:
+                    rollbackXRight(result.mva, result.mvb.hb)
+                pass
+                """
+                if result.mvb.direction == Facing.RIGHT:
+                    rollbackXLeft(result.mva, result.mvb.hb)
+                if result.mvb.direction == Facing.LEFT:
+                    rollbackXRight(result.mva, result.mvb.hb)
+                """
+                """
                 if result.mva.direction != result.mva.facing \
                         and result.mva.facing == Facing.LEFT:
                     rollbackXRight(result.mva, result.mvb.hb)
                 if result.mva.direction != result.mva.facing \
                         and result.mva.facing == Facing.RIGHT:
                     rollbackXLeft(result.mva, result.mvb.hb)
+                """
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
@@ -288,9 +237,9 @@ class InteractionListener:
         for mb in movers:
             result : OverlapResult = moverToMover(ma, mb)
 
-        floor_found = floor_found or \
-                      InteractionListener \
-                          .findInteraction(ma, mb, result)
+            floor_found = floor_found or \
+                          InteractionListener \
+                              .findInteraction(ma, mb, result)
 
         return floor_found, result
 

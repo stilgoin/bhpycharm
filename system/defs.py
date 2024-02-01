@@ -26,6 +26,11 @@ class Push(IntEnum):
     NUDGE = 1
     ROLLBACK = 2
     STEP = 4
+    REST = 8
+
+class Move(IntEnum):
+    NEUTRAL = 0
+    DASH = 1
 
 class Facing(IntEnum):
     LEFT = -1
@@ -50,6 +55,8 @@ class Tick(IntEnum):
     DELAY = 10
 
 class Status(IntEnum):
+    DASH = -1
+    NEUTRAL = 0x0
     WALK = 0x1
     EXPIRED = 0xFF
 
@@ -63,6 +70,9 @@ class Id(Enum):
     BLOCK = "block"
     STATUE = "statue"
     HAMMER = "hammer"
+    SIDECOIL = "sidecoil"
+    VERTCOIL = "vertcoil"
+    SPRINGBOX = "springbox"
 
 class Ability(Enum):
     PUSHING = "pushing"

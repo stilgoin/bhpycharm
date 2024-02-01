@@ -5,6 +5,7 @@ from system.defs import Ability, Push, Vel, Facing
 class InteractiveMover(Mover):
 
     movers = []
+    springs = []
 
     hitoffs = (0, 0, 15, 15)
     snap_xloc = 0.0

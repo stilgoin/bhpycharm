@@ -88,7 +88,9 @@ class Mover:
     pforce = 1
     mass = 1
     friction = 1
-    max_pvel = 1.00
+    max_pvel = 1.0
+    max_xvel = 1.0
+    max_dvel = 2.5
 
     id = ""
 
@@ -126,10 +128,17 @@ class Mover:
         return False, OverlapResult()
 
     def move(self):
+        max_xvels = [self.max_xvel, self.max_xvel, self.max_xvel]
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl
+        if self.push_state in [Push.NUDGE, Push.SKID]:
+            if self.xvel >= self.max_pvel:
+                self.xvel = self.max_pvel
+        else:
+            if self.xvel >= max_xvels[self.move_state]:
+                self.xvel = max_xvels[self.move_state]
 
         if self.jump_state == Jump.JUMP:
             self.yvel -= GRAVITY
@@ -144,6 +153,12 @@ class Mover:
     def set_anim_idx(self, state):
         self.animation_state.set_anim_idx(state)
 
+    def restToStill(self):
+        if self.action_timer > 0:
+            self.action_timer -= 1
+            if self.action_timer <= 0:
+                self.push_state = Push.STILL
+
     def call_lambdas(self):
         for call_lambda in self.lambdas:
             call_lambda()
@@ -155,6 +170,7 @@ class Mover:
         self.animation_state.add_frameticks()
         self.call_lambdas()
         self.move()
+        self.restToStill()
 
     def make_hitboxes(self):
         self.hb = Hitbox(self.xloc, self.yloc,
@@ -202,6 +218,7 @@ class Mover:
             keys_pressed, keys_released, launch = control
 
         do_accl = False
+        self.xaccl = 0.0
 
         if keys_released & Key.LEFT \
             or keys_released & Key.RIGHT:
@@ -217,17 +234,23 @@ class Mover:
             self.move_state = Status.WALK
             do_accl = True
         else:
-            self.xvel = 0.0
+            if self.move_state >= Status.NEUTRAL:
+                self.move_state = Status.NEUTRAL
+                self.push_state = Push.STILL
+            self.xvel += self.xaccl * self.move_state
+            if self.move_state >= Status.NEUTRAL:
+                self.xvel *= self.move_state
+            if self.xvel <= 0.0:
+                self.xvel = 0.0
             self.pvel = 0.0
-            self.move_state = 0
-            self.push_state = Push.STILL
 
         self.direction = self.facing
 
-        if do_accl and self.push_state == Push.STILL:
-            self.xvel += 0.10
-            if self.xvel >= 1.0:
-                self.xvel = 1.0
+        if do_accl:
+            if self.push_state == Push.NUDGE:
+                self.xaccl = self.base_xaccl / 2.0
+            else:
+                self.xaccl = self.base_xaccl
 
         if self.jump_state == Jump.FLOOR:
             if not this_frame_control & Key.LEFT \

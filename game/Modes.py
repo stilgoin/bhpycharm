@@ -1,11 +1,9 @@
-import sys
-
-from movers.AllMovers import AllMovers
-from movers.Block import Block, Statue
-from movers.InteractionListener import InteractionListener
-from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover, MiscMover, Player
 from game.Overlap import spriteToBG
+from movers.AllMovers import AllMovers
+from movers.Block import Block, Statue, SpringBox
+from movers.InteractionListener import InteractionListener
+from movers.mover_classes import InteractiveMover, MiscMover, Player
+from movers.movers import Id
 
 
 class GameMode:
@@ -24,7 +22,7 @@ class GameMode:
             mover.go()
             mover.make_hitboxes()
 
-        InteractionListener.evalTerminations()
+        #InteractionListener.evalTerminations()
 
         for mover in self.movers:
 
@@ -37,15 +35,13 @@ class GameMode:
             mover.misc_hitbox()
             mover.postproc()
 
-
-
-
         for mover in self.movers:
             self.display_list.extend(mover.animate())
             if mover.xvel > 0.0:
                 self.output += str(mover)
         if self.output != "":
-            print(str(self.output), end="\n")
+            pass
+            #print(str(self.output), end="\n")
         self.output = ""
         #sys.stdout.flush()
 
@@ -57,11 +53,13 @@ class GameMode:
     def ids(self):
         return Id
 
+    """TODO: Replace with JSON data to load spawn positions of Movers based on round
+    """
     def Init(self, anim_inits):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
-        PushingMover.movers.append(self.mPlayer)
+        Player.movers.append(self.mPlayer)
 
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
@@ -78,7 +76,15 @@ class GameMode:
         Block.movers.append(statue)
         self.movers.append(statue)
 
-
+        springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True)
+        springbox.xloc = 0x10
+        springbox.yloc = 0xA0
+        springbox.spring.xloc = 0x20
+        springbox.spring.yloc = 0xB0
+        Block.movers.append(springbox)
+        self.movers.append(springbox)
+        Block.movers.append(springbox.spring)
+        self.movers.append(springbox.spring)
 
 
 

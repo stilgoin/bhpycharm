@@ -120,6 +120,10 @@ class ResourceLoader:
             frames.append(sprite)
         anim_seqs.append(AnimationSequence(frames, terminator))
 
+    # Placeholder drawing
+    def drawPlaceholder(self, sprite, color, rects):
+        for rect in rects:
+            pygame.draw.rect(sprite, color, rect)
 
     def loadAnims(self, anim_dict):
         sheet = Image.open("data/master.bmp")
@@ -135,7 +139,12 @@ class ResourceLoader:
                 frames = []
                 terminator = terminators[0]
                 for anim_seq in anim_data.sequences:
-                    sprite = sm.surfaceFromPlaceholder(anim_data.color,(0,0,size,size))
+                    if not len(anim_data.rects):
+                        color = anim_data.color
+                    else:
+                        color = "#00000100"
+                    sprite = sm.surfaceFromPlaceholder(color,(0,0,size,size))
+                    self.drawPlaceholder(sprite, anim_data.color, anim_data.rects)
                     frames.append(sprite)
                 anim_seqs.append(AnimationSequence(frames, terminator))
             else:

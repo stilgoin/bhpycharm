@@ -1,18 +1,16 @@
-from game.Maps import Hitbox
-from game.Overlap import moverToMover, OverlapResult, Result
-from movers.InteractionListener import InteractionListener
 from movers.InteractiveMover import InteractiveMover
-from movers.PushingMover import PushingMover
 from movers.movers import Mover
-from system.defs import Facing, Push, Id, Anim, Jump, Ability
+from system.defs import Id, Anim, Jump
 
 
 class MiscMover(Mover):
     movers = []
     postproc_movers = []
 
+
 class Player(InteractiveMover):
     hitoffs = (4.0, 1.0, 12.0, 14.0)
+    movers = []
     def move(self):
         super().move()
         if self.jump_state == Jump.JUMP:
