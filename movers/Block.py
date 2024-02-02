@@ -11,7 +11,12 @@ class Block(InteractiveMover):
     mass = 2
     movers = []
     friction = 0
-    max_pvel = 6.0
+    psteps = 0
+
+    def add_push_steps(self):
+        if self.push_state == Push.NUDGE:
+            if self.xloc != self.oldXloc:
+                self.psteps += 1
 
     def halt_skidding(self):
         if self.push_state == Push.SKID:
@@ -22,6 +27,7 @@ class Block(InteractiveMover):
 
     def go(self):
         self.lambdas.append(lambda : self.halt_skidding())
+        self.lambdas.append(lambda : self.add_push_steps())
         super().go()
 
 class Statue(Block):
@@ -79,6 +85,9 @@ class Statue(Block):
                 self.hammer.animation_state.display_entry(self.hammer.id, self.hammer.xloc, self.hammer.yloc,
                                    True if self.hammer.facing == Facing.RIGHT else False,
                                    False)]
+
+    def go(self):
+        super().go()
 
     def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
         self.hammer = self.Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)

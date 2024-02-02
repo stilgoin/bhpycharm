@@ -120,7 +120,7 @@ class InteractiveMover(Mover):
                 self.pvel = 0
 
     def clamp_pvel(self):
-        if self.push_state == Push.STILL:
+        if self.push_state in (Push.STILL, Push.SKID):
             return
 
         if self.xvel >= self.max_pvel:

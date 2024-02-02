@@ -88,7 +88,7 @@ class Mover:
     pforce = 1
     mass = 1
     friction = 1
-    max_pvel = 1.0
+    max_pvel = 0.5
     max_xvel = 1.0
     max_dvel = 2.5
 
@@ -133,12 +133,6 @@ class Mover:
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl
-        if self.push_state in [Push.NUDGE, Push.SKID]:
-            if self.xvel >= self.max_pvel:
-                self.xvel = self.max_pvel
-        else:
-            if self.xvel >= max_xvels[self.move_state]:
-                self.xvel = max_xvels[self.move_state]
 
         if self.jump_state == Jump.JUMP:
             self.yvel -= GRAVITY
@@ -165,10 +159,11 @@ class Mover:
         self.lambdas.clear()
 
     def go(self):
-        self.oldXloc = self.xloc
-        self.oldYloc = self.yloc
         self.animation_state.add_frameticks()
         self.call_lambdas()
+
+        self.oldXloc = self.xloc
+        self.oldYloc = self.yloc
         self.move()
         self.restToStill()
 
@@ -244,13 +239,32 @@ class Mover:
                 self.xvel = 0.0
             self.pvel = 0.0
 
-        self.direction = self.facing
+
 
         if do_accl:
             if self.push_state == Push.NUDGE:
                 self.xaccl = self.base_xaccl / 2.0
             else:
                 self.xaccl = self.base_xaccl
+
+            if self.direction != self.facing:
+                self.xaccl *= -4
+            """
+            if self.move_state == Status.DASH:
+                pass
+            else:
+                self.direction = self.facing
+            """
+            self.xvel += self.xaccl
+            if self.xvel < 0.0:
+                self.direction = self.facing
+
+            if self.push_state in [Push.NUDGE, Push.SKID]:
+                if self.xvel >= self.max_pvel:
+                    self.xvel = self.max_pvel
+            else:
+                if self.xvel >= self.max_xvel:
+                    self.xvel = self.max_xvel
 
         if self.jump_state == Jump.FLOOR:
             if not this_frame_control & Key.LEFT \

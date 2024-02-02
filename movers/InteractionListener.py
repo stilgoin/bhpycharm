@@ -52,6 +52,7 @@ class InteractionListener:
             ma.push_state = Push.STILL
             mb.push_state = Push.STILL
             self.expired = True
+            mb.psteps = 0
             if not ma.move_state:
                 ma.xvel = 0.0
                 ma.xaccl = 0.0
@@ -62,19 +63,23 @@ class InteractionListener:
 
         if ma.xvel >= ma.max_pvel \
             or mb.xvel >= mb.max_pvel:
-            if ma.mass > mb.mass:
-                mskid = ma
-                mhalt = mb
-            else:
-                mskid = mb
-                mhalt = ma
+            if mb.psteps >= 40:
+                if ma.mass > mb.mass:
+                    mskid = ma
+                    mhalt = mb
 
-            mskid.push_state = Push.SKID
-            mskid.xaccl = -0.05
-            mskid.xvel = 1.75
-            #mhalt.push_state = Push.REST
-            #mhalt.action_timer = 5
-            self.expired = True
+                else:
+                    mskid = mb
+                    mhalt = ma
+
+                mskid.push_state = Push.SKID
+                mskid.xaccl = -0.05
+                mskid.xvel = 1.75
+                mskid.psteps = 0
+                mhalt.push_state = Push.STILL
+                #mhalt.push_state = Push.REST
+                #mhalt.action_timer = 5
+                self.expired = True
 
     interactions = defaultdict(lambda : InteractionListener.processMoverToBlock,
                                {Id.SIDECOIL.value : processMoverToCoil})
@@ -116,6 +121,14 @@ class InteractionListener:
         if not ma.xaccl and not mb.xaccl:
             return
 
+        if ma.facing == Facing.RIGHT:
+            if ma.xloc > mb.xloc:
+                return
+
+        if ma.facing == Facing.LEFT:
+            if ma.xloc < mb.xloc:
+                return
+
         """This check is to prevent pushing a block again immediately after launching it
         (And still be able to reach the skidding block and resume pushing it)
             It sucks but whaddya gonna do.
@@ -143,6 +156,9 @@ class InteractionListener:
 
         ma.push_state = Push.NUDGE
         mb.push_state = Push.NUDGE
+
+        if mb.xvel > 0:
+            mb.psteps = 20
 
         xaccl = 0.0
         if ma.xvel >= mb.xvel:
