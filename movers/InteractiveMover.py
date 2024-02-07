@@ -1,5 +1,5 @@
 from movers.movers import Mover
-from system.defs import Ability, Push, Vel, Facing
+from system.defs import Ability, Push, Vel, Facing, Status
 
 
 class InteractiveMover(Mover):
@@ -120,7 +120,8 @@ class InteractiveMover(Mover):
                 self.pvel = 0
 
     def clamp_pvel(self):
-        if self.push_state in (Push.STILL, Push.SKID):
+        if self.push_state in (Push.STILL, Push.SKID) \
+                or self.move_state == Status.DASH:
             return
 
         if self.xvel >= self.max_pvel:

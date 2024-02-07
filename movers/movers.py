@@ -132,7 +132,11 @@ class Mover:
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
 
-        self.xvel += self.xaccl
+        self.xvel += self.xaccl * self.move_state
+        if self.xvel <= 0.0:
+            self.xvel = 0.0
+            if self.push_state == Push.STILL:
+                self.move_state = Status.NEUTRAL
 
         if self.jump_state == Jump.JUMP:
             self.yvel -= GRAVITY
@@ -213,7 +217,7 @@ class Mover:
             keys_pressed, keys_released, launch = control
 
         do_accl = False
-        self.xaccl = 0.0
+        xaccl_here = self.xaccl * self.move_state
 
         if keys_released & Key.LEFT \
             or keys_released & Key.RIGHT:
@@ -222,46 +226,57 @@ class Mover:
         #self.yvel = 1.25
         if this_frame_control & Key.LEFT:
             self.facing = Facing.LEFT
-            self.move_state = Status.WALK
+            self.move_state *= Status.WALK
+            self.move_state |= Status.WALK
             do_accl = True
         elif this_frame_control & Key.RIGHT:
             self.facing = Facing.RIGHT
-            self.move_state = Status.WALK
+            self.move_state *= Status.WALK
+            self.move_state |= Status.WALK
             do_accl = True
         else:
+            self.push_state = Push.STILL
             if self.move_state >= Status.NEUTRAL:
                 self.move_state = Status.NEUTRAL
-                self.push_state = Push.STILL
-            self.xvel += self.xaccl * self.move_state
-            if self.move_state >= Status.NEUTRAL:
-                self.xvel *= self.move_state
-            if self.xvel <= 0.0:
                 self.xvel = 0.0
             self.pvel = 0.0
 
-
-
         if do_accl:
-            if self.push_state == Push.NUDGE:
-                self.xaccl = self.base_xaccl / 2.0
-            else:
-                self.xaccl = self.base_xaccl
+            if self.move_state == Status.WALK:
+                if self.push_state == Push.NUDGE:
+                    self.xaccl = self.base_xaccl / 2.0
+                else:
+                    self.xaccl = self.base_xaccl
 
             if self.direction != self.facing:
-                self.xaccl *= -4
+                if self.move_state >= Status.NEUTRAL:
+                    self.xaccl *= -4
+                else:
+                    self.xaccl += .0001
+            else:
+                #self.xvel += self.xaccl * self.move_state
+                if self.xvel <= self.max_xvel:
+                    self.move_state = Status.WALK
+                    self.xvel = self.max_xvel
             """
             if self.move_state == Status.DASH:
                 pass
             else:
                 self.direction = self.facing
             """
-            self.xvel += self.xaccl
-            if self.xvel < 0.0:
+
+            if self.xvel <= 0.0:
                 self.direction = self.facing
+                self.xaccl *= -1
+                self.xvel = self.xaccl
+                self.move_state = Status.WALK
 
             if self.push_state in [Push.NUDGE, Push.SKID]:
                 if self.xvel >= self.max_pvel:
                     self.xvel = self.max_pvel
+            elif self.move_state in [Status.DASH]:
+                if self.xvel >= self.max_dvel:
+                    self.xvel = self.max_dvel
             else:
                 if self.xvel >= self.max_xvel:
                     self.xvel = self.max_xvel
@@ -278,7 +293,7 @@ class Mover:
             and not self.jump_lock \
             and self.jump_state == Jump.FLOOR:
             self.set_jump(JUMPVEL)
-            self.move_state = 0
+            #self.move_state = 0
             self.set_anim_idx(Anim.JUMP)
 
         if not keys_pressed & Key.JUMP \

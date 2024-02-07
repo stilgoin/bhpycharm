@@ -3,7 +3,7 @@ from collections import defaultdict
 from game.Handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.Overlap import OverlapResult, moverToMover, Result
 from movers.movers import Mover
-from system.defs import Push, Vertical, Facing, Id
+from system.defs import Push, Vertical, Facing, Id, Status
 
 
 class InteractionListener:
@@ -23,16 +23,20 @@ class InteractionListener:
         if ma.push_state == Push.STILL \
                 and mb.push_state == Push.NUDGE:
             mb.push_state = Push.ROLLBACK
-            mb.xaccl = 0.1
-            mb.xvel = 0.5
+            mb.xaccl = 0.05
+            mb.xvel = 2.5
             mb.direction = mb.direction * -1
 
         if mb.push_state == Push.STILL:
             ma.xvel = mb.xvel
+            ma.xaccl = 0.05
+            ma.direction *= -1
+            ma.facing *= -1
+            ma.move_state = Status.DASH
             mb.xvel = 0.0
             mb.xaccl = 0.0
 
-            ma.direction *= -1
+
             self.expired = True
 
 
@@ -43,23 +47,25 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
 
-        if ma.push_state == Push.STILL \
-            and mb.push_state != Push.STILL \
-            or mb.push_state == Push.STILL \
-            and ma.push_state != Push.STILL \
-            or ma.hb.y0 > mb.hb.y1 \
-            or ma.hb.y1 < mb.hb.y0:
-            ma.push_state = Push.STILL
-            mb.push_state = Push.STILL
-            self.expired = True
-            mb.psteps = 0
-            if not ma.move_state:
-                ma.xvel = 0.0
-                ma.xaccl = 0.0
-            if not mb.move_state:
+        if ma.move_state >= Status.NEUTRAL:
+            if ma.push_state == Push.STILL \
+                and mb.push_state != Push.STILL \
+                or mb.push_state == Push.STILL \
+                and ma.push_state != Push.STILL \
+                or ma.hb.y0 > mb.hb.y1 \
+                or ma.hb.y1 < mb.hb.y0:
+                ma.push_state = Push.STILL
+                mb.push_state = Push.STILL
+                self.expired = True
+                mb.psteps = 0
+                if not ma.move_state:
+                    ma.xvel = 0.0
+                    ma.xaccl = 0.0
+
                 mb.xvel = 0.0
                 mb.xaccl = 0.0
-            return
+                mb.move_state = Status.WALK
+                return
 
         if ma.xvel >= ma.max_pvel \
             or mb.xvel >= mb.max_pvel:
@@ -67,7 +73,6 @@ class InteractionListener:
                 if ma.mass > mb.mass:
                     mskid = ma
                     mhalt = mb
-
                 else:
                     mskid = mb
                     mhalt = ma
@@ -76,6 +81,7 @@ class InteractionListener:
                 mskid.xaccl = -0.05
                 mskid.xvel = 1.75
                 mskid.psteps = 0
+                mskid.move_state = Status.WALK
                 mhalt.push_state = Push.STILL
                 #mhalt.push_state = Push.REST
                 #mhalt.action_timer = 5
@@ -168,10 +174,15 @@ class InteractionListener:
             ma.direction = mb.direction
             xaccl = mb.base_xaccl / 2.0
 
-        ma.xvel *= mb.friction
-        mb.xvel *= ma.friction
-        ma.xaccl = xaccl
-        mb.xaccl = xaccl
+        if ma.move_state >= Status.NEUTRAL:
+            ma.xvel *= mb.friction
+            mb.xvel *= ma.friction
+            ma.xaccl = xaccl
+            mb.xaccl = xaccl
+        else:
+            mb.xvel = ma.xvel
+            mb.xaccl = ma.xaccl
+        mb.move_state = ma.move_state
 
 
 

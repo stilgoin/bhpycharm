@@ -146,7 +146,7 @@ class ResourceLoader:
                     sprite = sm.surfaceFromPlaceholder(color,(0,0,size,size))
                     self.drawPlaceholder(sprite, anim_data.color, anim_data.rects)
                     frames.append(sprite)
-                anim_seqs.append(AnimationSequence(frames, terminator))
+                    anim_seqs.append(AnimationSequence(frames, terminator))
             else:
                 for anim_seq in anim_data.sequences:
                     self.loadAnimSeq(anim_seqs, sheet, terminators, anim_seq, ti, size)

@@ -19,18 +19,18 @@
         "placeholder" : false,
         "sequences":
                 [
-                    [{"xloc":  0, "yloc":  112}]
+                    [{"xloc":  0, "yloc":  112}],[{"xloc":  0, "yloc":  112}]
                 ],
-        "terminators": [253]
+        "terminators": [253,253]
     },
     {
         "id": "statue",
         "placeholder" : true,
         "rects": [],
         "size": "16",
-        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
         "color": "#A0522DFF",
-        "terminators": [253]
+        "terminators": [253,253]
     },
         {
         "id": "hammer",
@@ -46,9 +46,9 @@
         "placeholder" : true,
         "rects": [[0,6,16,4],[13,0,16,16]],
         "size": "16",
-        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
         "color": "#808080FF",
-        "terminators": [253]
+        "terminators": [253,253]
     },
     {
         "id": "vertcoil",
@@ -64,8 +64,8 @@
         "placeholder" : true,
         "rects": [],
         "size": "16",
-        "sequences": [[{"xloc":  0, "yloc":  0}]],
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
         "color": "#808080FF",
-        "terminators": [253]
+        "terminators": [253,253]
     }
 ]
