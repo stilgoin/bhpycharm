@@ -235,7 +235,7 @@ class Mover:
             self.move_state |= Status.WALK
             do_accl = True
         else:
-            self.push_state = Push.STILL
+            #self.push_state = Push.STILL
             if self.move_state >= Status.NEUTRAL:
                 self.move_state = Status.NEUTRAL
                 self.xvel = 0.0
@@ -270,10 +270,12 @@ class Mover:
                 self.xaccl *= -1
                 self.xvel = self.xaccl
                 self.move_state = Status.WALK
+                self.push_state = Push.STILL
 
             if self.push_state in [Push.NUDGE, Push.SKID]:
-                if self.xvel >= self.max_pvel:
-                    self.xvel = self.max_pvel
+                if self.move_state >= Status.NEUTRAL:
+                    if self.xvel >= self.max_pvel:
+                        self.xvel = self.max_pvel
             elif self.move_state in [Status.DASH]:
                 if self.xvel >= self.max_dvel:
                     self.xvel = self.max_dvel

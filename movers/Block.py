@@ -13,8 +13,12 @@ class Block(InteractiveMover):
     friction = 0
     psteps = 0
 
+    def __str__(self):
+        return super().__str__() + f"psteps: {self.psteps}"
+
     def add_push_steps(self):
-        if self.push_state == Push.NUDGE:
+        if self.push_state == Push.NUDGE \
+                and self.move_state >= Status.NEUTRAL:
             if self.xloc != self.oldXloc:
                 self.psteps += 1
 
@@ -104,9 +108,9 @@ class SpringBox(Block):
         if self.spring.xloc <= self.xloc + 4:
             self.spring.xloc = self.xloc + 4
 
-        if self.spring.push_state == Push.ROLLBACK:
-            if self.spring.xloc > self.xloc + 0x10:
-                self.spring.xloc = self.xloc + 0x10
+        if self.spring.xloc > self.xloc + 0x10:
+            self.spring.xloc = self.xloc + 0x10
+            if self.spring.push_state == Push.ROLLBACK:
                 self.spring.push_state = Push.STILL
 
     class SideSpring(Block):

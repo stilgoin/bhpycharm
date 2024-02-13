@@ -1,3 +1,5 @@
+import sys
+
 from game.Overlap import spriteToBG
 from movers.AllMovers import AllMovers
 from movers.Block import Block, Statue, SpringBox
@@ -41,9 +43,9 @@ class GameMode:
                 self.output += str(mover)
         if self.output != "":
             pass
-            #print(str(self.output), end="\n")
+            print(str(self.output), end="\n")
         self.output = ""
-        #sys.stdout.flush()
+        sys.stdout.flush()
 
     @property
     def player_id(self):

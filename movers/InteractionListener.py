@@ -9,25 +9,43 @@ from system.defs import Push, Vertical, Facing, Id, Status
 class InteractionListener:
 
     listeners = {}
+    result = None
     expired = False
     direction = 0
 
-    def __init__(self, mva, mvb):
+    def __init__(self, mva, mvb, result):
         self.mva = mva
         self.mvb = mvb
+        self.result = result
 
     def processMoverToCoil(self):
         ma: Mover = self.mva
         mb: Mover = self.mvb
 
+        if ma.hb.y0 > mb.hb.y1 \
+           or ma.hb.y1 < mb.hb.y0:
+            ma.push_state = Push.STILL
+            mb.move_state = Push.ROLLBACK
+            mb.xvel = mb.psteps / 16.0
+            mb.direction = mb.direction * -1
+            mb.psteps = 0
+            self.expired = True
+            return
+
         if ma.push_state == Push.STILL \
                 and mb.push_state == Push.NUDGE:
             mb.push_state = Push.ROLLBACK
             mb.xaccl = 0.05
-            mb.xvel = 2.5
+            mb.xvel = mb.psteps / 16.0
             mb.direction = mb.direction * -1
+            return
 
-        if mb.push_state == Push.STILL:
+        if mb.push_state == Push.ROLLBACK:
+            if ma.direction == mb.direction:
+                pass
+
+        if mb.push_state == Push.STILL \
+                and mb.psteps > 0:
             ma.xvel = mb.xvel
             ma.xaccl = 0.05
             ma.direction *= -1
@@ -35,8 +53,7 @@ class InteractionListener:
             ma.move_state = Status.DASH
             mb.xvel = 0.0
             mb.xaccl = 0.0
-
-
+            mb.psteps = 0
             self.expired = True
 
 
@@ -46,6 +63,8 @@ class InteractionListener:
 
         ma : Mover = self.mva
         mb : Mover = self.mvb
+
+        mb.move_state = ma.move_state
 
         if ma.move_state >= Status.NEUTRAL:
             if ma.push_state == Push.STILL \
@@ -129,11 +148,21 @@ class InteractionListener:
 
         if ma.facing == Facing.RIGHT:
             if ma.xloc > mb.xloc:
-                return
+                if ma.facing != ma.direction:
+                    if ma.xvel < 0.5 \
+                        or ma.move_state == Status.DASH:
+                        ma.xvel = 0.0
+                        ma.xaccl = 0.0
+                        return
 
         if ma.facing == Facing.LEFT:
             if ma.xloc < mb.xloc:
-                return
+                if ma.facing != ma.direction:
+                    if ma.xvel < 0.5 \
+                        or ma.move_state == Status.DASH:
+                        ma.xvel = 0.0
+                        ma.xaccl = 0.0
+                        return
 
         """This check is to prevent pushing a block again immediately after launching it
         (And still be able to reach the skidding block and resume pushing it)
@@ -158,7 +187,7 @@ class InteractionListener:
         #print(result,'\n--------\n')
 
         InteractionListener.listeners[(uuida, uuidb)] =\
-            InteractionListener(result.mva, result.mvb)
+            InteractionListener(result.mva, result.mvb, result)
 
         ma.push_state = Push.NUDGE
         mb.push_state = Push.NUDGE
@@ -262,6 +291,14 @@ class InteractionListener:
         floor_found = False
         result = OverlapResult()
         for mb in movers:
+
+            uuida = ma.auuid
+            uuidb = mb.auuid
+            if (uuida, uuidb) in InteractionListener.listeners.keys():
+                listener = InteractionListener.listeners[(uuida, uuidb)]
+                self.check_sides(listener.result)
+                continue
+
             result : OverlapResult = moverToMover(ma, mb)
 
             floor_found = floor_found or \
