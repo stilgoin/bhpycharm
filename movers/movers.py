@@ -102,6 +102,7 @@ class Mover:
     facing = Facing.LEFT
     direction = Facing.LEFT
     vertical = Vertical.UP
+    holding = 0
     lock = 0
 
     placeholder = False
@@ -111,7 +112,9 @@ class Mover:
 
     def __str__(self):
         #return str(self.animation_state)
-        return f"xloc: %.4f xvel: %.4f, xaccl: %.4f status: {self.push_state} " % \
+        return f"id: {self.id} xloc: %.4f xvel: %.4f, xaccl: %.4f move: {self.move_state} push: {self.push_state} \
+holding {self.holding} facing {self.facing} dir {self.direction} \"" \
+               f"events {self.events}" % \
             (self.xloc, self.xvel, self.xaccl)
 
     def set_jump(self, yvel):
@@ -127,16 +130,74 @@ class Mover:
     def moverToMovers(self):
         return False, OverlapResult()
 
+    def checkEvents(self):
+        pass
+
+    def procInput(self, control):
+        this_frame_control, last_frame_control, \
+            keys_pressed, keys_released, launch = control
+
+        if keys_released & Key.RIGHT:
+            self.events.append(Events.RELEASE_LEFT)
+        if keys_released & Key.LEFT:
+            self.events.append(Events.RELEASE_RIGHT)
+        if keys_pressed & Key.RIGHT:
+            self.events.append(Events.PRESS_RIGHT)
+        if keys_pressed & Key.LEFT:
+            self.events.append(Events.PRESS_LEFT)
+
+        if this_frame_control & Key.LEFT:
+            self.events.append(Events.HOLD_LEFT)
+            if Events.RELEASE_LEFT in self.events:
+                self.events.remove(Events.RELEASE_LEFT)
+            self.holding = Facing.LEFT
+        if this_frame_control & Key.RIGHT:
+            self.events.append(Events.HOLD_RIGHT)
+            if Events.RELEASE_RIGHT in self.events:
+                self.events.remove(Events.RELEASE_RIGHT)
+            self.holding = Facing.RIGHT
+
+        # Jumping
+        if self.jump_state == Jump.FLOOR:
+            if not this_frame_control & Key.LEFT \
+                and not this_frame_control & Key.RIGHT:
+                self.set_anim_idx(Anim.STILL)
+            if keys_pressed & Key.LEFT \
+                or keys_pressed & Key.RIGHT:
+                self.set_anim_idx(Anim.WALK)
+
+        if keys_pressed & Key.JUMP \
+            and not self.jump_lock \
+            and self.jump_state == Jump.FLOOR:
+            self.set_jump(JUMPVEL)
+            #self.move_state = 0
+            self.set_anim_idx(Anim.JUMP)
+
+        if not keys_pressed & Key.JUMP \
+            and self.jump_state == Jump.FLOOR:
+            self.jump_lock = False
+
+        if keys_released & Key.JUMP \
+                and self.jump_state == Jump.JUMP:
+            self.set_fall(1.75)
+            self.set_anim_idx(Anim.STILL)
+
+    def procEvents(self):
+        pass
+
+    def procInteractionEvents(self):
+        pass
+
     def move(self):
-        max_xvels = [self.max_xvel, self.max_xvel, self.max_xvel]
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl * self.move_state
         if self.xvel <= 0.0:
             self.xvel = 0.0
-            if self.push_state == Push.STILL:
-                self.move_state = Status.NEUTRAL
+            self.events.append(Events.MIN_XVEL)
+            #if self.push_state == Push.STILL:
+            #    self.move_state = Status.NEUTRAL
 
         if self.jump_state == Jump.JUMP:
             self.yvel -= GRAVITY
@@ -161,6 +222,8 @@ class Mover:
         for call_lambda in self.lambdas:
             call_lambda()
         self.lambdas.clear()
+
+
 
     def go(self):
         self.animation_state.add_frameticks()
@@ -212,116 +275,14 @@ class Mover:
                 self.push_state = Push.SKID
             return
 
-    def proc_input(self, control):
-        this_frame_control, last_frame_control,\
-            keys_pressed, keys_released, launch = control
-
-        do_accl = False
-        xaccl_here = self.xaccl * self.move_state
-
-        if keys_released & Key.LEFT \
-            or keys_released & Key.RIGHT:
-            self.push_state = Push.STILL
-
-        #self.yvel = 1.25
-        if this_frame_control & Key.LEFT:
-            self.facing = Facing.LEFT
-            self.move_state *= Status.WALK
-            self.move_state |= Status.WALK
-            do_accl = True
-        elif this_frame_control & Key.RIGHT:
-            self.facing = Facing.RIGHT
-            self.move_state *= Status.WALK
-            self.move_state |= Status.WALK
-            do_accl = True
-        else:
-            #self.push_state = Push.STILL
-            if self.move_state >= Status.NEUTRAL:
-                self.move_state = Status.NEUTRAL
-                self.xvel = 0.0
-            self.pvel = 0.0
-
-        if do_accl:
-            if self.move_state == Status.WALK:
-                if self.push_state == Push.NUDGE:
-                    self.xaccl = self.base_xaccl / 2.0
-                else:
-                    self.xaccl = self.base_xaccl
-
-            if self.direction != self.facing:
-                if self.move_state >= Status.NEUTRAL:
-                    self.xaccl *= -4
-                else:
-                    self.xaccl += .0001
-            else:
-                #self.xvel += self.xaccl * self.move_state
-                if self.xvel <= self.max_xvel:
-                    self.move_state = Status.WALK
-                    self.xvel = self.max_xvel
-            """
-            if self.move_state == Status.DASH:
-                pass
-            else:
-                self.direction = self.facing
-            """
-
-            if self.xvel <= 0.0:
-                self.direction = self.facing
-                self.xaccl *= -1
-                self.xvel = self.xaccl
-                self.move_state = Status.WALK
-                self.push_state = Push.STILL
-
-            if self.push_state in [Push.NUDGE, Push.SKID]:
-                if self.move_state >= Status.NEUTRAL:
-                    if self.xvel >= self.max_pvel:
-                        self.xvel = self.max_pvel
-            elif self.move_state in [Status.DASH]:
-                if self.xvel >= self.max_dvel:
-                    self.xvel = self.max_dvel
-            else:
-                if self.xvel >= self.max_xvel:
-                    self.xvel = self.max_xvel
-
-        if self.jump_state == Jump.FLOOR:
-            if not this_frame_control & Key.LEFT \
-                and not this_frame_control & Key.RIGHT:
-                self.set_anim_idx(Anim.STILL)
-            if keys_pressed & Key.LEFT \
-                or keys_pressed & Key.RIGHT:
-                self.set_anim_idx(Anim.WALK)
-
-        if keys_pressed & Key.JUMP \
-            and not self.jump_lock \
-            and self.jump_state == Jump.FLOOR:
-            self.set_jump(JUMPVEL)
-            #self.move_state = 0
-            self.set_anim_idx(Anim.JUMP)
-
-        if not keys_pressed & Key.JUMP \
-            and self.jump_state == Jump.FLOOR:
-            self.jump_lock = False
-
-        if keys_released & Key.JUMP \
-                and self.jump_state == Jump.JUMP:
-            self.set_fall(1.75)
-            self.set_anim_idx(Anim.STILL)
-
-        """
-        if this_frame_control & Key.UP:
-            self.vertical = Vertical.UP
-        elif this_frame_control & Key.DOWN:
-            self.vertical = Vertical.DOWN
-        else:
-            self.yvel = 0.0
-        """
-
     def __init__(self, anim_init, id = Id.PLAYER.value, placeholder = False):
         self.animation_state = AnimationState(anim_init)
         self.id = id
         self.set_fall(1.75)
         self.set_anim_idx(Anim.STILL)
         self.lambdas = []
+        self.events = []
+        self.interaction_events = []
         self.placeholder = placeholder
         self.auuid = uuid.uuid4()
 

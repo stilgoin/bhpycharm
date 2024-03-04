@@ -1,5 +1,5 @@
 from movers.movers import Mover
-from system.defs import Ability, Push, Vel, Facing, Status
+from system.defs import Ability, Push, Vel, Facing, Status, Events
 
 
 class InteractiveMover(Mover):
@@ -89,9 +89,6 @@ class InteractiveMover(Mover):
                     if int(self.snap_xloc) & 0x7:
                         self.snap_xloc &= 0xFFF8
 
-
-
-
             if snapTo8:
                 self.xloc = self.snap_xloc
                 self.push_state = Push.NOPUSH
@@ -126,6 +123,23 @@ class InteractiveMover(Mover):
 
         if self.xvel >= self.max_pvel:
             self.xvel = self.max_pvel
+
+    def procInteractionEvents(self):
+
+        if Events.HALT_PUSHING in self.interaction_events:
+            self.push_state = Push.STILL
+
+        self.interaction_events.clear()
+
+    def initPushing(self, direction, friction, xaccl, move_state, xvel=0):
+        self.xvel *= friction
+        self.xaccl = xaccl
+        if xvel > 0:
+            self.xvel = xvel
+        self.move_state = move_state
+        self.direction = direction
+        self.push_state = Push.NUDGE
+
 
     def go(self):
         self.lambdas.append(lambda : self.clamp_pvel())

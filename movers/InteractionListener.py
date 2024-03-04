@@ -2,8 +2,9 @@ from collections import defaultdict
 
 from game.Handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.Overlap import OverlapResult, moverToMover, Result
+from movers.InteractiveMover import InteractiveMover
 from movers.movers import Mover
-from system.defs import Push, Vertical, Facing, Id, Status
+from system.defs import Push, Vertical, Facing, Id, Status, Events
 
 
 class InteractionListener:
@@ -22,6 +23,13 @@ class InteractionListener:
         ma: Mover = self.mva
         mb: Mover = self.mvb
 
+        if ma.xloc > mb.xloc:
+            ma.events.append(Events.PUSHING_COIL_LEFT)
+        else:
+            ma.events.append(Events.PUSHING_COIL_RIGHT)
+
+        print("at coil", ma)
+
         if ma.hb.y0 > mb.hb.y1 \
            or ma.hb.y1 < mb.hb.y0:
             ma.push_state = Push.STILL
@@ -30,14 +38,18 @@ class InteractionListener:
             mb.direction = mb.direction * -1
             mb.psteps = 0
             self.expired = True
+            print("above object")
             return
 
         if ma.push_state == Push.STILL \
                 and mb.push_state == Push.NUDGE:
+            #ma.push_state = Push.ROLLBACK
             mb.push_state = Push.ROLLBACK
             mb.xaccl = 0.05
             mb.xvel = mb.psteps / 16.0
             mb.direction = mb.direction * -1
+            #ma.events.append(Events.PUSHING_COIL)
+            print("rollback")
             return
 
         if mb.push_state == Push.ROLLBACK:
@@ -54,6 +66,8 @@ class InteractionListener:
             mb.xvel = 0.0
             mb.xaccl = 0.0
             mb.psteps = 0
+            print("dashing", mb.move_state, mb.push_state, mb.direction)
+            #ma.events.append(Events.PUSHING_COIL)
             self.expired = True
 
 
@@ -73,9 +87,14 @@ class InteractionListener:
                 and ma.push_state != Push.STILL \
                 or ma.hb.y0 > mb.hb.y1 \
                 or ma.hb.y1 < mb.hb.y0:
+                ma.interaction_events.append(Events.HALT_PUSHING)
+                mb.interaction_events.append(Events.HALT_PUSHING)
+                self.expired = True
+                return
+                """
                 ma.push_state = Push.STILL
                 mb.push_state = Push.STILL
-                self.expired = True
+                
                 mb.psteps = 0
                 if not ma.move_state:
                     ma.xvel = 0.0
@@ -85,10 +104,15 @@ class InteractionListener:
                 mb.xaccl = 0.0
                 mb.move_state = Status.WALK
                 return
+                """
 
         if ma.xvel >= ma.max_pvel \
             or mb.xvel >= mb.max_pvel:
             if mb.psteps >= 40:
+                ma.interaction_events.append(Events.HALT_PUSHING)
+                mb.interaction_events.append(Events.PUSH_TO_SKID)
+                self.expired = True
+                """
                 if ma.mass > mb.mass:
                     mskid = ma
                     mhalt = mb
@@ -104,7 +128,8 @@ class InteractionListener:
                 mhalt.push_state = Push.STILL
                 #mhalt.push_state = Push.REST
                 #mhalt.action_timer = 5
-                self.expired = True
+                """
+
 
     interactions = defaultdict(lambda : InteractionListener.processMoverToBlock,
                                {Id.SIDECOIL.value : processMoverToCoil})
@@ -133,7 +158,7 @@ class InteractionListener:
         cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))
 
     @classmethod
-    def initInteraction(self, ma : Mover, mb : Mover,
+    def initInteraction(self, ma : InteractiveMover, mb : InteractiveMover,
                         result : OverlapResult ):
         uuida = ma.auuid
         uuidb = mb.auuid
@@ -189,12 +214,34 @@ class InteractionListener:
         InteractionListener.listeners[(uuida, uuidb)] =\
             InteractionListener(result.mva, result.mvb, result)
 
-        ma.push_state = Push.NUDGE
-        mb.push_state = Push.NUDGE
-
         if mb.xvel > 0:
             mb.psteps = 20
 
+        if ma.xvel >= mb.xvel:
+            direction = ma.direction
+            xaccl = ma.base_xaccl / 2.0
+        else:
+            direction = mb.direction
+            xaccl = mb.base_xaccl / 2.0
+
+        if ma.move_state >= Status.NEUTRAL:
+            frictiona = ma.friction
+            frictionb = mb.friction
+            xvel = 0
+            move_state = ma.move_state
+        else:
+            frictiona = 1
+            frictionb = 1
+            xvel = ma.xvel
+            xaccl = ma.xaccl
+            move_state = ma.move_state
+
+        ma.initPushing(direction, frictionb, xaccl, move_state)
+        mb.initPushing(direction, frictiona, xaccl, move_state, xvel)
+
+        #print(ma, mb)
+
+        """
         xaccl = 0.0
         if ma.xvel >= mb.xvel:
             mb.direction = ma.direction
@@ -212,7 +259,7 @@ class InteractionListener:
             mb.xvel = ma.xvel
             mb.xaccl = ma.xaccl
         mb.move_state = ma.move_state
-
+        """
 
 
 
@@ -222,6 +269,7 @@ class InteractionListener:
 
     @classmethod
     def check_sides(cls, result: OverlapResult):
+
         if result.result == Result.CONTACT:
             if result.facing == Facing.RIGHT:
                 pass
@@ -232,17 +280,21 @@ class InteractionListener:
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
+                print("ROLLBACK LEFT")
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
+                print("ROLLBACK RIGHT")
             else:
 
                 if result.vert == Vertical.DOWN:
                     return
 
-                if result.mva.xloc > result.mva.xloc:
+                if result.mva.xloc > result.mvb.xloc:
                     rollbackXLeft(result.mva, result.mvb.hb)
+                    #print("XLeft unknown facing")
                 else:
                     rollbackXRight(result.mva, result.mvb.hb)
+                    #print("XRight unknown facing")
                 pass
                 """
                 if result.mvb.direction == Facing.RIGHT:
@@ -296,6 +348,7 @@ class InteractionListener:
             uuidb = mb.auuid
             if (uuida, uuidb) in InteractionListener.listeners.keys():
                 listener = InteractionListener.listeners[(uuida, uuidb)]
+                #print("check sides in listener", ma, mb.id)
                 self.check_sides(listener.result)
                 continue
 

@@ -6,6 +6,7 @@ from movers.Block import Block, Statue, SpringBox
 from movers.InteractionListener import InteractionListener
 from movers.mover_classes import InteractiveMover, MiscMover, Player
 from movers.movers import Id
+from system.defs import Push, Facing
 
 
 class GameMode:
@@ -15,15 +16,15 @@ class GameMode:
     def Loop(self, controls):
         self.loopcounter += 1
         self.display_list.clear()
-        InteractionListener.evalInteractions()
 
-        self.mPlayer.proc_input(controls)
+
+        self.mPlayer.procInput(controls)
         for mover in self.movers:
             if mover.id == Id.BLOCK.value:
                 mover.proc_auto(controls)
+            mover.procEvents()
             mover.go()
             mover.make_hitboxes()
-
         #InteractionListener.evalTerminations()
 
         for mover in self.movers:
@@ -37,13 +38,16 @@ class GameMode:
             mover.misc_hitbox()
             mover.postproc()
 
+        InteractionListener.evalInteractions()
+
         for mover in self.movers:
+            mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
             if mover.xvel > 0.0:
                 self.output += str(mover)
         if self.output != "":
             pass
-            print(str(self.output), end="\n")
+        #    print(str(self.output), end="\n")
         self.output = ""
         sys.stdout.flush()
 
@@ -78,7 +82,8 @@ class GameMode:
         Block.movers.append(statue)
         self.movers.append(statue)
 
-        springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True)
+        springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
+                              facing=Facing.RIGHT)
         springbox.xloc = 0x10
         springbox.yloc = 0xA0
         springbox.spring.xloc = 0x20

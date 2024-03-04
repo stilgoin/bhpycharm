@@ -3,7 +3,7 @@ from game.Overlap import Result, moverToMover
 from movers.InteractiveMover import InteractiveMover
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Mover
-from system.defs import Id, Facing, Push, Status
+from system.defs import Id, Facing, Push, Status, Events
 
 
 class Block(InteractiveMover):
@@ -29,18 +29,44 @@ class Block(InteractiveMover):
                 self.xvel = 0.0
                 self.xaccl = 0.0
 
+    def procInteractionEvents(self):
+        if Events.HALT_PUSHING in self.interaction_events:
+            self.xvel = 0.0
+            self.xaccl = 0.0
+            self.push_state = Push.STILL
+            self.move_state = Status.NEUTRAL
+            self.psteps = 0
+
+        elif Events.PUSH_TO_SKID in self.interaction_events:
+            self.push_state = Push.SKID
+            self.xaccl = -0.05
+            self.xvel = 1.75
+            self.psteps = 0
+            self.move_state = Status.WALK
+
+        self.interaction_events.clear()
+
+    def initPushing(self, direction, friction, xaccl, move_state, xvel=0):
+        self.xvel *= friction
+        self.xaccl = xaccl
+        if xvel > 0:
+            self.xvel = xvel
+        self.move_state = move_state
+        self.direction = direction
+        self.push_state = Push.NUDGE
+
     def go(self):
         self.lambdas.append(lambda : self.halt_skidding())
         self.lambdas.append(lambda : self.add_push_steps())
         super().go()
 
+class Hammer(Mover):
+    active = False
+
+    def check(self, moverToBGFunc = lambda : None):
+        pass
+
 class Statue(Block):
-
-    class Hammer(Mover):
-        active = False
-
-        def check(self, moverToBGFunc = lambda : None):
-            pass
 
     hammer : Hammer = None
 
@@ -94,10 +120,26 @@ class Statue(Block):
         super().go()
 
     def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
-        self.hammer = self.Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)
+        self.hammer = Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)
         MiscMover.movers.append(self.hammer)
         super().__init__(anim_init, id, placeholder)
         MiscMover.postproc_movers.append(self)
+
+class SideSpring(Block):
+    base_xaccl = 0.05
+    max_pvel = 0.25
+
+    def clamp_pvel(self):
+        if self.push_state == Push.STILL \
+                or self.push_state == Push.ROLLBACK:
+            return
+
+        if self.xvel >= self.max_pvel:
+            self.xvel = self.max_pvel
+
+    def __init__(self, anim_init, id, placeholder, facing = Facing.RIGHT):
+        super().__init__(anim_init, id, placeholder)
+        self.facing = facing
 
 class SpringBox(Block):
     base_xaccl = 0.0    # disable pushing, but keep the capability
@@ -113,18 +155,6 @@ class SpringBox(Block):
             if self.spring.push_state == Push.ROLLBACK:
                 self.spring.push_state = Push.STILL
 
-    class SideSpring(Block):
-        base_xaccl = 0.05
-        max_pvel = 0.25
-
-        def clamp_pvel(self):
-            if self.push_state == Push.STILL \
-                    or self.push_state == Push.ROLLBACK:
-                return
-
-            if self.xvel >= self.max_pvel:
-                self.xvel = self.max_pvel
-
     def animate(self):
         return [self.animation_state \
                     .display_entry(self.id, self.xloc, self.yloc,
@@ -133,6 +163,6 @@ class SpringBox(Block):
                 self.spring.animation_state.display_entry(self.spring.id, self.spring.xloc, self.spring.yloc,
                                    True if self.spring.facing == Facing.RIGHT else False,
                                    False)]
-    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
-        self.spring = self.SideSpring(anim_inits[Id.SIDECOIL], Id.SIDECOIL.value, True)
+    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True, facing = Facing.RIGHT):
+        self.spring = SideSpring(anim_inits[Id.SIDECOIL], Id.SIDECOIL.value, True, facing)
         super().__init__(anim_init, id, placeholder)

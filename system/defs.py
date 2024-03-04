@@ -65,6 +65,26 @@ class Terminators(IntEnum):
     REPEAT = 0xFE
     EXPIRE = 0xFF
 
+class Events(Enum):
+    HOLD_LEFT = "hold_left"
+    HOLD_RIGHT = "hold_right"
+    PRESS_LEFT = "press_left"
+    PRESS_RIGHT = "press_right"
+    RELEASE_LEFT = "release_left"
+    RELEASE_RIGHT = "release_right"
+    REVERSE_DIRECTION = "reverse_direction"
+    MAX_XVEL = "max_xvel"
+    MIN_XVEL = "min_xvel"
+    ACCELERATE = "accelerate"
+    DECCELERATE = "deccelerate"
+    XVEL_GT = "xvel_greater_than"
+    XVEL_LT = "xvel_less_than"
+    HALT_PUSHING = "halt_pushing"
+    PUSH_TO_SKID = "push_to_skid"
+    PUSHING_COIL_LEFT = "pushing_coil"
+    PUSHING_COIL_RIGHT = "pushing_coil"
+    NO_CHECK_COIL = "no_check_coil"
+
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
