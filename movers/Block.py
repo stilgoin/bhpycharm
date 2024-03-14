@@ -144,6 +144,23 @@ class SideSpring(Block):
 class SpringBox(Block):
     base_xaccl = 0.0    # disable pushing, but keep the capability
 
+    def procInteractionEvents(self):
+
+        if Events.MOVER_LEAVE_COIL in self.spring.interaction_events:
+            if self.spring.push_state == Push.NUDGE:
+                self.spring.push_state = Push.ROLLBACK
+                self.spring.xvel = self.spring.psteps / 16.0
+                self.spring.xaccl = 0.05
+                self.spring.direction = self.spring.direction * -1
+                print("Leave coil")
+            self.spring.psteps = 0
+
+        if Events.MOVER_RECOIL in self.spring.interaction_events:
+            self.spring.haltMovement()
+            self.spring.psteps = 0
+
+        super().procInteractionEvents()
+
     def go(self):
         super().go()
 
@@ -154,6 +171,17 @@ class SpringBox(Block):
             self.spring.xloc = self.xloc + 0x10
             if self.spring.push_state == Push.ROLLBACK:
                 self.spring.push_state = Push.STILL
+                self.spring.dash_xvel = self.spring.xvel
+                self.spring.haltMovement()
+
+
+            """
+            if self.spring.push_state == Push.ROLLBACK:
+                self.spring.push_state = Push.STILL
+                self.spring.xvel = 0.0
+                self.spring.xaccl = 0.0
+                self.spring.move_state = Status.NEUTRAL
+            """
 
     def animate(self):
         return [self.animation_state \

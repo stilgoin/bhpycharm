@@ -28,28 +28,37 @@ class InteractionListener:
         else:
             ma.events.append(Events.PUSHING_COIL_RIGHT)
 
-        print("at coil", ma)
+        mb.interaction_events.append(Events.COIL_CONTACT)
+
+        #print("at coil", ma)
 
         if ma.hb.y0 > mb.hb.y1 \
            or ma.hb.y1 < mb.hb.y0:
+            #print("above object", mb.psteps)
+            ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
+            mb.interaction_events.append(Events.MOVER_LEAVE_COIL)
+            mb.interaction_events.remove(Events.COIL_CONTACT)
+
+            """
             ma.push_state = Push.STILL
-            mb.move_state = Push.ROLLBACK
+            mb.push_state = Push.ROLLBACK
             mb.xvel = mb.psteps / 16.0
+            mb.xaccl = 0.05
             mb.direction = mb.direction * -1
             mb.psteps = 0
+            """
             self.expired = True
-            print("above object")
             return
 
         if ma.push_state == Push.STILL \
                 and mb.push_state == Push.NUDGE:
             #ma.push_state = Push.ROLLBACK
             mb.push_state = Push.ROLLBACK
-            mb.xaccl = 0.05
+            #mb.xaccl = 0.05
             mb.xvel = mb.psteps / 16.0
             mb.direction = mb.direction * -1
             #ma.events.append(Events.PUSHING_COIL)
-            print("rollback")
+            print("rollback", mb.psteps)
             return
 
         if mb.push_state == Push.ROLLBACK:
@@ -58,6 +67,12 @@ class InteractionListener:
 
         if mb.push_state == Push.STILL \
                 and mb.psteps > 0:
+            print("dashing", mb.move_state, mb.push_state, mb.direction, mb.psteps)
+            ma.interaction_events.append(Events.MOVER_RECOIL)
+            mb.interaction_events.append(Events.MOVER_RECOIL)
+            ma.dash_xvel = mb.dash_xvel
+
+            """
             ma.xvel = mb.xvel
             ma.xaccl = 0.05
             ma.direction *= -1
@@ -66,8 +81,8 @@ class InteractionListener:
             mb.xvel = 0.0
             mb.xaccl = 0.0
             mb.psteps = 0
-            print("dashing", mb.move_state, mb.push_state, mb.direction)
             #ma.events.append(Events.PUSHING_COIL)
+            """
             self.expired = True
 
 
@@ -144,15 +159,6 @@ class InteractionListener:
         #for key in cls.listeners.keys():
             #listener = cls.listeners[key]
             #listener.processInteraction()
-
-        # delete dict entry without exception
-        cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))
-
-    @classmethod
-    def evalTerminations(cls):
-        for key in cls.listeners.keys():
-            listener = cls.listeners[key]
-            #listener.checkTerm()
 
         # delete dict entry without exception
         cls.listeners = dict(filter(lambda x: not x[1].expired, cls.listeners.items()))

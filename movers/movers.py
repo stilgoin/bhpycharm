@@ -133,6 +133,12 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
     def checkEvents(self):
         pass
 
+    def haltMovement(self):
+        self.move_state = 0
+        self.push_state = 0
+        self.xvel = 0.0
+        self.xaccl = 0.0
+
     def procInput(self, control):
         this_frame_control, last_frame_control, \
             keys_pressed, keys_released, launch = control
@@ -195,7 +201,8 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         self.xvel += self.xaccl * self.move_state
         if self.xvel <= 0.0:
             self.xvel = 0.0
-            self.events.append(Events.MIN_XVEL)
+            if Events.MIN_XVEL not in self.events:
+                self.events.append(Events.MIN_XVEL)
             #if self.push_state == Push.STILL:
             #    self.move_state = Status.NEUTRAL
 

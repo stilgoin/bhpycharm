@@ -84,6 +84,9 @@ class Events(Enum):
     PUSHING_COIL_LEFT = "pushing_coil"
     PUSHING_COIL_RIGHT = "pushing_coil"
     NO_CHECK_COIL = "no_check_coil"
+    MOVER_LEAVE_COIL = "no_contact_coil"
+    MOVER_RECOIL = "mover_recoil"
+    COIL_CONTACT = "coil_contact"
 
 class Id(Enum):
     PLAYER = "player"

@@ -12,6 +12,7 @@ class InteractiveMover(Mover):
     push_xloc = 0.0
     pvel = 0.0
     ability = Ability.ITEM.value
+    dash_xvel = 0.0
 
     def dummy(self):
         pass
@@ -128,6 +129,16 @@ class InteractiveMover(Mover):
 
         if Events.HALT_PUSHING in self.interaction_events:
             self.push_state = Push.STILL
+
+        if Events.MOVER_LEAVE_COIL in self.interaction_events:
+            self.push_state = Push.STILL
+
+        if Events.MOVER_RECOIL in self.interaction_events:
+            self.xvel = self.dash_xvel
+            self.xaccl = 0.05
+            self.direction *= -1
+            self.facing *= -1
+            self.move_state = Status.DASH
 
         self.interaction_events.clear()
 

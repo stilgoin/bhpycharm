@@ -25,7 +25,6 @@ class GameMode:
             mover.procEvents()
             mover.go()
             mover.make_hitboxes()
-        #InteractionListener.evalTerminations()
 
         for mover in self.movers:
 
@@ -45,9 +44,11 @@ class GameMode:
             self.display_list.extend(mover.animate())
             if mover.xvel > 0.0:
                 self.output += str(mover)
-        if self.output != "":
+            if mover.push_state == Push.ROLLBACK:
+                self.output += str(mover)
+        if self.output != "" and self.loopcounter % 10 == 0:
             pass
-        #    print(str(self.output), end="\n")
+            print(str(self.output), end="\n")
         self.output = ""
         sys.stdout.flush()
 
