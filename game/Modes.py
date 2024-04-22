@@ -26,11 +26,15 @@ class GameMode:
             mover.go()
             mover.make_hitboxes()
 
+        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), AllMovers.blocks) )
         for mover in self.movers:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
                 floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks)
+
+            if mover.id in (Id.BLOCK.value, Id.STATUE.value):
+                floor_found, result = InteractionListener.moverToMovers(mover, springs)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
         for mover in MiscMover.postproc_movers:
@@ -42,10 +46,12 @@ class GameMode:
         for mover in self.movers:
             mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
-            if mover.xvel > 0.0:
+            if mover.push_state != Push.STILL:
                 self.output += str(mover)
-            if mover.push_state == Push.ROLLBACK:
-                self.output += str(mover)
+            #if mover.xvel > 0.0:
+            #    self.output += str(mover)
+            #if mover.push_state == Push.ROLLBACK:
+            #    self.output += str(mover)
         if self.output != "" and self.loopcounter % 10 == 0:
             pass
             print(str(self.output), end="\n")

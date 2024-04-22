@@ -131,11 +131,17 @@ def moverToMover(mva, mvb) -> OverlapResult:
     elif contact(mva.hb, mvb.hb):
         result.result = Result.CONTACT
         if sideContact(mva.hb, mvb.hb):
-            if mva.facing == Facing.RIGHT \
+            """if mva.facing == Facing.RIGHT \
                 and mva.xloc < mvb.xloc:
                 result.facing = Facing.RIGHT
             if mva.facing == Facing.LEFT \
                 and mva.xloc > mvb.xloc:
+                result.facing = Facing.LEFT"""
+            if mva.direction == Facing.RIGHT \
+                    and mva.xloc < mvb.xloc:
+                result.facing = Facing.RIGHT
+            if mva.direction == Facing.LEFT \
+                    and mva.xloc > mvb.xloc:
                 result.facing = Facing.LEFT
             #result.facing = mva.facing
         if vertContact(mva.hb, mvb.hb):
