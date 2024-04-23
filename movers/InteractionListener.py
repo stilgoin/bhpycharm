@@ -73,7 +73,13 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
 
-        mb.move_state = ma.move_state
+        if ma.move_state != Status.NEUTRAL:
+            mb.move_state = ma.move_state
+
+        if ma.move_state == Status.NEUTRAL \
+            and mb.move_state == Status.DASH \
+            and mb.xvel == 0.0:
+            pass
 
         if ma.move_state >= Status.NEUTRAL:
             if ma.push_state == Push.STILL \
@@ -208,20 +214,20 @@ class InteractionListener:
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-                print("ROLLBACK LEFT 205")
+                #print("ROLLBACK LEFT 205")
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
-                print("ROLLBACK RIGHT 207")
+                #print("ROLLBACK RIGHT 207")
             else:
                 if result.vert == Vertical.DOWN:
                     return
 
                 if result.mva.xloc > result.mvb.xloc:
                     rollbackXRight(result.mva, result.mvb.hb)
-                    print("ROLLBACK LEFT 218")
+                    #print("ROLLBACK LEFT 218")
                 else:
                     rollbackXLeft(result.mva, result.mvb.hb)
-                    print("ROLLBACK RIGHT 218")
+                    #print("ROLLBACK RIGHT 218")
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,

@@ -46,7 +46,7 @@ class GameMode:
         for mover in self.movers:
             mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
-            if mover.push_state != Push.STILL:
+            if mover.xvel > 0 and mover.id in (Id.STATUE.value, Id.PLAYER.value):
                 self.output += str(mover)
             #if mover.xvel > 0.0:
             #    self.output += str(mover)

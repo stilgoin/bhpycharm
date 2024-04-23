@@ -28,22 +28,27 @@ class Block(InteractiveMover):
                 self.push_state = Push.STILL
                 self.xvel = 0.0
                 self.xaccl = 0.0
+                print("halt skidding")
 
     def procInteractionEvents(self):
         if Events.HALT_PUSHING in self.interaction_events:
-            self.xvel = 0.0
-            self.xaccl = 0.0
             self.push_state = Push.STILL
-            self.move_state = Status.NEUTRAL
-            self.psteps = 0
+            if self.move_state != Status.DASH:
+                self.xvel = 0.0
+                self.xaccl = 0.0
+                self.move_state = Status.NEUTRAL
+                self.psteps = 0
             print("Halt")
 
         elif Events.PUSH_TO_SKID in self.interaction_events:
-            self.push_state = Push.SKID
-            self.xaccl = -0.05
-            self.xvel = 1.75
             self.psteps = 0
-            self.move_state = Status.WALK
+            if self.move_state != Status.DASH:
+            #if True:
+                self.push_state = Push.SKID
+                self.xaccl = -0.05
+                self.xvel = 1.75
+                self.move_state = Status.WALK
+                print("UGH")
 
         if Events.MOVER_RECOIL in self.interaction_events:
             self.xvel = self.dash_xvel
@@ -62,7 +67,8 @@ class Block(InteractiveMover):
         self.xaccl = xaccl
         if xvel > 0:
             self.xvel = xvel
-        self.move_state = move_state
+        if self.move_state == Status.NEUTRAL:
+            self.move_state = move_state
         self.direction = direction
         self.push_state = Push.NUDGE
         print("PUSHING")
