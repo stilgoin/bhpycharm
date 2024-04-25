@@ -12,6 +12,7 @@ class Block(InteractiveMover):
     movers = []
     friction = 0
     psteps = 0
+    pushByHand = False
 
     def __str__(self):
         return super().__str__() + f"psteps: {self.psteps}"
@@ -38,6 +39,7 @@ class Block(InteractiveMover):
                 self.xaccl = 0.0
                 self.move_state = Status.NEUTRAL
                 self.psteps = 0
+                self.pushByHand = False
             print("Halt")
 
         elif Events.PUSH_TO_SKID in self.interaction_events:
@@ -48,6 +50,7 @@ class Block(InteractiveMover):
                 self.xaccl = -0.05
                 self.xvel = 1.75
                 self.move_state = Status.WALK
+                self.pushByHand = False
                 print("UGH")
 
         if Events.MOVER_RECOIL in self.interaction_events:
@@ -62,7 +65,7 @@ class Block(InteractiveMover):
     def procEvents(self):
         self.events.clear()
 
-    def initPushing(self, direction, friction, xaccl, move_state, xvel=0):
+    def initPushing(self, direction, friction, xaccl, move_state, xvel=0, pushByHand = False):
         self.xvel *= friction
         self.xaccl = xaccl
         if xvel > 0:
@@ -71,6 +74,7 @@ class Block(InteractiveMover):
             self.move_state = move_state
         self.direction = direction
         self.push_state = Push.NUDGE
+        self.pushByHand = pushByHand
         print("PUSHING")
 
     def go(self):

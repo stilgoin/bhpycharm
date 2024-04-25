@@ -32,6 +32,7 @@ class Move(IntEnum):
     NEUTRAL = 0
     DASH = 1
 
+
 class Facing(IntEnum):
     LEFT = -1
     RIGHT = 1

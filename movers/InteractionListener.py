@@ -52,12 +52,28 @@ class InteractionListener:
             print("rollback", mb.psteps)
             return
 
-        if mb.push_state == Push.ROLLBACK:
-            if ma.direction == mb.direction:
-                pass
+        if ma.id in (Id.STATUE.value, Id.BLOCK.value) \
+                and not ma.pushByHand:
+            if mb.psteps > 16 and mb.push_state == Push.NUDGE:
+                mb.push_state = Push.ROLLBACK
+                mb.xvel = mb.psteps / 16.0
+                mb.direction = mb.direction * -1
+                ma.move_state = Status.NEUTRAL
+                ma.push_state = Push.STILL
+                ma.xvel = 0
+                ma.xaccl = 0
+                return
+
+
+        if mb.push_state == Push.ROLLBACK \
+            and not mb.xvel:
+            ma.interaction_events.append(Events.MOVER_RECOIL)
+            mb.interaction_events.append(Events.MOVER_RECOIL)
+            ma.dash_xvel = mb.dash_xvel
+            self.expired = True
 
         if mb.push_state in (Push.STILL, Push.SKID) \
-                and mb.psteps > 0:
+                and mb.psteps >= 0:
             print("dashing", mb.move_state, mb.push_state, mb.direction, mb.psteps)
             ma.interaction_events.append(Events.MOVER_RECOIL)
             mb.interaction_events.append(Events.MOVER_RECOIL)
@@ -197,7 +213,7 @@ class InteractionListener:
             move_state = ma.move_state
 
         ma.initPushing(direction, frictionb, xaccl, move_state)
-        mb.initPushing(direction, frictiona, xaccl, move_state, xvel)
+        mb.initPushing(direction, frictiona, xaccl, move_state, xvel, pushByHand = True)
 
     @classmethod
     def check_sides(cls, result: OverlapResult):
