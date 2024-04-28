@@ -1,70 +1,118 @@
-from game.Maps import Hitbox
-from game.Overlap import moverToMover, OverlapResult, Result
 from movers.InteractiveMover import InteractiveMover
-from movers.PushingMover import PushingMover
 from movers.movers import Mover
-from system.defs import Facing, Push, Id, Anim, Jump, Ability
+from system.defs import Id, Anim, Jump, Events, Status, Facing, Push
 
 
 class MiscMover(Mover):
     movers = []
+    postproc_movers = []
 
-class Statue(InteractiveMover):
 
-    class Hammer(Mover):
-        active = False
+class Player(InteractiveMover):
+    hitoffs = (4.0, 1.0, 12.0, 14.0)
+    movers = []
 
-        def check(self, moverToBGFunc = lambda : None):
-            pass
+    def procEvents(self):
 
-    hammer : Hammer = None
+        if Events.HOLD_RIGHT in self.events \
+            or Events.HOLD_LEFT in self.events:
+            if Events.MIN_XVEL in self.events \
+                    and Events.PUSHING_COIL_RIGHT not in self.events \
+                    and Events.PUSHING_COIL_LEFT not in self.events:
+                self.xaccl = self.base_xaccl
 
-    def check(self, moverToBGFunc):
-        #self.trigger_box = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
-        if self.action_timer > 0:
-            self.action_timer -= 1
-            if self.action_timer <= 30:
-                self.hammer.xloc = 0xFFFF
+                self.move_state = Status.WALK
+                if Events.HOLD_LEFT in self.events:
+                    self.holding = Facing.LEFT
+                if Events.HOLD_RIGHT in self.events:
+                    self.holding = Facing.RIGHT
+
+                if self.holding != 0:
+                    self.direction = self.holding
+                    self.facing = self.holding
         else:
-            self.hammer.xloc = 0xFFFF
+            if self.move_state >= Status.NEUTRAL:
+                self.move_state = Status.NEUTRAL
+                self.xvel = 0.0
+                self.xaccl = 0.0
+                self.holding = 0
 
-        self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
-        for mover in InteractiveMover.movers + PushingMover.movers:
-            result = moverToMover(self, mover)
-            if result.result == Result.CONTACT \
-                or result.result == Result.OVERLAP:
+        if Events.RELEASE_LEFT in self.events \
+            or Events.RELEASE_RIGHT in self.events:
+            self.push_state = Push.STILL
 
-                if not self.action_timer:
-                    self.action_timer = 60
-                    self.hammer.yloc = self.yloc - 0x4
-                    if result.facing == Facing.LEFT \
-                        or result.side == Facing.LEFT:
-                        self.hammer.xloc = self.xloc - 0x10
-                    else:
-                        self.hammer.xloc = self.xloc + 0x10
+            #print(self.events)
 
-        super().check(moverToBGFunc)
+        if self.direction != self.holding and self.holding != 0:
+            self.events.append(Events.REVERSE_DIRECTION)
+            self.interaction_events.append(Events.HALT_PUSHING)
 
-    def animate(self):
-        return [self.animation_state \
-                    .display_entry(self.id, self.xloc, self.yloc,
-                                   True if self.facing == Facing.RIGHT else False,
-                                   False),
-                self.hammer.animation_state.display_entry(self.hammer.id, self.hammer.xloc, self.hammer.yloc,
-                                   True if self.hammer.facing == Facing.RIGHT else False,
-                                   False)]
+            """ Comment out the above and the player can "moonwalk" push
+                It's a bug but might be neat
+            """
 
-    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True):
-        self.hammer = self.Hammer(anim_inits[Id.HAMMER], Id.HAMMER.value, True)
-        MiscMover.movers.append(self.hammer)
-        super().__init__(anim_init, id, placeholder)
+        if self.move_state == Status.WALK:
+            if self.push_state == Push.NUDGE:
+                self.xaccl = self.base_xaccl / 2.0
+            else:
+                self.xaccl = self.base_xaccl
 
+            if self.xvel >= self.max_xvel:
+                self.xvel = self.max_xvel
 
-class Player(PushingMover):
+        if self.xvel > 0.0:
+            zero_xvel = False
+            if self.move_state >= Status.NEUTRAL:
+                if Events.PUSHING_COIL_LEFT in self.events:
+                    if self.holding == Facing.RIGHT:
+                        self.holding = 0
+                        zero_xvel = True
+                        print("Negate holding")
+
+                if Events.PUSHING_COIL_RIGHT in self.events:
+                    if self.holding == Facing.LEFT:
+                        self.holding = 0
+                        zero_xvel = True
+
+            if zero_xvel:
+                self.xvel = 0.0
+                self.xaccl = 0.0
+
+            if Events.REVERSE_DIRECTION in self.events:
+                if self.move_state == Status.WALK:
+                    self.xaccl *= -4
+                    self.facing = self.holding
+                    self.direction = self.holding
+
+                if self.move_state == Status.DASH:
+                    self.xaccl += 0.0001
+                    if self.xvel <= self.max_xvel:
+                        self.xvel = self.max_xvel
+                        self.move_state = Status.WALK
+        else:
+            if Events.HOLD_RIGHT not in self.events \
+                and Events.HOLD_LEFT not in self.events:
+                if self.move_state == Status.DASH:
+                    self.move_state = Status.NEUTRAL
+                    self.xaccl = 0.0
+
+        if self.holding == self.direction \
+            and self.move_state == Status.DASH:
+                if self.xvel <= self.max_xvel:
+                    self.move_state = Status.WALK
+                    print("UH HERE")
+                    self.xaccl = self.base_xaccl
+
+        """
+        if Events.HOLD_RIGHT in self.events \
+                or Events.HOLD_LEFT in self.events:
+            print("uh",self)
+        """
+
+        self.events.clear()
 
     def move(self):
         super().move()
-
         if self.jump_state == Jump.JUMP:
             if self.yvel <= 1.50 \
                     and not self.animation_state \

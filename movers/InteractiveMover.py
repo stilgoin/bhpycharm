@@ -1,16 +1,18 @@
 from movers.movers import Mover
-from system.defs import Ability, Push, Vel, Facing
+from system.defs import Ability, Push, Vel, Facing, Status, Events
 
 
 class InteractiveMover(Mover):
 
     movers = []
+    springs = []
 
     hitoffs = (0, 0, 15, 15)
     snap_xloc = 0.0
     push_xloc = 0.0
     pvel = 0.0
     ability = Ability.ITEM.value
+    dash_xvel = 0.0
 
     def dummy(self):
         pass
@@ -88,9 +90,6 @@ class InteractiveMover(Mover):
                     if int(self.snap_xloc) & 0x7:
                         self.snap_xloc &= 0xFFF8
 
-
-
-
             if snapTo8:
                 self.xloc = self.snap_xloc
                 self.push_state = Push.NOPUSH
@@ -115,15 +114,51 @@ class InteractiveMover(Mover):
                 self.xloc = check_val
                 self.xvel = 0
                 self.push_state = Push.NOPUSH
+
                 self.pvel = 0
 
+    def clamp_pvel(self):
+        if self.push_state in (Push.STILL, Push.SKID) \
+                or self.move_state == Status.DASH:
+            return
+
+        if self.xvel >= self.max_pvel:
+            self.xvel = self.max_pvel
+
+    def procInteractionEvents(self):
+
+        if Events.HALT_PUSHING in self.interaction_events:
+            self.push_state = Push.STILL
+
+        if Events.MOVER_LEAVE_COIL in self.interaction_events:
+            self.push_state = Push.STILL
+
+        if Events.MOVER_RECOIL in self.interaction_events:
+            self.xvel = self.dash_xvel
+            self.xaccl = 0.05
+            self.direction *= -1
+            self.facing *= -1
+            self.move_state = Status.DASH
+
+        self.interaction_events.clear()
+
+    def initPushing(self, direction, friction, xaccl, move_state, xvel=0):
+        self.xvel *= friction
+        self.xaccl = xaccl
+        if xvel > 0:
+            self.xvel = xvel
+        self.move_state = move_state
+        self.direction = direction
+        self.push_state = Push.NUDGE
+
+
     def go(self):
-        self.lambdas.append(lambda : self.process_pushing())
+        self.lambdas.append(lambda : self.clamp_pvel())
         super().go()
 
     def test(self):
-        self.push_state = Push.SKID
-        self.xvel = 2.5
+        #self.push_state = Push.SKID
+        #self.xvel = 2.5
         self.direction = Facing.LEFT
         self.snap_xloc = self.xloc - 8
         #self.xaccl = -0.05

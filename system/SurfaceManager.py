@@ -1,8 +1,6 @@
-import pygame
-
-from enum import IntEnum
-from system.defs import *
 from PIL import Image
+
+from system.defs import *
 
 
 class Surfaces(IntEnum):

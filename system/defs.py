@@ -21,11 +21,17 @@ class Key(IntEnum):
     DOWN = 0x80
 
 class Push(IntEnum):
-    NOPUSH = 0
+    SKID = -1
+    STILL = 0
     NUDGE = 1
     ROLLBACK = 2
     STEP = 4
-    SKID = 8
+    REST = 8
+
+class Move(IntEnum):
+    NEUTRAL = 0
+    DASH = 1
+
 
 class Facing(IntEnum):
     LEFT = -1
@@ -50,6 +56,8 @@ class Tick(IntEnum):
     DELAY = 10
 
 class Status(IntEnum):
+    DASH = -1
+    NEUTRAL = 0x0
     WALK = 0x1
     EXPIRED = 0xFF
 
@@ -58,11 +66,37 @@ class Terminators(IntEnum):
     REPEAT = 0xFE
     EXPIRE = 0xFF
 
+class Events(Enum):
+    HOLD_LEFT = "hold_left"
+    HOLD_RIGHT = "hold_right"
+    PRESS_LEFT = "press_left"
+    PRESS_RIGHT = "press_right"
+    RELEASE_LEFT = "release_left"
+    RELEASE_RIGHT = "release_right"
+    REVERSE_DIRECTION = "reverse_direction"
+    MAX_XVEL = "max_xvel"
+    MIN_XVEL = "min_xvel"
+    ACCELERATE = "accelerate"
+    DECCELERATE = "deccelerate"
+    XVEL_GT = "xvel_greater_than"
+    XVEL_LT = "xvel_less_than"
+    HALT_PUSHING = "halt_pushing"
+    PUSH_TO_SKID = "push_to_skid"
+    PUSHING_COIL_LEFT = "pushing_coil"
+    PUSHING_COIL_RIGHT = "pushing_coil"
+    NO_CHECK_COIL = "no_check_coil"
+    MOVER_LEAVE_COIL = "no_contact_coil"
+    MOVER_RECOIL = "mover_recoil"
+    COIL_CONTACT = "coil_contact"
+
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
     STATUE = "statue"
     HAMMER = "hammer"
+    SIDECOIL = "sidecoil"
+    VERTCOIL = "vertcoil"
+    SPRINGBOX = "springbox"
 
 class Ability(Enum):
     PUSHING = "pushing"
@@ -71,7 +105,6 @@ class Ability(Enum):
 class Statue(IntEnum):
     PASSIVE = 0
     ARMED = 1
-
 
 class Vel(float, Enum):
     SHOVE = 0.175

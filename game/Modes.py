@@ -1,9 +1,12 @@
 import sys
 
-from movers.InteractionListener import InteractionListener
-from movers.movers import Mover, AnimationState, Id
-from movers.mover_classes import PushingMover, InteractiveMover, Player, Statue
 from game.Overlap import spriteToBG
+from movers.AllMovers import AllMovers
+from movers.Block import Block, Statue, SpringBox
+from movers.InteractionListener import InteractionListener
+from movers.mover_classes import InteractiveMover, MiscMover, Player
+from movers.movers import Id
+from system.defs import Push, Facing
 
 
 class GameMode:
@@ -13,29 +16,47 @@ class GameMode:
     def Loop(self, controls):
         self.loopcounter += 1
         self.display_list.clear()
-        InteractionListener.evalInteractions()
 
-        self.mPlayer.proc_input(controls)
+
+        self.mPlayer.procInput(controls)
         for mover in self.movers:
             if mover.id == Id.BLOCK.value:
                 mover.proc_auto(controls)
+            mover.procEvents()
             mover.go()
             mover.make_hitboxes()
 
-        InteractionListener.evalTerminations()
-
+        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), AllMovers.blocks) )
         for mover in self.movers:
-            floor_found, result = InteractionListener.moverToMovers(mover)
+
+            floor_found = False
+            if mover.id == Id.PLAYER.value:
+                floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks)
+
+            if mover.id in (Id.BLOCK.value, Id.STATUE.value):
+                floor_found, result = InteractionListener.moverToMovers(mover, springs)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
+        for mover in MiscMover.postproc_movers:
+            mover.misc_hitbox()
+            mover.postproc()
+
+        InteractionListener.evalInteractions()
+
         for mover in self.movers:
+            mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
-            self.output += str(mover)
-
-        #print("\rloops: " + str(self.output), end="")
+            if mover.xvel > 0 and mover.id in (Id.STATUE.value, Id.PLAYER.value):
+                self.output += str(mover)
+            #if mover.xvel > 0.0:
+            #    self.output += str(mover)
+            #if mover.push_state == Push.ROLLBACK:
+            #    self.output += str(mover)
+        if self.output != "" and self.loopcounter % 10 == 0:
+            pass
+            print(str(self.output), end="\n")
         self.output = ""
-
-        #sys.stdout.flush()
+        sys.stdout.flush()
 
     @property
     def player_id(self):
@@ -45,25 +66,40 @@ class GameMode:
     def ids(self):
         return Id
 
+    """TODO: Replace with JSON data to load spawn positions of Movers based on round
+    """
     def Init(self, anim_inits):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
+        Player.movers.append(self.mPlayer)
 
         self.movers.append(self.mPlayer)
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-        block.xloc = 0xA0
-        block.yloc = 0xA0
+        block.xloc = 0x80
+        block.yloc = 0x80
         block.test()
-        InteractiveMover.movers.append(block)
+        #InteractiveMover.movers.append(block)
+        #self.movers.append(block)
 
         statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
         statue.xloc = 0x80
         statue.yloc = 0x80
-        #InteractiveMover.movers.append(statue)
+        statue.test()
+        Block.movers.append(statue)
+        self.movers.append(statue)
 
-        self.movers.append(block)
-        #self.movers.append(statue)
+        springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
+                              facing=Facing.RIGHT)
+        springbox.xloc = 0x10
+        springbox.yloc = 0xA0
+        springbox.spring.xloc = 0x20
+        springbox.spring.yloc = 0xB0
+        Block.movers.append(springbox)
+        self.movers.append(springbox)
+        Block.movers.append(springbox.spring)
+        self.movers.append(springbox.spring)
+
 
 
     def __init__(self):

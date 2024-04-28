@@ -21,8 +21,9 @@ class OverlapResult:
     mvb = None
 
     def __str__(self):
-        return str(self.result) + " " + str(self.side) + " " + str(self.vert) \
-            + " " + str(self.facing) + " " + str(self.standing)
+        return f"{self.hba}\n{self.phba}\n{self.hbb}\n{self.phbb}"
+        #return f"result: {self.result}, side: {self.side}, vert: {self.vert}, \
+        #facing: {self.facing}, standing: {self.standing}"
 
 def contact(recta, rectb):
     if recta.x0 - 1 > rectb.x1 or \
@@ -130,16 +131,23 @@ def moverToMover(mva, mvb) -> OverlapResult:
     elif contact(mva.hb, mvb.hb):
         result.result = Result.CONTACT
         if sideContact(mva.hb, mvb.hb):
-            if mva.facing == Facing.RIGHT \
+            """if mva.facing == Facing.RIGHT \
                 and mva.xloc < mvb.xloc:
                 result.facing = Facing.RIGHT
             if mva.facing == Facing.LEFT \
                 and mva.xloc > mvb.xloc:
+                result.facing = Facing.LEFT"""
+            if mva.direction == Facing.RIGHT \
+                    and mva.xloc < mvb.xloc:
+                result.facing = Facing.RIGHT
+            if mva.direction == Facing.LEFT \
+                    and mva.xloc > mvb.xloc:
                 result.facing = Facing.LEFT
             #result.facing = mva.facing
         if vertContact(mva.hb, mvb.hb):
             result.standing = mva.vertical
-
+    result.mva = mva
+    result.mvb = mvb
     return result
 
 
