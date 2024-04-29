@@ -59,6 +59,7 @@ class Status(IntEnum):
     DASH = -1
     NEUTRAL = 0x0
     WALK = 0x1
+    SHAKE = 0x2
     EXPIRED = 0xFF
 
 class Terminators(IntEnum):
@@ -97,6 +98,7 @@ class Id(Enum):
     SIDECOIL = "sidecoil"
     VERTCOIL = "vertcoil"
     SPRINGBOX = "springbox"
+    BRIDGEPLAT = "bridgeplat"
 
 class Ability(Enum):
     PUSHING = "pushing"

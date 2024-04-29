@@ -13,6 +13,7 @@ class InteractiveMover(Mover):
     pvel = 0.0
     ability = Ability.ITEM.value
     dash_xvel = 0.0
+    onFallPlat = False
 
     def dummy(self):
         pass

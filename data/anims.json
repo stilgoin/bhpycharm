@@ -67,5 +67,14 @@
         "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
         "color": "#808080FF",
         "terminators": [253,253]
+    },
+    {
+        "id": "bridgeplat",
+        "placeholder" : true,
+        "rects": [],
+        "size": "16",
+        "sequences": [[{"xloc": 0, "yloc": 0}]],
+        "color": "#80FF80FF",
+        "terminators": [253]
     }
 ]

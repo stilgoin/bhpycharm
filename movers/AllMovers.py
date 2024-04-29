@@ -1,5 +1,4 @@
-from movers.Block import Block
-from movers.movers import Mover
+from movers.blocks.block import Block
 
 
 class AllMovers:

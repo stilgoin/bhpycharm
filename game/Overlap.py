@@ -167,6 +167,10 @@ def spriteToBG(mover, bghits):
                     rollbackXRight(mover, hit)
                 if right:
                     rollbackXLeft(mover, hit)
+            else:
+                if mover.onFallPlat:
+                    rollbackYUp(mover, hit)
+                    floor_found = True
 
             upa, downa, vertha = vert( (mover.hb, mover.phb), hit)
             upb, downb, verthb = vert( (mover.hb, mover.phb), hit, 1)

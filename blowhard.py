@@ -23,9 +23,9 @@ def main():
 
     resloader = ResourceLoader("data/try.bin")
     sm = SurfaceManager(SCR_W, SCR_H)
-    resloader.initMap(sm)
+    resloader.initMap(sm, 1)
     game = GameMode()
-    game.bghits = resloader.tileMaps[0].hitboxes
+    game.bghits = resloader.tileMaps[1].hitboxes
     resloader.initMoverAnims(game)
 
 

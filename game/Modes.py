@@ -2,11 +2,14 @@ import sys
 
 from game.Overlap import spriteToBG
 from movers.AllMovers import AllMovers
-from movers.Block import Block, Statue, SpringBox
+from movers.blocks.block import Block
+from movers.blocks.statue import Statue
+from movers.blocks.spring import SpringBox
 from movers.InteractionListener import InteractionListener
+from movers.bridge import BridgeSegment
 from movers.mover_classes import InteractiveMover, MiscMover, Player
 from movers.movers import Id
-from system.defs import Push, Facing
+from system.defs import Facing
 
 
 class GameMode:
@@ -31,10 +34,10 @@ class GameMode:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks)
+                floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks + self.interact_movers)
 
             if mover.id in (Id.BLOCK.value, Id.STATUE.value):
-                floor_found, result = InteractionListener.moverToMovers(mover, springs)
+                floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
         for mover in MiscMover.postproc_movers:
@@ -73,17 +76,33 @@ class GameMode:
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
         Player.movers.append(self.mPlayer)
-
         self.movers.append(self.mPlayer)
+
+        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
+        bridge.xloc = 0x70
+        bridge.yloc = 0xC0
+        self.movers.append(bridge)
+        self.interact_movers.append(bridge)
+        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
+        bridge.xloc = 0x80
+        bridge.yloc = 0xC0
+        self.movers.append(bridge)
+        self.interact_movers.append(bridge)
+        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
+        bridge.xloc = 0x90
+        bridge.yloc = 0xC0
+        self.movers.append(bridge)
+        self.interact_movers.append(bridge)
+
         block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-        block.xloc = 0x80
+        block.xloc = 0x60
         block.yloc = 0x80
         block.test()
         #InteractiveMover.movers.append(block)
         #self.movers.append(block)
 
         statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
-        statue.xloc = 0x80
+        statue.xloc = 0x60
         statue.yloc = 0x80
         statue.test()
         Block.movers.append(statue)

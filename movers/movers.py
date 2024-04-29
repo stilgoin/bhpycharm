@@ -252,6 +252,10 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         #floor_found, result = self.moverToMovers()
 
         floor_found = floor_found or moverToBGFunc()
+
+        if floor_found and self.onFallPlat:
+            moverToBGFunc()
+
         if floor_found and self.jump_state == Jump.FALL:
             self.jump_state = Jump.FLOOR
             self.yvel = 0.0
