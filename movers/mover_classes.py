@@ -1,4 +1,4 @@
-from movers.InteractiveMover import InteractiveMover
+from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
 from system.defs import Id, Anim, Jump, Events, Status, Facing, Push
 

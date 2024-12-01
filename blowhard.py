@@ -1,10 +1,12 @@
 
-from game.Modes import GameMode
+from game.modes import GameMode
+from system import draw
 
-from system.Control import Control
+from system.control import Control
 from system.defs import *
 from system.resload import ResourceLoader
-from system.SurfaceManager import SurfaceManager
+from system.resource_store import ResourceStore
+from system.surface_manager import SurfaceManager
 def main():
     pygame.mixer.pre_init(96000, -16, 4, 4096)
     pygame.init()
@@ -22,11 +24,17 @@ def main():
     control = Control()
 
     resloader = ResourceLoader("data/try.bin")
+    resource_store = ResourceStore()
+    resloader.loadAnims(resource_store.animations)
+    resource_store.tileMaps = resloader.loadTileMaps()
+    resloader.loadTilesets(resource_store.tileSets)
+
     sm = SurfaceManager(SCR_W, SCR_H)
-    resloader.initMap(sm, 1)
+    draw.initMap(sm, resource_store.tileMaps,
+                 resource_store.tileSets, 1)
     game = GameMode()
-    game.bghits = resloader.tileMaps[1].hitboxes
-    resloader.initMoverAnims(game)
+    game.bghits = resource_store.tileMaps[1].hitboxes
+    draw.initMoverAnims(game, resource_store.animations)
 
 
     running = True
@@ -45,7 +53,7 @@ def main():
 
         control.control(pygame)
         game.Loop(control.controls)
-        resloader.drawAnims(sm, game)
+        draw.drawAnims(sm, game, resource_store.animations)
         sm.drawScreen(pygame.display.get_surface() )
         pygame.display.flip()
 

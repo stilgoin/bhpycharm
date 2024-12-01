@@ -1,6 +1,6 @@
-from game.Handlers import rollbackXRight, rollbackXLeft, rollbackYUp
-from game.Overlap import OverlapResult, moverToMover, Result
-from movers.InteractiveMover import InteractiveMover
+from game.handlers import rollbackXRight, rollbackXLeft, rollbackYUp
+from game.overlap import OverlapResult, moverToMover, Result
+from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
 from system.defs import Facing, Vertical, Push, Vel, Ability
 

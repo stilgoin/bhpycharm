@@ -1,6 +1,6 @@
-from game.Maps import Hitbox
-from game.Overlap import moverToMover, Result
-from movers.InteractiveMover import InteractiveMover
+from game.maps import Hitbox
+from game.overlap import moverToMover, Result
+from movers.interactive_mover import InteractiveMover
 from movers.blocks.block import Block
 from movers.mover_classes import Player, MiscMover
 from movers.movers import Mover

@@ -1,4 +1,4 @@
-from game.Handlers import *
+from game.handlers import *
 from system.defs import Jump, Facing, Vertical
 from enum import IntEnum
 

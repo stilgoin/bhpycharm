@@ -1,6 +1,6 @@
 from system.defs import *
-from game.Maps import Hitbox
-from game.Overlap import OverlapResult
+from game.maps import Hitbox
+from game.overlap import OverlapResult
 
 import uuid
 

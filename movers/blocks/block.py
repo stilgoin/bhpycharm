@@ -1,4 +1,4 @@
-from movers.InteractiveMover import InteractiveMover
+from movers.interactive_mover import InteractiveMover
 from system.defs import Status, Push, Events
 
 class Block(InteractiveMover):

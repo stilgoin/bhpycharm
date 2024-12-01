@@ -7,63 +7,51 @@ from types import SimpleNamespace
 import pygame
 from PIL import Image
 
-from game.Maps import TilePlacement, MapLayer, TileMap, AnimationSequence
-from game.Modes import GameMode
+from game.maps import TilePlacement, MapLayer, TileMap, AnimationSequence
+from system.surface_manager import SurfaceManager as sm
 
-from system.SurfaceManager import SurfaceManager as sm, Surfaces
+
 class ResourceLoader:
+    tileMaps: list[TileMap]
+    tileSets: dict[str, list[pygame.Surface]]
 
-    tileMaps : list[TileMap]
-    tileSets : dict[str, list[pygame.Surface]]
     def __getitem__(self, item):
         if item in self.tileset_keys:
             return self.tileSets[item]
 
-    def initMap(self, surfMgmt : sm, mapIdx : int = 0):
-        layer : MapLayer
-        tipl : TilePlacement
-        tileset_keys = ["8x8", "16x16", "24x24", "32x32"]
-        tileMap = self.tileMaps[mapIdx]
-        tileSurf : pygame.Surface
-        for layer in tileMap.layers:
-            for tipl in layer.tile_placements:
-                tkey = tileset_keys[tipl.tileSize - 1]
-                tileSurf = self.tileSets[tkey][tipl.tileId]
-                xloc = tipl.xloc
-                yloc = tipl.yloc
-                surfMgmt.blitSurface(Surfaces.MAP.value, tileSurf, (xloc, yloc) )
 
-    def loadTiles(self, image, tile_size, tileset_key):
+    def loadTiles(self, image, tile_size, tileset_key,
+                  tileSets: dict[str, list[pygame.Surface]]):
         ty = 0
         while ty < image.height:
             tx = 0
             while tx < image.width:
                 tile_surf = \
                     sm.surfaceFromImage(image,
-                                    (tx, ty, tile_size, tile_size))
-                self.tileSets[tileset_key]\
+                                        (tx, ty, tile_size, tile_size))
+                tileSets[tileset_key] \
                     .append(tile_surf)
                 tx += tile_size
             ty += tile_size
 
-    def loadTilesets(self):
+    def loadTilesets(self, tileSets: [str, list[pygame.Surface]]):
         tile_sizes = [8, 16, 32]
         ti = 0
         for tile_size in tile_sizes:
             image = self.tile_sheets[ti]
             self.loadTiles(image, tile_size,
-                           self.tileset_keys[ti])
+                           self.tileset_keys[ti], tileSets)
             ti += 1
 
     def loadBinImage(self, bin_image) -> Image:
         return Image.open(bin_image,
                           formats=["PNG"])
 
-
     """
     Recursively builds an object from json starting with the inner-most json {} string
     """
-    def decodeMapsJson(self, fields_dict : dict) -> dict[str, pygame.Surface]:
+
+    def decodeMapsJson(self, fields_dict: dict) -> dict[str, pygame.Surface]:
         if 'xloc' in fields_dict:
             return TilePlacement(**fields_dict)
         if 'tilePlacements' in fields_dict.keys():
@@ -72,42 +60,13 @@ class ResourceLoader:
             return TileMap(fields_dict['mapLayers']['shadowList'])
         return fields_dict
 
-    def loadTileMaps(self, maps_dict) -> list[TileMap]:
+    def loadTileMaps(self) -> list[TileMap]:
         json_strr = "[{\"xloc\":0,\"yloc\":224,\"tileSize\":2,\"tileId\":0,\"flipTile\":false,\"vflipTile\":false}" \
                     ",{\"xloc\":80,\"yloc\":240,\"tileSize\":2,\"tileId\":1,\"flipTile\":false,\"vflipTile\":false}]"
-        tilemaps_strr = maps_dict.tileMapEditor
+        tilemaps_strr = self.maps_dict.tileMapEditor
         return json.loads(tilemaps_strr,
-                   object_hook=self.decodeMapsJson)
+                          object_hook=self.decodeMapsJson)
 
-    def drawAnims(self, surfMgmt : sm, game : GameMode):
-        surfMgmt.clearSpriteSurf()
-        display_list = game.display_list
-        for entry in display_list:
-            if 0xFF == entry.frameIdx:
-                continue
-            animation = self.animations[entry.id]
-            sprite = animation[entry.animIdx].frames[entry.frameIdx]
-            xloc = entry.xloc
-            yloc = entry.yloc
-            sprite = pygame.transform.flip(sprite, entry.fliph, entry.flipv)
-            surfMgmt.drawSprite(sprite, xloc, yloc)
-
-
-        #sprite = self.animations["player"][0].frames[0]
-        #surfMgmt.blitSurface(Surfaces.SPRITE.value, sprite, (0x80, 0x80))
-
-    def initMoverAnims(self, game : GameMode):
-        anim_inits = {}
-        for id in game.ids:
-            #anim_seqs = self.animations[game.player_id.value]
-            anim_seqs = self.animations[id.value]
-            maxFrames = []
-            terminators = []
-            for anim_seq in anim_seqs:
-                maxFrames.append(len(anim_seq.frames) )
-                terminators.append(anim_seq.terminator)
-            anim_inits[id] = (maxFrames, terminators)
-        game.Init( anim_inits )
 
     def loadAnimSeq(self, anim_seqs, sheet, terminators, anim_seq, ti, size):
         frames = []
@@ -120,16 +79,17 @@ class ResourceLoader:
             frames.append(sprite)
         anim_seqs.append(AnimationSequence(frames, terminator))
 
+
     # Placeholder drawing
     def drawPlaceholder(self, sprite, color, rects):
         for rect in rects:
             pygame.draw.rect(sprite, color, rect)
 
-    def loadAnims(self, anim_dict):
+    def loadAnims(self, animations : dict):
         sheet = Image.open("data/master.bmp")
         sheet = sheet.convert("RGBA")
 
-        for anim_data in anim_dict:
+        for anim_data in self.anim_dict:
             anim_seqs = []
             size = int(anim_data.size)
             terminators = anim_data.terminators
@@ -143,7 +103,7 @@ class ResourceLoader:
                         color = anim_data.color
                     else:
                         color = "#00000100"
-                    sprite = sm.surfaceFromPlaceholder(color,(0,0,size,size))
+                    sprite = sm.surfaceFromPlaceholder(color, (0, 0, size, size))
                     self.drawPlaceholder(sprite, anim_data.color, anim_data.rects)
                     frames.append(sprite)
                     anim_seqs.append(AnimationSequence(frames, terminator))
@@ -151,7 +111,7 @@ class ResourceLoader:
                 for anim_seq in anim_data.sequences:
                     self.loadAnimSeq(anim_seqs, sheet, terminators, anim_seq, ti, size)
                     ti += 1
-            self.animations[id] = anim_seqs
+            animations[id] = anim_seqs
 
 
     def __init__(self, filename):
@@ -164,16 +124,13 @@ class ResourceLoader:
         self.tileSets = defaultdict(list)
 
         maps_file = io.FileIO(filename, "r")
-        maps_dict = json.load(maps_file,
+        self.maps_dict = json.load(maps_file,
                               object_hook=lambda d: SimpleNamespace(**d))
         maps_file.close()
 
         anim_file = io.FileIO("data/anims.json", "r")
-        anim_dict = json.load(anim_file,
+        self.anim_dict = json.load(anim_file,
                               object_hook=lambda d: SimpleNamespace(**d))
-        self.loadAnims(anim_dict)
-
-        self.tileMaps = self.loadTileMaps(maps_dict)
 
         gfx_file = io.FileIO(filename + ".images", "r")
         gfx_dict = json.load(gfx_file)
@@ -189,8 +146,3 @@ class ResourceLoader:
                 blo
             )
             self.tile_sheets.append(image)
-
-        self.loadTilesets()
-
-
-

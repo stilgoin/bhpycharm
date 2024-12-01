@@ -1,8 +1,8 @@
 from collections import defaultdict
 
-from game.Handlers import rollbackYUp, rollbackXLeft, rollbackXRight
-from game.Overlap import OverlapResult, moverToMover, Result
-from movers.InteractiveMover import InteractiveMover
+from game.handlers import rollbackYUp, rollbackXLeft, rollbackXRight
+from game.overlap import OverlapResult, moverToMover, Result
+from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
 from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump
 

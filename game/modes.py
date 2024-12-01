@@ -1,11 +1,11 @@
 import sys
 
-from game.Overlap import spriteToBG
+from game.overlap import spriteToBG
 from movers.AllMovers import AllMovers
 from movers.blocks.block import Block
 from movers.blocks.statue import Statue
 from movers.blocks.spring import SpringBox
-from movers.InteractionListener import InteractionListener
+from movers.interaction_listener import InteractionListener
 from movers.bridge import BridgeSegment
 from movers.mover_classes import InteractiveMover, MiscMover, Player
 from movers.movers import Id
