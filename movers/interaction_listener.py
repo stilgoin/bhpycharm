@@ -52,7 +52,7 @@ class InteractionListener:
             print("rollback", mb.psteps)
             return
 
-        if ma.id in (Id.STATUE.value, Id.BLOCK.value) \
+        if ma.id in (Id.BLOCK.value) \
                 and not ma.pushByHand:
             if mb.psteps > 16 and mb.push_state == Push.NUDGE:
                 mb.push_state = Push.ROLLBACK
@@ -164,7 +164,7 @@ class InteractionListener:
         if not ma.xaccl and not mb.xaccl:
             return
 
-        if ma.id not in (Id.STATUE.value, Id.BLOCK.value):
+        if ma.id not in (Id.BLOCK.value):
             if ma.facing == Facing.RIGHT:
                 if ma.xloc > mb.xloc:
                     if ma.facing != ma.direction:

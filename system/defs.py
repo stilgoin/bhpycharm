@@ -93,7 +93,6 @@ class Events(Enum):
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
-    STATUE = "statue"
     HAMMER = "hammer"
     SIDECOIL = "sidecoil"
     VERTCOIL = "vertcoil"
@@ -103,10 +102,6 @@ class Id(Enum):
 class Ability(Enum):
     PUSHING = "pushing"
     ITEM = "item"
-
-class Statue(IntEnum):
-    PASSIVE = 0
-    ARMED = 1
 
 class Vel(float, Enum):
     SHOVE = 0.175

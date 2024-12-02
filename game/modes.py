@@ -3,10 +3,9 @@ import sys
 from game.overlap import spriteToBG
 from movers.AllMovers import AllMovers
 from movers.blocks.block import Block
-from movers.blocks.statue import Statue
 from movers.blocks.spring import SpringBox
-from movers.interaction_listener import InteractionListener
 from movers.bridge import BridgeSegment
+from movers.interaction_listener import InteractionListener
 from movers.mover_classes import InteractiveMover, MiscMover, Player
 from movers.movers import Id
 from system.defs import Facing
@@ -36,8 +35,8 @@ class GameMode:
             if mover.id == Id.PLAYER.value:
                 floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks + self.interact_movers)
 
-            if mover.id in (Id.BLOCK.value, Id.STATUE.value):
-                floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
+            #if mover.id in (Id.STATUE.value):
+            #    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
         for mover in MiscMover.postproc_movers:
@@ -49,7 +48,7 @@ class GameMode:
         for mover in self.movers:
             mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
-            if mover.xvel > 0 and mover.id in (Id.STATUE.value, Id.PLAYER.value):
+            if mover.xvel > 0 and mover.id in (Id.PLAYER.value):
                 self.output += str(mover)
             #if mover.xvel > 0.0:
             #    self.output += str(mover)
@@ -100,13 +99,6 @@ class GameMode:
         block.test()
         #InteractiveMover.movers.append(block)
         #self.movers.append(block)
-
-        statue = Statue(anim_inits, anim_inits[self.ids.STATUE], self.ids.STATUE.value, True)
-        statue.xloc = 0x60
-        statue.yloc = 0x80
-        statue.test()
-        Block.movers.append(statue)
-        self.movers.append(statue)
 
         springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
                               facing=Facing.RIGHT)

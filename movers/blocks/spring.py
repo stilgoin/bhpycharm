@@ -75,6 +75,6 @@ class SpringBox(Block):
                 self.spring.animation_state.display_entry(self.spring.id, self.spring.xloc, self.spring.yloc,
                                    True if self.spring.facing == Facing.RIGHT else False,
                                    False)]
-    def __init__(self, anim_inits, anim_init, id = Id.STATUE.value, placeholder = True, facing = Facing.RIGHT):
+    def __init__(self, anim_inits, anim_init, id = Id.SPRINGBOX.value, placeholder = True, facing = Facing.RIGHT):
         self.spring = SideSpring(anim_inits[Id.SIDECOIL], Id.SIDECOIL.value, True, facing)
         super().__init__(anim_init, id, placeholder)
