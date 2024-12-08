@@ -93,7 +93,6 @@ class Events(Enum):
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
-    HAMMER = "hammer"
     SIDECOIL = "sidecoil"
     VERTCOIL = "vertcoil"
     SPRINGBOX = "springbox"

@@ -73,6 +73,12 @@ class Block(InteractiveMover):
         print("PUSHING")
 
     def go(self):
-        self.lambdas.append(lambda : self.halt_skidding())
-        self.lambdas.append(lambda : self.add_push_steps())
         super().go()
+
+    def before_move(self):
+        super().before_move()
+        self.halt_skidding()
+        self.add_push_steps()
+
+    def move(self):
+        super().move()

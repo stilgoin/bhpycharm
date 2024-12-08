@@ -35,8 +35,8 @@ class GameMode:
             if mover.id == Id.PLAYER.value:
                 floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks + self.interact_movers)
 
-            #if mover.id in (Id.STATUE.value):
-            #    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
+            if mover.id in (Id.BLOCK.value):
+                floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
             mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
 
         for mover in MiscMover.postproc_movers:
@@ -93,12 +93,13 @@ class GameMode:
         self.movers.append(bridge)
         self.interact_movers.append(bridge)
 
-        block = InteractiveMover(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+        block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0x60
         block.yloc = 0x80
         block.test()
         #InteractiveMover.movers.append(block)
-        #self.movers.append(block)
+        self.movers.append(block)
+        Block.movers.append(block)
 
         springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
                               facing=Facing.RIGHT)

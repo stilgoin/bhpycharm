@@ -1,3 +1,4 @@
+from movers.helpers.animation_state import AnimationState
 from system.defs import *
 from game.maps import Hitbox
 from game.overlap import OverlapResult
@@ -6,76 +7,6 @@ import uuid
 
 JUMPVEL = 1.75
 GRAVITY = .046875
-
-class DisplayEntry:
-    id = ""
-    animIdx = 0
-    frameIdx = 0
-    xloc = 0.0
-    yloc = 0.0
-    fliph = False
-    flipv = False
-
-    def __init__(self, **kwargs):
-        self.id = kwargs['id']
-        self.animIdx = kwargs['animIdx']
-        self.frameIdx = kwargs['frameIdx']
-        self.xloc = kwargs['xloc']
-        self.yloc = kwargs['yloc']
-        self.fliph = kwargs['fliph'] \
-            if 'fliph' in kwargs else False
-        self.flipv = kwargs['flipv'] \
-            if 'flipv' in kwargs else False
-
-
-
-class AnimationState:
-    animIdx = 0
-    frameTicks = 0
-    maxFrames = 0
-
-    def __str__(self):
-        return "animIdx: " + str(self.animIdx) + ", frameTicks: " + str(self.frameTicks)
-
-
-    def process_terminator(self):
-        terminator = self.terminators[self.animIdx]
-        if terminator == Terminators.HOLD:
-            return self.maxFrames[self.animIdx] - 1
-        if terminator == Terminators.REPEAT:
-            self.frameTicks = 0
-            return 0
-        if terminator == Terminators.EXPIRE:
-            return Terminators.EXPIRE
-    @property
-    def current_frame(self):
-        frameIdx = int(self.frameTicks / Tick.DELAY)
-        if frameIdx >= self.maxFrames[self.animIdx]:
-            return self.process_terminator()
-        return frameIdx
-
-    def set_anim_idx(self, animIdx):
-        self.animIdx = animIdx
-        self.frameTicks = 0
-
-    def check_anim_idx(self, animIdx) -> bool:
-        return self.animIdx == animIdx
-
-    def display_entry(self, id, xloc, yloc, fliph = False, flipv = False):
-        frameIdx = self.current_frame
-        if id == Id.BLOCK.value:
-            fliph = False
-        return DisplayEntry(id=id, animIdx=self.animIdx,
-                            frameIdx=frameIdx, xloc=xloc, yloc=yloc,
-                            fliph=fliph, flipv=flipv)
-
-    def add_frameticks(self):
-        self.frameTicks += 1
-
-    def __init__(self, anim_init):
-        maxFrames, terminators = anim_init
-        self.maxFrames = maxFrames
-        self.terminators = terminators
 
 class Mover:
     xloc = 0.0
@@ -194,6 +125,9 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
     def procInteractionEvents(self):
         pass
 
+    def before_move(self):
+        pass
+
     def move(self):
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
@@ -225,17 +159,11 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
             if self.action_timer <= 0:
                 self.push_state = Push.STILL
 
-    def call_lambdas(self):
-        for call_lambda in self.lambdas:
-            call_lambda()
-        self.lambdas.clear()
-
-
 
     def go(self):
         self.animation_state.add_frameticks()
-        self.call_lambdas()
 
+        self.before_move()
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.move()
@@ -291,7 +219,6 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         self.id = id
         self.set_fall(1.75)
         self.set_anim_idx(Anim.STILL)
-        self.lambdas = []
         self.events = []
         self.interaction_events = []
         self.placeholder = placeholder

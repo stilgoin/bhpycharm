@@ -143,7 +143,7 @@ class InteractiveMover(Mover):
 
         self.interaction_events.clear()
 
-    def initPushing(self, direction, friction, xaccl, move_state, xvel=0):
+    def initPushing(self, direction, friction, xaccl, move_state, xvel=0, pushByHand = False):
         self.xvel *= friction
         self.xaccl = xaccl
         if xvel > 0:
@@ -154,8 +154,13 @@ class InteractiveMover(Mover):
 
 
     def go(self):
-        self.lambdas.append(lambda : self.clamp_pvel())
         super().go()
+
+    def before_move(self):
+        self.clamp_pvel()
+
+    def move(self):
+        super().move()
 
     def test(self):
         #self.push_state = Push.SKID
