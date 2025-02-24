@@ -10,7 +10,7 @@ class Block(InteractiveMover):
     pushByHand = False
 
     def __str__(self):
-        return super().__str__() + f"psteps: {self.psteps}"
+        return super().__str__() + f"psteps: {self.psteps}, pvel: {self.pvel}"
 
     def add_push_steps(self):
         if self.push_state == Push.NUDGE \
@@ -60,15 +60,10 @@ class Block(InteractiveMover):
     def procEvents(self):
         self.events.clear()
 
-    def initPushing(self, direction, friction, xaccl, move_state, xvel=0, pushByHand = False):
-        self.xvel *= friction
+    def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
         self.xaccl = xaccl
-        if xvel > 0:
-            self.xvel = xvel
-        if self.move_state == Status.NEUTRAL:
-            self.move_state = move_state
+        self.xvel = xvel * friction
         self.direction = direction
-        self.push_state = Push.NUDGE
         self.pushByHand = pushByHand
         print("PUSHING")
 
@@ -78,7 +73,7 @@ class Block(InteractiveMover):
     def before_move(self):
         super().before_move()
         self.halt_skidding()
-        self.add_push_steps()
+        #self.add_push_steps()
 
     def move(self):
         super().move()

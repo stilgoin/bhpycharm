@@ -83,12 +83,13 @@ class Events(Enum):
     XVEL_LT = "xvel_less_than"
     HALT_PUSHING = "halt_pushing"
     PUSH_TO_SKID = "push_to_skid"
-    PUSHING_COIL_LEFT = "pushing_coil"
-    PUSHING_COIL_RIGHT = "pushing_coil"
+    PUSHING_COIL_LEFT = "pushing_coil_left"
+    PUSHING_COIL_RIGHT = "pushing_coil_right"
     NO_CHECK_COIL = "no_check_coil"
     MOVER_LEAVE_COIL = "no_contact_coil"
     MOVER_RECOIL = "mover_recoil"
     COIL_CONTACT = "coil_contact"
+    CONTINUE_PUSHING = "continue_pushing"
 
 class Id(Enum):
     PLAYER = "player"

@@ -6,7 +6,7 @@ from movers.blocks.block import Block
 from movers.blocks.spring import SpringBox
 from movers.bridge import BridgeSegment
 from movers.interaction_listener import InteractionListener
-from movers.mover_classes import InteractiveMover, MiscMover, Player
+from movers.mover_classes import MiscMover, Player
 from movers.movers import Id
 from system.defs import Facing
 
@@ -43,13 +43,14 @@ class GameMode:
             mover.misc_hitbox()
             mover.postproc()
 
+        #self.output += \
         InteractionListener.evalInteractions()
 
         for mover in self.movers:
             mover.procInteractionEvents()
             self.display_list.extend(mover.animate())
-            if mover.xvel > 0 and mover.id in (Id.PLAYER.value):
-                self.output += str(mover)
+            if mover.xvel > 0 and mover.id in (Id.PLAYER.value, Id.BLOCK.value, Id.SIDECOIL.value):
+                self.output += str(mover) + "\n"
             #if mover.xvel > 0.0:
             #    self.output += str(mover)
             #if mover.push_state == Push.ROLLBACK:
@@ -57,6 +58,7 @@ class GameMode:
         if self.output != "" and self.loopcounter % 10 == 0:
             pass
             print(str(self.output), end="\n")
+            print("----------------------------")
         self.output = ""
         sys.stdout.flush()
 
@@ -80,26 +82,34 @@ class GameMode:
         bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
         bridge.xloc = 0x70
         bridge.yloc = 0xC0
-        self.movers.append(bridge)
-        self.interact_movers.append(bridge)
+        #self.movers.append(bridge)
+        #self.interact_movers.append(bridge)
         bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
         bridge.xloc = 0x80
         bridge.yloc = 0xC0
-        self.movers.append(bridge)
-        self.interact_movers.append(bridge)
+        #self.movers.append(bridge)
+        #self.interact_movers.append(bridge)
         bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
         bridge.xloc = 0x90
         bridge.yloc = 0xC0
-        self.movers.append(bridge)
-        self.interact_movers.append(bridge)
+        #self.movers.append(bridge)
+        #self.interact_movers.append(bridge)
 
         block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0x60
-        block.yloc = 0x80
+        block.yloc = 0xc0
         block.test()
         #InteractiveMover.movers.append(block)
         self.movers.append(block)
         Block.movers.append(block)
+
+        block2 = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+        block2.xloc = 0x60
+        block2.yloc = 0x80
+        block2.test()
+        # InteractiveMover.movers.append(block)
+        self.movers.append(block2)
+        Block.movers.append(block2)
 
         springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
                               facing=Facing.RIGHT)

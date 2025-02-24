@@ -8,7 +8,7 @@ from movers.movers import Mover
 from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump
 
 
-class InteractionListener:
+class InteractionListener2:
 
     listeners = {}
     result = None
@@ -88,9 +88,6 @@ class InteractionListener:
 
         ma : Mover = self.mva
         mb : Mover = self.mvb
-
-        ma.interaction_events.append(Events.CONTINUE_PUSHING)
-        mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
         if ma.move_state != Status.NEUTRAL:
             mb.move_state = ma.move_state
@@ -176,26 +173,79 @@ class InteractionListener:
         if (uuida, uuidb) in InteractionListener.listeners.keys():
             return
 
-        if not ma.xvel and not mb.xvel:
+        if not ma.move_state and not mb.move_state:
             return
 
-        InteractionListener.listeners[(uuida, uuidb)] = \
+        if not ma.xaccl and not mb.xaccl:
+            return
+        """ TODO:  Check if this can be removed
+        """
+        """
+        if ma.id not in (Id.BLOCK.value):
+            if ma.facing == Facing.RIGHT:
+                if ma.xloc > mb.xloc:
+                    if ma.facing != ma.direction:
+                        if ma.xvel < 0.5 \
+                            or ma.move_state == Status.DASH:
+                            ma.xvel = 0.0
+                            ma.xaccl = 0.0
+                            return
+
+            if ma.facing == Facing.LEFT:
+                if ma.xloc < mb.xloc:
+                    if ma.facing != ma.direction:
+                        if ma.xvel < 0.5 \
+                            or ma.move_state == Status.DASH:
+                            ma.xvel = 0.0
+                            ma.xaccl = 0.0
+                            return
+        """
+
+        # Don't initialize pushing again if we just launched into skidding
+        # TODO:  Maybe the interaction_listener can expire when the hitboxes aren't touching
+        if Push.SKID == mb.push_state \
+            and mb.xvel >= 0.5:
+            return
+
+        InteractionListener.listeners[(uuida, uuidb)] =\
             InteractionListener(result.mva, result.mvb, result)
 
-        if mb.xvel >= ma.MAX_XVEL_WALK:
-            direction = mb.direction
-            xaccl = mb.base_xaccl / 2.0
-            friction = mb.friction
-            xvel = mb.xvel
-        else:
+        if mb.id == Id.SPRINGBOX.value:
+            return
+
+        if mb.xvel > 0:
+            mb.psteps = 20
+
+        if ma.xvel >= mb.xvel:
             direction = ma.direction
             xaccl = ma.base_xaccl / 2.0
-            friction = ma.friction
+        else:
+            direction = mb.direction
+            xaccl = mb.base_xaccl / 2.0
+
+        if ma.move_state >= Status.NEUTRAL:
+            frictiona = ma.friction
+            frictionb = mb.friction
             xvel = ma.xvel
+            move_state = ma.move_state
+        else:
+            frictiona = 1
+            frictionb = 1
+            xvel = ma.xvel
+            xaccl = ma.xaccl
+            move_state = ma.move_state
 
-        ma.initPushing(direction, friction, xaccl)
-        mb.initPushing(direction, friction, xaccl, xvel, pushByHand = True)
+        if mb.MAX_PVEL_CONST < ma.MAX_PVEL_CONST:
+            ma.max_pvel = mb.MAX_PVEL_CONST
+            mb.max_pvel = mb.MAX_PVEL_CONST
+        else:
+            ma.max_pvel = ma.MAX_PVEL_CONST
+            mb.max_pvel = ma.MAX_PVEL_CONST
 
+        ma.initPushing(direction, frictionb, xaccl, move_state)
+        mb.initPushing(direction, frictiona, xaccl, move_state, xvel, pushByHand = True)
+        print("Push got initialized here", str(ma), str(mb))
+        print("dir",ma.direction, mb.direction,"facing", ma.facing,mb.facing)
 
     @classmethod
     def check_bridge(cls, result: OverlapResult):

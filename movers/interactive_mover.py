@@ -125,7 +125,7 @@ class InteractiveMover(Mover):
 
         if self.xvel >= self.max_pvel:
             self.xvel = self.max_pvel
-
+            print(f"{self.id}, {self.max_pvel}")
     def procInteractionEvents(self):
 
         if Events.HALT_PUSHING in self.interaction_events:
@@ -143,14 +143,10 @@ class InteractiveMover(Mover):
 
         self.interaction_events.clear()
 
-    def initPushing(self, direction, friction, xaccl, move_state, xvel=0, pushByHand = False):
-        self.xvel *= friction
+    def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
         self.xaccl = xaccl
-        if xvel > 0:
-            self.xvel = xvel
-        self.move_state = move_state
+        self.xvel = xvel * friction
         self.direction = direction
-        self.push_state = Push.NUDGE
 
 
     def go(self):

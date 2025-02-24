@@ -5,6 +5,7 @@ from system.defs import Events, Push, Id, Facing, Status
 class SideSpring(Block):
     base_xaccl = 0.05
     max_pvel = 0.25
+    MAX_PVEL_CONST = 0.25
 
     def clamp_pvel(self):
         if self.push_state == Push.STILL \
@@ -13,7 +14,7 @@ class SideSpring(Block):
 
         if self.xvel >= self.max_pvel:
             self.xvel = self.max_pvel
-
+            print(f"{self.id}, {self.max_pvel}")
     def go(self):
         if not self.xvel and self.move_state == Status.DASH:
             self.push_state = Push.STILL
