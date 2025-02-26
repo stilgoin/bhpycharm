@@ -89,43 +89,17 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
 
+        if not ma.xaccl \
+                or ma.direction != mb.direction \
+                or ma.hb.y0 > mb.hb.y1 \
+                or ma.hb.y1 < mb.hb.y0:
+            mb.interaction_events.append(Events.HALT_PUSHING)
+            self.expired = True
+            return
+
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
-        if ma.move_state != Status.NEUTRAL:
-            mb.move_state = ma.move_state
-
-        if ma.direction != mb.direction \
-                and math.floor(ma.xvel) == math.floor(mb.xvel):
-            mb.direction = ma.direction
-
-        if ma.move_state == Status.NEUTRAL \
-            and mb.move_state == Status.DASH \
-            and mb.xvel == 0.0:
-            pass
-
-        if ma.move_state >= Status.NEUTRAL:
-            if ma.push_state == Push.STILL \
-                and mb.push_state != Push.STILL \
-                or mb.push_state == Push.STILL \
-                and ma.push_state != Push.STILL:
-                ma.interaction_events.append(Events.HALT_PUSHING)
-                mb.interaction_events.append(Events.HALT_PUSHING)
-                #self.expired = True
-
-        if ma.hb.y0 > mb.hb.y1 \
-        or ma.hb.y1 < mb.hb.y0 \
-        or ma.move_state == Status.NEUTRAL and mb.move_state == Status.NEUTRAL:
-                ma.interaction_events.append(Events.HALT_PUSHING)
-                mb.interaction_events.append(Events.HALT_PUSHING)
-                self.expired = True
-
-        if ma.xvel >= ma.max_pvel \
-            or mb.xvel >= mb.max_pvel:
-            if mb.psteps >= 40:
-                ma.interaction_events.append(Events.HALT_PUSHING)
-                mb.interaction_events.append(Events.PUSH_TO_SKID)
-                self.expired = True
 
 
 
@@ -185,12 +159,12 @@ class InteractionListener:
         if mb.xvel >= ma.MAX_XVEL_WALK:
             direction = mb.direction
             xaccl = mb.base_xaccl / 2.0
-            friction = mb.friction
+            friction = ma.friction
             xvel = mb.xvel
         else:
             direction = ma.direction
             xaccl = ma.base_xaccl / 2.0
-            friction = ma.friction
+            friction = mb.friction
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl)
@@ -223,28 +197,28 @@ class InteractionListener:
             if result.facing == Facing.RIGHT:
                 pass
                 rollbackXLeft(result.mva, result.mvb.hb)
-                print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
+                #print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
             if result.facing == Facing.LEFT:
                 pass
                 rollbackXRight(result.mva, result.mvb.hb)
-                print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
+                #print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-                print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
+                #print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
-                print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
+                #print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
             else:
                 if result.vert == Vertical.DOWN:
                     return
 
                 if result.mva.xloc > result.mvb.xloc:
                     rollbackXRight(result.mva, result.mvb.hb)
-                    print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
+                    #print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
                 else:
                     rollbackXLeft(result.mva, result.mvb.hb)
-                    print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
+                    #print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,

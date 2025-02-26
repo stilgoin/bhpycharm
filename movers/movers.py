@@ -23,7 +23,7 @@ class Mover:
     MAX_PVEL_CONST = 0.5
     MAX_XVEL_WALK = 1.75
     MAX_XVEL_DASH = 5.25
-    MAX_XVEL_PUSH = 1.25
+    MAX_XVEL_PUSH = 1.0
     max_xvel = 1.0
     max_dvel = 2.5
 

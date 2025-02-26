@@ -28,14 +28,16 @@ class Block(InteractiveMover):
 
     def procInteractionEvents(self):
         if Events.HALT_PUSHING in self.interaction_events:
-            self.push_state = Push.STILL
-            if self.move_state != Status.DASH:
-                self.xvel = 0.0
-                self.xaccl = 0.0
-                self.move_state = Status.NEUTRAL
-                self.psteps = 0
-                self.pushByHand = False
+            self.xvel = 0.0
+            self.xaccl = 0.0
+            self.psteps = 0
+            self.pushByHand = False
             print("Halt")
+
+        elif Events.CONTINUE_PUSHING in self.interaction_events:
+            self.xvel += self.xaccl
+            if self.xvel >= self.MAX_XVEL_PUSH:
+                self.xvel = self.MAX_XVEL_PUSH
 
         elif Events.PUSH_TO_SKID in self.interaction_events:
             self.psteps = 0

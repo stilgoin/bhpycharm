@@ -19,7 +19,9 @@ class Player(InteractiveMover):
             if Events.MIN_XVEL in self.events \
                     and Events.PUSHING_COIL_RIGHT not in self.events \
                     and Events.PUSHING_COIL_LEFT not in self.events:
-                self.xaccl = self.base_xaccl
+
+                if not self.xaccl:
+                    self.xaccl = self.base_xaccl
 
                 self.move_state = Status.WALK
                 if Events.HOLD_LEFT in self.events:
@@ -51,14 +53,14 @@ class Player(InteractiveMover):
                 It's a bug but might be neat
             """
 
-        if self.move_state == Status.WALK:
-            if self.push_state == Push.NUDGE:
-                self.xaccl = self.base_xaccl / 2.0
-            else:
-                self.xaccl = self.base_xaccl
+        #if self.move_state == Status.WALK:
+        #    if self.push_state == Push.NUDGE:
+        #        self.xaccl = self.base_xaccl / 2.0
+        #    else:
+        #        self.xaccl = self.base_xaccl
 
-            if self.xvel >= self.max_xvel:
-                self.xvel = self.max_xvel
+        if self.xvel >= self.max_xvel:
+            self.xvel = self.max_xvel
 
         if self.xvel > 0.0:
             zero_xvel = False
