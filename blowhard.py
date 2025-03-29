@@ -12,9 +12,9 @@ def main():
     pygame.init()
     pygame.font.init()
     font_obj = pygame.font.SysFont("arial",14)
-
+    bestdepth = pygame.display.mode_ok( (SCALE_W,SCALE_H), 0, 32)
     pyg_screen = \
-        pygame.display.set_mode( (SCALE_W, SCALE_H) )
+        pygame.display.set_mode( (SCALE_W, SCALE_H), 0, bestdepth )
 
     pygame.display.set_caption("Blowhard")
     pygame.mouse.set_visible(0)
@@ -41,7 +41,7 @@ def main():
     while running:
         pyg_clock.tick(60)
 
-        pyg_screen.fill((BG_FILL))
+        #pyg_screen.fill(pygame.Color(96,112,128,0))
 
         for event in pygame.event.get():
             if QUIT == event.type:

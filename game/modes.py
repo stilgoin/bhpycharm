@@ -19,7 +19,6 @@ class GameMode:
         self.loopcounter += 1
         self.display_list.clear()
 
-
         self.mPlayer.procInput(controls)
         for mover in self.movers:
             if mover.id == Id.BLOCK.value:

@@ -1,7 +1,10 @@
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
 from system.defs import Id, Anim, Jump, Events, Status, Facing, Push
+from system.defs import *
 
+
+JUMPVEL = 1.75
 
 class MiscMover(Mover):
     movers = []
@@ -16,34 +19,22 @@ class Player(InteractiveMover):
 
         if Events.HOLD_RIGHT in self.events \
             or Events.HOLD_LEFT in self.events:
-            if Events.MIN_XVEL in self.events \
-                    and Events.PUSHING_COIL_RIGHT not in self.events \
-                    and Events.PUSHING_COIL_LEFT not in self.events:
 
-                if not self.xaccl:
-                    self.xaccl = self.base_xaccl
+            if not self.xaccl:
+                self.xaccl = self.base_xaccl
 
-                self.move_state = Status.WALK
-                if Events.HOLD_LEFT in self.events:
-                    self.holding = Facing.LEFT
-                if Events.HOLD_RIGHT in self.events:
-                    self.holding = Facing.RIGHT
+            if Events.HOLD_LEFT in self.events:
+                self.holding = Facing.LEFT
+            if Events.HOLD_RIGHT in self.events:
+                self.holding = Facing.RIGHT
 
-                if self.holding != 0:
-                    self.direction = self.holding
-                    self.facing = self.holding
+            if self.holding != 0:
+                self.direction = self.holding
+                self.facing = self.holding
         else:
-            if self.move_state >= Status.NEUTRAL:
-                self.move_state = Status.NEUTRAL
-                self.xvel = 0.0
-                self.xaccl = 0.0
-                self.holding = 0
-
-        if Events.RELEASE_LEFT in self.events \
-            or Events.RELEASE_RIGHT in self.events:
-            self.push_state = Push.STILL
-
-            #print(self.events)
+            self.xvel = 0.0
+            self.xaccl = 0.0
+            self.holding = 0
 
         if self.direction != self.holding and self.holding != 0:
             self.events.append(Events.REVERSE_DIRECTION)
@@ -112,6 +103,55 @@ class Player(InteractiveMover):
         """
 
         self.events.clear()
+
+    def procInput(self, control):
+        this_frame_control, last_frame_control, \
+            keys_pressed, keys_released, launch = control
+
+        if keys_released & Key.RIGHT:
+            self.events.append(Events.RELEASE_LEFT)
+        if keys_released & Key.LEFT:
+            self.events.append(Events.RELEASE_RIGHT)
+        if keys_pressed & Key.RIGHT:
+            self.events.append(Events.PRESS_RIGHT)
+        if keys_pressed & Key.LEFT:
+            self.events.append(Events.PRESS_LEFT)
+
+        if this_frame_control & Key.LEFT:
+            self.events.append(Events.HOLD_LEFT)
+            if Events.RELEASE_LEFT in self.events:
+                self.events.remove(Events.RELEASE_LEFT)
+            self.holding = Facing.LEFT
+        if this_frame_control & Key.RIGHT:
+            self.events.append(Events.HOLD_RIGHT)
+            if Events.RELEASE_RIGHT in self.events:
+                self.events.remove(Events.RELEASE_RIGHT)
+            self.holding = Facing.RIGHT
+
+        # Jumping
+        if self.jump_state == Jump.FLOOR:
+            if not this_frame_control & Key.LEFT \
+                and not this_frame_control & Key.RIGHT:
+                self.set_anim_idx(Anim.STILL)
+            if keys_pressed & Key.LEFT \
+                or keys_pressed & Key.RIGHT:
+                self.set_anim_idx(Anim.WALK)
+
+        if keys_pressed & Key.JUMP \
+            and not self.jump_lock \
+            and self.jump_state == Jump.FLOOR:
+            self.set_jump(JUMPVEL)
+            #self.move_state = 0
+            self.set_anim_idx(Anim.JUMP)
+
+        if not keys_pressed & Key.JUMP \
+            and self.jump_state == Jump.FLOOR:
+            self.jump_lock = False
+
+        if keys_released & Key.JUMP \
+                and self.jump_state == Jump.JUMP:
+            self.set_fall(1.75)
+            self.set_anim_idx(Anim.STILL)
 
     def move(self):
         super().move()

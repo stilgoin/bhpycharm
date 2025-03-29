@@ -4,7 +4,7 @@ from pygame.constants import *
 from enum import Enum, IntEnum
 
 BG_CLEAR = pygame.Color(0,0,1,0)
-BG_FILL = pygame.Color(96,160,255)
+BG_FILL = pygame.Color(96,160,255,0)
 SCR_W = 256
 SCR_H = 256
 SCALE_W = 1080

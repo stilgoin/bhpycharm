@@ -32,6 +32,7 @@ class SurfaceManager:
 
     def drawSprite(self, sprite, xloc, yloc):
         sprite_surf = self.surfaces[Surfaces.SPRITE.value]
+        #pygame.draw.rect(sprite_surf, (0,255,0,0), pygame.Rect(xloc,yloc,8,8) )
         sprite_surf.blit(sprite, (xloc, yloc))
 
     def clearSpriteSurf(self):
@@ -43,7 +44,7 @@ class SurfaceManager:
         map_surf = self.surfaces[Surfaces.MAP]
         sprite_surf = self.surfaces[Surfaces.SPRITE]
         scale_surf = self.surfaces[Surfaces.SCALE]
-        final_surf.fill((BG_CLEAR))
+        final_surf.fill((BG_FILL))
         final_surf.blit(map_surf, (0, 0))
         final_surf.blit(sprite_surf, (0, 0))
         pygame.transform.scale(final_surf, (SCALE_W, SCALE_H), scale_surf)

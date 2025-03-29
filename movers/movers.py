@@ -74,55 +74,6 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         self.xvel = 0.0
         self.xaccl = 0.0
 
-    def procInput(self, control):
-        this_frame_control, last_frame_control, \
-            keys_pressed, keys_released, launch = control
-
-        if keys_released & Key.RIGHT:
-            self.events.append(Events.RELEASE_LEFT)
-        if keys_released & Key.LEFT:
-            self.events.append(Events.RELEASE_RIGHT)
-        if keys_pressed & Key.RIGHT:
-            self.events.append(Events.PRESS_RIGHT)
-        if keys_pressed & Key.LEFT:
-            self.events.append(Events.PRESS_LEFT)
-
-        if this_frame_control & Key.LEFT:
-            self.events.append(Events.HOLD_LEFT)
-            if Events.RELEASE_LEFT in self.events:
-                self.events.remove(Events.RELEASE_LEFT)
-            self.holding = Facing.LEFT
-        if this_frame_control & Key.RIGHT:
-            self.events.append(Events.HOLD_RIGHT)
-            if Events.RELEASE_RIGHT in self.events:
-                self.events.remove(Events.RELEASE_RIGHT)
-            self.holding = Facing.RIGHT
-
-        # Jumping
-        if self.jump_state == Jump.FLOOR:
-            if not this_frame_control & Key.LEFT \
-                and not this_frame_control & Key.RIGHT:
-                self.set_anim_idx(Anim.STILL)
-            if keys_pressed & Key.LEFT \
-                or keys_pressed & Key.RIGHT:
-                self.set_anim_idx(Anim.WALK)
-
-        if keys_pressed & Key.JUMP \
-            and not self.jump_lock \
-            and self.jump_state == Jump.FLOOR:
-            self.set_jump(JUMPVEL)
-            #self.move_state = 0
-            self.set_anim_idx(Anim.JUMP)
-
-        if not keys_pressed & Key.JUMP \
-            and self.jump_state == Jump.FLOOR:
-            self.jump_lock = False
-
-        if keys_released & Key.JUMP \
-                and self.jump_state == Jump.JUMP:
-            self.set_fall(1.75)
-            self.set_anim_idx(Anim.STILL)
-
     def procEvents(self):
         pass
 
@@ -136,7 +87,7 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
 
-        self.xvel += self.xaccl * self.move_state
+        self.xvel += self.xaccl
         if self.xvel <= 0.0:
             self.xvel = 0.0
             if Events.MIN_XVEL not in self.events:
