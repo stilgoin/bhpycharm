@@ -35,7 +35,7 @@ class Block(InteractiveMover):
             print("Halt")
 
         elif Events.CONTINUE_PUSHING in self.interaction_events:
-            self.xvel += self.xaccl
+            #self.xvel += self.xaccl
             if self.xvel >= self.MAX_XVEL_PUSH:
                 self.xvel = self.MAX_XVEL_PUSH
 

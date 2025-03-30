@@ -158,12 +158,12 @@ class InteractionListener:
 
         if mb.xvel >= ma.MAX_XVEL_WALK:
             direction = mb.direction
-            xaccl = mb.base_xaccl / 2.0
+            xaccl = mb.base_xaccl / 8.0
             friction = ma.friction
             xvel = mb.xvel
         else:
             direction = ma.direction
-            xaccl = ma.base_xaccl / 2.0
+            xaccl = ma.base_xaccl / 8.0
             friction = mb.friction
             xvel = ma.xvel
 

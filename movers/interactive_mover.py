@@ -47,8 +47,7 @@ class InteractiveMover(Mover):
         pass
 
     def clamp_pvel(self):
-        if self.push_state in (Push.STILL, Push.SKID) \
-                or self.move_state == Status.DASH:
+        if self.push_state in (Push.STILL, Push.SKID):
             return
 
         if self.xvel >= self.max_pvel:
@@ -68,7 +67,6 @@ class InteractiveMover(Mover):
             self.xaccl = 0.05
             self.direction *= -1
             self.facing *= -1
-            self.move_state = Status.DASH
 
         self.interaction_events.clear()
 

@@ -23,9 +23,7 @@ class GameMode:
         for mover in self.movers:
             if mover.id == Id.BLOCK.value:
                 mover.proc_auto(controls)
-            mover.procEvents()
             mover.go()
-            mover.make_hitboxes()
 
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), AllMovers.blocks) )
         for mover in self.movers:
@@ -54,7 +52,7 @@ class GameMode:
             #    self.output += str(mover)
             #if mover.push_state == Push.ROLLBACK:
             #    self.output += str(mover)
-        if self.output != "" and self.loopcounter % 10 == 0:
+        if self.output != "" and self.loopcounter % 1 == 0:
             pass
             print(str(self.output), end="\n")
             print("----------------------------")

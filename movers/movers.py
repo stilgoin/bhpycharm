@@ -88,6 +88,10 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl
+        
+        #if self.id == Id.BLOCK.value and self.xaccl != 0:
+        #    print(self.xvel,self.xaccl)
+        
         if self.xvel <= 0.0:
             self.xvel = 0.0
             if Events.MIN_XVEL not in self.events:
@@ -116,13 +120,16 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
 
 
     def go(self):
+        self.procEvents()
         self.animation_state.add_frameticks()
-
+ 
         self.before_move()
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.move()
         self.restToStill()
+        
+        self.make_hitboxes()
 
     def make_hitboxes(self):
         self.hb = Hitbox(self.xloc, self.yloc,
@@ -143,10 +150,7 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
             self.jump_state = Jump.FLOOR
             self.yvel = 0.0
             self.jump_lock = False
-            if self.move_state == Status.WALK:
-                self.set_anim_idx(Anim.WALK)
-            else:
-                self.set_anim_idx(Anim.STILL)
+            self.set_anim_idx(Anim.WALK)
 
         if not floor_found and self.jump_state == Jump.FLOOR:
             self.set_fall(JUMPVEL)

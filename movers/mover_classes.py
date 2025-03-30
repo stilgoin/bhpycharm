@@ -17,6 +17,10 @@ class Player(InteractiveMover):
 
     def procEvents(self):
 
+        if Events.PRESS_LEFT in self.events \
+            or Events.PRESS_RIGHT in self.events:
+            self.set_anim_idx(Anim.WALK)
+
         if Events.HOLD_RIGHT in self.events \
             or Events.HOLD_LEFT in self.events:
 
@@ -35,6 +39,9 @@ class Player(InteractiveMover):
             self.xvel = 0.0
             self.xaccl = 0.0
             self.holding = 0
+            
+            if Jump.FLOOR == self.jump_state:
+                self.set_anim_idx(Anim.STILL)
 
         if self.direction != self.holding and self.holding != 0:
             self.events.append(Events.REVERSE_DIRECTION)
@@ -52,55 +59,6 @@ class Player(InteractiveMover):
 
         if self.xvel >= self.max_xvel:
             self.xvel = self.max_xvel
-
-        if self.xvel > 0.0:
-            zero_xvel = False
-            if self.move_state >= Status.NEUTRAL:
-                if Events.PUSHING_COIL_LEFT in self.events:
-                    if self.holding == Facing.RIGHT:
-                        self.holding = 0
-                        zero_xvel = True
-                        print("Negate holding")
-
-                if Events.PUSHING_COIL_RIGHT in self.events:
-                    if self.holding == Facing.LEFT:
-                        self.holding = 0
-                        zero_xvel = True
-
-            if zero_xvel:
-                self.xvel = 0.0
-                self.xaccl = 0.0
-
-            if Events.REVERSE_DIRECTION in self.events:
-                if self.move_state == Status.WALK:
-                    self.xaccl *= -4
-                    self.facing = self.holding
-                    self.direction = self.holding
-
-                if self.move_state == Status.DASH:
-                    self.xaccl += 0.0001
-                    if self.xvel <= self.max_xvel:
-                        self.xvel = self.max_xvel
-                        self.move_state = Status.WALK
-        else:
-            if Events.HOLD_RIGHT not in self.events \
-                and Events.HOLD_LEFT not in self.events:
-                if self.move_state == Status.DASH:
-                    self.move_state = Status.NEUTRAL
-                    self.xaccl = 0.0
-
-        if self.holding == self.direction \
-            and self.move_state == Status.DASH:
-                if self.xvel <= self.max_xvel:
-                    self.move_state = Status.WALK
-                    print("UH HERE")
-                    self.xaccl = self.base_xaccl
-
-        """
-        if Events.HOLD_RIGHT in self.events \
-                or Events.HOLD_LEFT in self.events:
-            print("uh",self)
-        """
 
         self.events.clear()
 
@@ -127,15 +85,6 @@ class Player(InteractiveMover):
             if Events.RELEASE_RIGHT in self.events:
                 self.events.remove(Events.RELEASE_RIGHT)
             self.holding = Facing.RIGHT
-
-        # Jumping
-        if self.jump_state == Jump.FLOOR:
-            if not this_frame_control & Key.LEFT \
-                and not this_frame_control & Key.RIGHT:
-                self.set_anim_idx(Anim.STILL)
-            if keys_pressed & Key.LEFT \
-                or keys_pressed & Key.RIGHT:
-                self.set_anim_idx(Anim.WALK)
 
         if keys_pressed & Key.JUMP \
             and not self.jump_lock \
