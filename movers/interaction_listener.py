@@ -24,65 +24,24 @@ class InteractionListener:
         return "interaction: " + str(self.mva) + " " + str(self.mvb)
 
     def processMoverToCoil(self):
-        ma: Mover = self.mva
-        mb: Mover = self.mvb
-
-        if ma.xloc > mb.xloc:
-            ma.events.append(Events.PUSHING_COIL_LEFT)
+        
+        ma : Mover = self.mva
+        mb : Mover = self.mvb
+        
+        if not ma.xaccl and mb.xvel < mb.dash_xvel:
+            ma.interaction_events.append(Events.MOVER_RECOIL)
+            mb.interaction_events.append(Events.MOVER_RECOIL)
         else:
-            ma.events.append(Events.PUSHING_COIL_RIGHT)
-
-        mb.interaction_events.append(Events.COIL_CONTACT)
-
-        if ma.hb.y0 > mb.hb.y1 \
-           or ma.hb.y1 < mb.hb.y0:
-            ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
-            mb.interaction_events.append(Events.MOVER_LEAVE_COIL)
-            mb.interaction_events.remove(Events.COIL_CONTACT)
-            self.expired = True
-            return
-
-        if ma.push_state == Push.STILL \
-                and mb.push_state == Push.NUDGE:
-            mb.push_state = Push.ROLLBACK
-            mb.xvel = mb.psteps / 16.0
-            mb.direction = mb.direction * -1
-            print("rollback", mb.psteps)
-            return
-
-        if ma.id in (Id.BLOCK.value) \
-                and not ma.pushByHand:
-            if mb.psteps > 16 and mb.push_state == Push.NUDGE:
-                mb.push_state = Push.ROLLBACK
-                mb.xvel = mb.psteps / 16.0
-                mb.direction = mb.direction * -1
-                ma.move_state = Status.NEUTRAL
-                ma.push_state = Push.STILL
-                ma.xvel = 0
-                ma.xaccl = 0
-                return
-
-
-        if mb.push_state == Push.ROLLBACK \
-            and not mb.xvel:
-            ma.interaction_events.append(Events.MOVER_RECOIL)
-            mb.interaction_events.append(Events.MOVER_RECOIL)
-            ma.dash_xvel = mb.dash_xvel
-            print("Recoil")
-            self.expired = True
-
-        if mb.push_state in (Push.STILL, Push.SKID) \
-                and mb.psteps >= 0:
-            print("dashing", mb.move_state, mb.push_state, mb.direction, mb.psteps)
-            ma.interaction_events.append(Events.MOVER_RECOIL)
-            mb.interaction_events.append(Events.MOVER_RECOIL)
-            ma.dash_xvel = mb.dash_xvel
-            print("Recoil")
-            self.expired = True
-
-        if ma.push_state == Push.STILL and mb.push_state == Push.STILL \
-                or ma.move_state == Status.NEUTRAL and mb.move_state == Status.NEUTRAL:
-            self.expired = True
+            if int(mb.xloc) != mb.default_xloc:
+                InteractionListener.check_sides(self.result)
+            else:
+                if ma.xvel >= 2.5:
+                    ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
+                    self.expired = True
+                    mb.xaccl = 0
+                    mb.xvel = 0
+                    return
+            self.processMoverToBlock()
 
     def processMoverToBlock(self):
 
@@ -93,10 +52,12 @@ class InteractionListener:
                 or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
                 or ma.hb.y1 < mb.hb.y0:
+            ma.interaction_events.append(Events.HALT_PUSHING)
             mb.interaction_events.append(Events.HALT_PUSHING)
             self.expired = True
             return
 
+        InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
@@ -163,11 +124,15 @@ class InteractionListener:
             xvel = mb.xvel
         else:
             direction = ma.direction
-            xaccl = ma.base_xaccl / 8.0
-            friction = mb.friction
+            if ma.xaccl >= 0:
+                friction = mb.friction
+                xaccl = ma.base_xaccl / 8.0
+            else:
+                friction = 1
+                xaccl = ma.xaccl    
             xvel = ma.xvel
 
-        ma.initPushing(direction, friction, xaccl)
+        ma.initPushing(direction, friction, xaccl, xvel)
         mb.initPushing(direction, friction, xaccl, xvel, pushByHand = True)
 
 

@@ -21,8 +21,8 @@ class Mover:
     friction = 1
     max_pvel = 0.5
     MAX_PVEL_CONST = 0.5
-    MAX_XVEL_WALK = 1.75
-    MAX_XVEL_DASH = 5.25
+    MAX_XVEL_WALK = 1.25
+    MAX_XVEL_DASH = 3.25
     MAX_XVEL_PUSH = 1.0
     max_xvel = 1.0
     max_dvel = 2.5
@@ -48,7 +48,7 @@ class Mover:
     def __str__(self):
         #return str(self.animation_state)
         return f"id: {self.id} xloc: %.4f xvel: %.4f, xaccl: %.4f move: {self.move_state} push: {self.push_state} \
-holding {self.holding} facing {self.facing} dir {self.direction} \"" \
+holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.direction} \"" \
                f"events {self.events}" % \
             (self.xloc, self.xvel, self.xaccl)
 
@@ -89,11 +89,16 @@ holding {self.holding} facing {self.facing} dir {self.direction} \"" \
 
         self.xvel += self.xaccl
         
+        if self.xvel > self.max_xvel:
+            self.xvel = self.max_xvel
+        
         #if self.id == Id.BLOCK.value and self.xaccl != 0:
         #    print(self.xvel,self.xaccl)
         
         if self.xvel <= 0.0:
             self.xvel = 0.0
+            self.xaccl = 0.0
+            self.max_xvel = self.MAX_XVEL_WALK
             if Events.MIN_XVEL not in self.events:
                 self.events.append(Events.MIN_XVEL)
             #if self.push_state == Push.STILL:

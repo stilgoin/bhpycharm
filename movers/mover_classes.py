@@ -33,19 +33,24 @@ class Player(InteractiveMover):
                 self.holding = Facing.RIGHT
 
             if self.holding != 0:
-                self.direction = self.holding
-                self.facing = self.holding
+                if self.xvel <= self.MAX_XVEL_WALK \
+                    and self.xaccl > 0:
+                    self.direction = self.holding
+                    self.facing = self.holding
+                    
         else:
-            self.xvel = 0.0
-            self.xaccl = 0.0
-            self.holding = 0
+            if self.xvel <= self.MAX_XVEL_WALK:
+                if self.xaccl >= 0:
+                    self.xvel = 0.0
+                    self.xaccl = 0.0
+                    self.holding = 0
             
             if Jump.FLOOR == self.jump_state:
                 self.set_anim_idx(Anim.STILL)
 
         if self.direction != self.holding and self.holding != 0:
-            self.events.append(Events.REVERSE_DIRECTION)
-            self.interaction_events.append(Events.HALT_PUSHING)
+            if self.xaccl < 0:
+                self.xaccl = -0.15
 
             """ Comment out the above and the player can "moonwalk" push
                 It's a bug but might be neat

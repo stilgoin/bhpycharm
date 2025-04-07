@@ -35,9 +35,10 @@ class Block(InteractiveMover):
             print("Halt")
 
         elif Events.CONTINUE_PUSHING in self.interaction_events:
+            pass
             #self.xvel += self.xaccl
-            if self.xvel >= self.MAX_XVEL_PUSH:
-                self.xvel = self.MAX_XVEL_PUSH
+            #if self.xvel >= self.MAX_XVEL_PUSH:
+            #    self.xvel = self.MAX_XVEL_PUSH
 
         elif Events.PUSH_TO_SKID in self.interaction_events:
             self.psteps = 0
@@ -54,8 +55,6 @@ class Block(InteractiveMover):
             self.xvel = self.dash_xvel
             self.xaccl = 0.05
             self.direction *= -1
-            self.facing *= -1
-            self.move_state = Status.DASH
 
         self.interaction_events.clear()
 
@@ -67,6 +66,10 @@ class Block(InteractiveMover):
         self.xvel = xvel * friction
         self.direction = direction
         self.pushByHand = pushByHand
+        if xaccl >= 0:
+            self.max_xvel = self.MAX_XVEL_PUSH
+        else:
+            self.max_xvel = self.MAX_XVEL_DASH
         print("PUSHING")
 
     def go(self):

@@ -6,6 +6,8 @@ class SideSpring(Block):
     base_xaccl = 0.05
     max_pvel = 0.25
     MAX_PVEL_CONST = 0.25
+    default_xloc = 0.0
+    snap_xloc = 0.0
 
     def clamp_pvel(self):
         if self.push_state == Push.STILL \
@@ -15,10 +17,34 @@ class SideSpring(Block):
         if self.xvel >= self.max_pvel:
             self.xvel = self.max_pvel
             print(f"{self.id}, {self.max_pvel}")
+            
+    def procInteractionEvents(self):
+        
+        halt_pushing = False
+        
+        if Events.CONTINUE_PUSHING in self.interaction_events:
+            
+            halt_pushing = self.lockInPlace()
+            
+            if halt_pushing:
+                self.interaction_events.remove(Events.CONTINUE_PUSHING)
+                self.interaction_events.append(Events.HALT_PUSHING)
+        else:
+            self.lockInPlace()
+                
+        super().procInteractionEvents()
+        
+    def lockInPlace(self):
+        if self.xloc > self.default_xloc:
+            self.xloc = self.default_xloc
+            return True
+        if self.xloc < self.default_xloc - 0xC:
+            self.xloc = self.default_xloc - 0xC
+            return True
+        
+        return False
+            
     def go(self):
-        if not self.xvel and self.move_state == Status.DASH:
-            self.push_state = Push.STILL
-            self.move_state = Status.NEUTRAL
         super().go()
 
     def __init__(self, anim_init, id, placeholder, facing = Facing.RIGHT):
@@ -40,33 +66,34 @@ class SpringBox(Block):
             self.spring.psteps = 0
 
         if Events.MOVER_RECOIL in self.spring.interaction_events:
-            self.spring.haltMovement()
-            self.spring.psteps = 0
-            self.spring.interaction_events.remove(Events.MOVER_RECOIL)
+            pass
+            #self.spring.haltMovement()
+            #self.spring.psteps = 0
+            #self.spring.interaction_events.remove(Events.MOVER_RECOIL)
 
         super().procInteractionEvents()
 
     def go(self):
         super().go()
 
-        if self.spring.xloc <= self.xloc + 4:
-            self.spring.xloc = self.xloc + 4
+        #if self.spring.xloc <= self.xloc + 4:
+        #    self.spring.xloc = self.xloc + 4
 
-        if self.spring.xloc > self.xloc + 0x10:
-            self.spring.xloc = self.xloc + 0x10
-            if self.spring.push_state == Push.ROLLBACK:
-                self.spring.push_state = Push.STILL
-                self.spring.dash_xvel = self.spring.xvel
-                self.spring.haltMovement()
+        #if self.spring.xloc > self.xloc + 0x10:
+        #    self.spring.xloc = self.xloc + 0x10
+        #    if self.spring.push_state == Push.ROLLBACK:
+        #        self.spring.push_state = Push.STILL
+        #        self.spring.dash_xvel = self.spring.xvel
+        #        self.spring.haltMovement()
 
 
-            """
-            if self.spring.push_state == Push.ROLLBACK:
-                self.spring.push_state = Push.STILL
-                self.spring.xvel = 0.0
-                self.spring.xaccl = 0.0
-                self.spring.move_state = Status.NEUTRAL
-            """
+        """
+        if self.spring.push_state == Push.ROLLBACK:
+            self.spring.push_state = Push.STILL
+            self.spring.xvel = 0.0
+            self.spring.xaccl = 0.0
+            self.spring.move_state = Status.NEUTRAL
+        """
 
     def animate(self):
         return [self.animation_state \

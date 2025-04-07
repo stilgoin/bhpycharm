@@ -114,7 +114,8 @@ class GameMode:
         springbox.yloc = 0xA0
         springbox.spring.xloc = 0x20
         springbox.spring.yloc = 0xB0
-        Block.movers.append(springbox)
+        springbox.spring.default_xloc = 0x20
+        #Block.movers.append(springbox)
         self.movers.append(springbox)
         Block.movers.append(springbox.spring)
         self.movers.append(springbox.spring)

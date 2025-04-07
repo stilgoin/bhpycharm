@@ -84,6 +84,11 @@ class ResourceLoader:
     def drawPlaceholder(self, sprite, color, rects):
         for rect in rects:
             pygame.draw.rect(sprite, color, rect)
+            
+    def loadScenery(self, idx, scenery : list):
+        scenery.clear()
+        scenery+=self.scenery[idx]
+        
 
     def loadAnims(self, animations : dict):
         sheet = Image.open("data/master.bmp")
@@ -130,6 +135,10 @@ class ResourceLoader:
 
         anim_file = io.FileIO("data/anims.json", "r")
         self.anim_dict = json.load(anim_file,
+                              object_hook=lambda d: SimpleNamespace(**d))
+                              
+        scenery_file = io.FileIO("data/scenery.json", "r")
+        self.scenery = json.load(scenery_file,
                               object_hook=lambda d: SimpleNamespace(**d))
 
         gfx_file = io.FileIO(filename + ".images", "r")

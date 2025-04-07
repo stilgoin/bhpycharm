@@ -28,10 +28,11 @@ def main():
     resloader.loadAnims(resource_store.animations)
     resource_store.tileMaps = resloader.loadTileMaps()
     resloader.loadTilesets(resource_store.tileSets)
+    resloader.loadScenery(0, resource_store.scenery)
 
     sm = SurfaceManager(SCR_W, SCR_H)
-    draw.initMap(sm, resource_store.tileMaps,
-                 resource_store.tileSets, 0)
+    draw.initMap(sm, resource_store.tileMaps, 
+                 resource_store.tileSets, resource_store.scenery, 0)
     game = GameMode()
     game.bghits = resource_store.tileMaps[0].hitboxes
     draw.initMoverAnims(game, resource_store.animations)

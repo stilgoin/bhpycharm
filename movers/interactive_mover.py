@@ -12,7 +12,7 @@ class InteractiveMover(Mover):
     push_xloc = 0.0
     pvel = 0.0
     ability = Ability.ITEM.value
-    dash_xvel = 0.0
+    dash_xvel = 2.5
     onFallPlat = False
 
     def dummy(self):
@@ -57,16 +57,21 @@ class InteractiveMover(Mover):
     def procInteractionEvents(self):
 
         if Events.HALT_PUSHING in self.interaction_events:
-            self.push_state = Push.STILL
+            self.max_xvel = self.MAX_XVEL_WALK
+            self.xaccl = self.base_xaccl
 
         if Events.MOVER_LEAVE_COIL in self.interaction_events:
-            self.push_state = Push.STILL
+            pass
 
         if Events.MOVER_RECOIL in self.interaction_events:
             self.xvel = self.dash_xvel
+            self.max_xvel = self.MAX_XVEL_DASH
             self.xaccl = 0.05
             self.direction *= -1
             self.facing *= -1
+            
+        if Events.MOVER_LEAVE_COIL in self.interaction_events:
+            self.xaccl = -0.05
 
         self.interaction_events.clear()
 
@@ -74,13 +79,18 @@ class InteractiveMover(Mover):
         self.xaccl = xaccl
         self.xvel = xvel * friction
         self.direction = direction
+        if xaccl >= 0:
+            self.max_xvel = self.MAX_XVEL_PUSH
+        else:
+            self.max_xvel = self.MAX_XVEL_DASH
 
 
     def go(self):
         super().go()
 
     def before_move(self):
-        self.clamp_pvel()
+        pass
+        #self.clamp_pvel()
 
     def move(self):
         super().move()

@@ -34,17 +34,23 @@ def initMoverAnims(game : GameMode, animations : dict):
 def initMap(surfMgmt : sm,
             tileMaps : list[TileMap],
             tileSets : dict[str, list[pygame.Surface]],
+            scenery : list,
             mapIdx : int = 0):
     layer : MapLayer
     tipl : TilePlacement
     tileset_keys = ["8x8", "16x16", "24x24", "32x32"]
     tileMap = tileMaps[mapIdx]
     tileSurf : pygame.Surface
+    
+    for shape in scenery:
+        surf = sm.surfaceFromPlaceholder(shape.color, (0,0,shape.width,shape.height))
+        surfMgmt.blitSurface(Surfaces.MAP.value, surf, (shape.xloc, shape.yloc) )
+    
     for layer in tileMap.layers:
         for tipl in layer.tile_placements:
             tkey = tileset_keys[tipl.tileSize - 1]
             tileSurf = tileSets[tkey][tipl.tileId]
             xloc = tipl.xloc
             yloc = tipl.yloc
-            surfMgmt.blitSurface(Surfaces.MAP.value, tileSurf, (xloc, yloc) )
+            #surfMgmt.blitSurface(Surfaces.MAP.value, tileSurf, (xloc, yloc) )
 
