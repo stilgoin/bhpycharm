@@ -35,7 +35,7 @@ class InteractionListener:
             if int(mb.xloc) != mb.default_xloc:
                 InteractionListener.check_sides(self.result)
             else:
-                if ma.xvel >= 2.5:
+                if ma.xvel >= mb.MAX_XVEL_PUSH:
                     ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
                     self.expired = True
                     mb.xaccl = 0

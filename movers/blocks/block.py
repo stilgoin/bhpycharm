@@ -52,9 +52,13 @@ class Block(InteractiveMover):
                 print("UGH")
 
         if Events.MOVER_RECOIL in self.interaction_events:
-            self.xvel = self.dash_xvel
+            self.xvel = self.MAX_XVEL_DASH
+            self.max_xvel = self.MAX_XVEL_DASH
             self.xaccl = 0.05
             self.direction *= -1
+            
+        if Events.MOVER_LEAVE_COIL in self.interaction_events:
+            self.xaccl = -0.05
 
         self.interaction_events.clear()
 
