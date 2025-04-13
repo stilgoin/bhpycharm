@@ -3,6 +3,7 @@
     "id": "player",
     "size": "16",
     "placeholder" : false,
+    "complex": false,
     "sequences":
         [
             [{"xloc": 0,"yloc": 0}],
@@ -17,6 +18,7 @@
         "id": "block",
         "size": "16",
         "placeholder" : false,
+        "complex": false,
         "sequences":
                 [
                     [{"xloc":  0, "yloc":  112}],[{"xloc":  0, "yloc":  112}]
@@ -27,6 +29,7 @@
     {
         "id": "sidecoil",
         "placeholder" : true,
+        "complex": false,
         "rects": [[0,6,16,4],[0,0,3,16]],
         "size": "16",
         "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
@@ -36,6 +39,7 @@
     {
         "id": "vertcoil",
         "placeholder" : true,
+        "complex" : false,
         "rects": [[0,8,16,4],[12,0,16,16]],
         "size": "16",
         "sequences": [[{"xloc":  0, "yloc":  0}]],
@@ -45,6 +49,7 @@
     {
         "id": "springbox",
         "placeholder" : true,
+        "complex" : false,
         "rects": [],
         "size": "16",
         "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
@@ -52,8 +57,39 @@
         "terminators": [253,253]
     },
     {
+        "id": "gatehinge",
+        "placeholder" : true,
+        "complex" : true,
+        "rects": [[0,0,5]],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
+        "color": "#808080FF",
+        "terminators": [253,253]
+    },
+    {
+        "id": "gate",
+        "placeholder" : true,
+        "complex" : true,
+        "rects": [[0,8],[16,8],[16,12],[0,12]],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
+        "color": "#26DBEDFF",
+        "terminators": [253,253]
+    },
+        {
+        "id": "gateright",
+        "placeholder" : true,
+        "complex" : true,
+        "rects": [[0,8],[16,8],[16,12],[0,12]],
+        "size": "16",
+        "sequences": [[{"xloc":  0, "yloc":  0}],[{"xloc":  0, "yloc":  0}]],
+        "color": "#26DBEDFF",
+        "terminators": [253,253]
+    },
+    {
         "id": "bridgeplat",
         "placeholder" : true,
+        "complex" : false,
         "rects": [],
         "size": "16",
         "sequences": [[{"xloc": 0, "yloc": 0}]],

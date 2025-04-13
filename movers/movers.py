@@ -26,12 +26,14 @@ class Mover:
     MAX_XVEL_PUSH = 1.0
     max_xvel = 1.0
     max_dvel = 2.5
-
+    hitoffs = (0, 0, 15, 15)
     id = ""
+    angle = 0.0
 
     move_state = 0
     push_state = 0
     jump_state = 0
+    onFallPlat = False
     action_timer = 0
     jump_lock = False
     facing = Facing.LEFT
@@ -88,7 +90,11 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         self.yloc += (self.yvel * self.vertical)
 
         self.xvel += self.xaccl
-        
+
+        if self.xaccl < 0:
+            if self.xvel < self.MAX_XVEL_WALK:
+                self.max_xvel = self.MAX_XVEL_WALK
+
         if self.xvel > self.max_xvel:
             self.xvel = self.max_xvel
         
@@ -136,6 +142,24 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         
         self.make_hitboxes()
 
+        if self.id == Id.GATE.value:
+            self.angle -= 2.5
+            #self.angle = -45
+            if self.angle < -165:
+                self.angle = 0
+            if self.angle >= -90:
+                self.xloc = self.default_xloc + int(self.angle / 16.0)
+
+        if  self.id == Id.GATERIGHT.value:
+            self.angle += 2.5
+            #self.angle = 45
+            if self.angle > 165:
+                self.angle = 0
+            if self.angle <= 90:
+                self.xloc = self.default_xloc + int(self.angle / 16.0)
+            #self.yloc = self.default_yloc - int(self.angle / 8.0) + 16
+
+
     def make_hitboxes(self):
         self.hb = Hitbox(self.xloc, self.yloc,
                          self.hitoffs)
@@ -165,7 +189,7 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         return [self.animation_state\
             .display_entry(self.id, self.xloc, self.yloc,
                            True if self.facing == Facing.RIGHT else False,
-                           False)]
+                           False, self.angle)]
 
     def proc_auto(self, control):
         this_frame_control, last_frame_control, \

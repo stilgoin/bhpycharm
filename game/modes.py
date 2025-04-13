@@ -1,46 +1,45 @@
 import sys
 
 from game.overlap import spriteToBG
-from movers.AllMovers import AllMovers
 from movers.blocks.block import Block
 from movers.blocks.spring import SpringBox
-from movers.bridge import BridgeSegment
 from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
-from movers.movers import Id
+from movers.movers import Id, Mover
 from system.defs import Facing
 
 
 class GameMode:
-
     loopcounter = 0
     output = ""
+
     def Loop(self, controls):
         self.loopcounter += 1
         self.display_list.clear()
 
         self.mPlayer.procInput(controls)
+
+        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.movers))
+
         for mover in self.movers:
-            if mover.id == Id.BLOCK.value:
-                mover.proc_auto(controls)
             mover.go()
 
-        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), AllMovers.blocks) )
         for mover in self.movers:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, AllMovers.blocks + self.interact_movers)
+                floor_found, result = InteractionListener.moverToMovers(mover, Block.movers + self.interact_movers)
 
             if mover.id in (Id.BLOCK.value):
                 floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
-            mover.check(floor_found, moverToBGFunc = lambda : spriteToBG(mover, self.bghits))
+            mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
 
         for mover in MiscMover.postproc_movers:
-            mover.misc_hitbox()
-            mover.postproc()
+            pass
+            #mover.misc_hitbox()
+            #mover.postproc()
 
-        #self.output += \
+        # self.output += \
         InteractionListener.evalInteractions()
 
         for mover in self.movers:
@@ -48,9 +47,9 @@ class GameMode:
             self.display_list.extend(mover.animate())
             if mover.xvel > 0 and mover.id in (Id.PLAYER.value, Id.BLOCK.value, Id.SIDECOIL.value):
                 self.output += str(mover) + "\n"
-            #if mover.xvel > 0.0:
+            # if mover.xvel > 0.0:
             #    self.output += str(mover)
-            #if mover.push_state == Push.ROLLBACK:
+            # if mover.push_state == Push.ROLLBACK:
             #    self.output += str(mover)
         if self.output != "" and self.loopcounter % 1 == 0:
             pass
@@ -69,6 +68,7 @@ class GameMode:
 
     """TODO: Replace with JSON data to load spawn positions of Movers based on round
     """
+
     def Init(self, anim_inits):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
@@ -76,27 +76,29 @@ class GameMode:
         Player.movers.append(self.mPlayer)
         self.movers.append(self.mPlayer)
 
-        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
-        bridge.xloc = 0x70
-        bridge.yloc = 0xC0
-        #self.movers.append(bridge)
-        #self.interact_movers.append(bridge)
-        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
-        bridge.xloc = 0x80
-        bridge.yloc = 0xC0
-        #self.movers.append(bridge)
-        #self.interact_movers.append(bridge)
-        bridge = BridgeSegment(anim_inits[self.ids.BRIDGEPLAT], self.ids.BRIDGEPLAT.value, True)
-        bridge.xloc = 0x90
-        bridge.yloc = 0xC0
-        #self.movers.append(bridge)
-        #self.interact_movers.append(bridge)
+        hinge = Mover(anim_inits[self.ids.HINGE], self.ids.HINGE.value, True)
+        hinge.xloc = 0x60
+        hinge.yloc = 0x60
+        self.movers.append(hinge)
+
+        gate = Mover(anim_inits[self.ids.GATE], self.ids.GATE.value, True)
+        gate.xloc = 0x80
+        gate.default_xloc = 0x80
+        gate.yloc = 0xA0
+        self.movers.append(gate)
+
+        rightgate = Mover(anim_inits[self.ids.GATERIGHT], self.ids.GATERIGHT.value, True)
+        rightgate.xloc = 0x90
+        rightgate.default_xloc = 0x90
+        rightgate.yloc = 0xA0
+        rightgate.default_yloc = 0xA0
+        self.movers.append(rightgate)
 
         block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
         block.xloc = 0x60
         block.yloc = 0xc0
         block.test()
-        #InteractiveMover.movers.append(block)
+        # InteractiveMover.movers.append(block)
         self.movers.append(block)
         Block.movers.append(block)
 
@@ -115,12 +117,10 @@ class GameMode:
         springbox.spring.xloc = 0x20
         springbox.spring.yloc = 0xB0
         springbox.spring.default_xloc = 0x20
-        #Block.movers.append(springbox)
+        # Block.movers.append(springbox)
         self.movers.append(springbox)
         Block.movers.append(springbox.spring)
         self.movers.append(springbox.spring)
-
-
 
     def __init__(self):
         self.display_list = []
@@ -128,4 +128,3 @@ class GameMode:
         self.push_movers = []
         self.interact_movers = []
         self.bghits = []
-

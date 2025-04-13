@@ -98,6 +98,9 @@ class Id(Enum):
     VERTCOIL = "vertcoil"
     SPRINGBOX = "springbox"
     BRIDGEPLAT = "bridgeplat"
+    HINGE = "gatehinge"
+    GATE = "gate"
+    GATERIGHT = "gateright"
 
 class Ability(Enum):
     PUSHING = "pushing"

@@ -34,13 +34,13 @@ class AnimationState:
     def check_anim_idx(self, animIdx) -> bool:
         return self.animIdx == animIdx
 
-    def display_entry(self, id, xloc, yloc, fliph = False, flipv = False):
+    def display_entry(self, id, xloc, yloc, fliph = False, flipv = False, angle = 0.0):
         frameIdx = self.current_frame
         if id == Id.BLOCK.value:
             fliph = False
         return DisplayEntry(id=id, animIdx=self.animIdx,
                             frameIdx=frameIdx, xloc=xloc, yloc=yloc,
-                            fliph=fliph, flipv=flipv)
+                            fliph=fliph, flipv=flipv, angle=angle)
 
     def add_frameticks(self):
         self.frameTicks += 1

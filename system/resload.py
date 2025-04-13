@@ -101,17 +101,36 @@ class ResourceLoader:
             id = anim_data.id
             ti = 0
             if anim_data.placeholder:
-                frames = []
-                terminator = terminators[0]
-                for anim_seq in anim_data.sequences:
-                    if not len(anim_data.rects):
-                        color = anim_data.color
-                    else:
-                        color = "#00000100"
-                    sprite = sm.surfaceFromPlaceholder(color, (0, 0, size, size))
-                    self.drawPlaceholder(sprite, anim_data.color, anim_data.rects)
-                    frames.append(sprite)
-                    anim_seqs.append(AnimationSequence(frames, terminator))
+                if not anim_data.complex:
+                    frames = []
+                    terminator = terminators[0]
+                    for anim_seq in anim_data.sequences:
+                        if not len(anim_data.rects):
+                            color = anim_data.color
+                        else:
+                            color = "#00000100"
+                        sprite = sm.surfaceFromPlaceholder(color, (0, 0, size, size))
+                        self.drawPlaceholder(sprite, anim_data.color, anim_data.rects)
+                        frames.append(sprite)
+                        anim_seqs.append(AnimationSequence(frames, terminator))
+                else:
+                    frames = []
+                    terminator = terminators[0]
+                    for anim_seq in anim_data.sequences:
+                        if len(anim_data.rects) > 0:
+                            draw_polygon = False
+                            for rect in anim_data.rects:
+                                if len(rect) == 3:
+                                    sprite = sm.surfaceFromPlaceholder((0,0,1), (0, 0, size, size))
+                                    pygame.draw.circle(sprite, anim_data.color, (5,5), 5)
+                                if len(rect) == 2:
+                                    draw_polygon = True
+                                    continue
+                            if draw_polygon:
+                                sprite = sm.surfaceFromPlaceholder((0, 0, 1), (0, 0, 16, 16))
+                                pygame.draw.polygon(sprite, anim_data.color, anim_data.rects)
+                            frames.append(sprite)
+                        anim_seqs.append(AnimationSequence(frames, terminator))
             else:
                 for anim_seq in anim_data.sequences:
                     self.loadAnimSeq(anim_seqs, sheet, terminators, anim_seq, ti, size)

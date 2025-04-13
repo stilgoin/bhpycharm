@@ -109,7 +109,7 @@ class TileMap:
                 hb.y1 = hb.y0 + tile_sizes[tipl.tileSize - 1]
                 tileId = tipl.tileId
                 hb.solid = solid
-                self.hitboxes.append(hb)
+                #self.hitboxes.append(hb)
 
 
     def __init__(self, layers):

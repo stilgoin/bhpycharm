@@ -1,10 +1,9 @@
 [
 
 	[
-		{
-			"xloc":20,"yloc":20,"width":160,"height":16,"color":"#808080FF"
-		}
-	
+		{"xloc":16,"yloc":192,"width":80,"height":16,"color":"#263F72FF","collision": 2},
+		{"xloc":128,"yloc":192,"width":64,"height": 16,"color": "#263F72FF","collision": 2}
+
 	
 	
 	

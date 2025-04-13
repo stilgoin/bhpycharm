@@ -57,38 +57,15 @@ class InteractionListener:
             self.expired = True
             return
 
-        InteractionListener.check_sides(self.result)
+        if mb.xvel != ma.xvel:
+            InteractionListener.check_sides(self.result)
+
+        #InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
-
-
-
-
-
-    def processMoverToBridge(self):
-        ma: Mover = self.mva
-        mb: Mover = self.mvb
-
-        if ma.jump_state == Jump.JUMP \
-            or ma.hb.x1 < mb.hb.x0 or ma.hb.x0 > mb.hb.x1:
-            self.expired = True
-            ma.onFallPlat = False
-            mb.load_count -= 1
-            if not mb.load_count:
-                mb.move_state = Status.NEUTRAL
-                mb.yvel = 0.0
-                mb.yloc = mb.save_yloc
-                mb.vertical = Vertical.DOWN
-        else:
-            ma.yloc = mb.yloc - (ma.hb.yoffs + ma.hb.height)
-            ma.onFallPlat = True
-
     interactions = defaultdict(lambda : InteractionListener.processMoverToBlock,
-                               {Id.SIDECOIL.value : processMoverToCoil,
-                                Id.BRIDGEPLAT.value : processMoverToBridge})
-
-
+                               {Id.SIDECOIL.value : processMoverToCoil})
 
     @classmethod
     def evalInteractions(cls):
@@ -135,26 +112,6 @@ class InteractionListener:
         ma.initPushing(direction, friction, xaccl, xvel)
         mb.initPushing(direction, friction, xaccl, xvel, pushByHand = True)
 
-
-    @classmethod
-    def check_bridge(cls, result: OverlapResult):
-        pass
-
-    @classmethod
-    def check_fallplat(cls, result: OverlapResult):
-
-        if result.result == Result.OVERLAP:
-            if result.mva.onFallPlat:
-                rollbackYUp(result.mva, result.mvb.hb)
-
-        if result.result == Result.CONTACT \
-            and result.standing == Vertical.DOWN \
-            or result.result == Result.OVERLAP \
-            and result.vert == Vertical.DOWN:
-            rollbackYUp(result.mva, result.mvb.hb)
-            return True
-        return False
-
     @classmethod
     def check_sides(cls, result: OverlapResult):
 
@@ -197,19 +154,7 @@ class InteractionListener:
             rollbackYUp(ma, mb.hb)
             floor_found = True
 
-        if mb.id == Id.BRIDGEPLAT.value:
-            if self.check_fallplat(result):
-                if not result.mvb.load_count:
-                    result.mvb.yvel = result.mvb.shake_vel
-                    result.mvb.move_state = Status.SHAKE
-                    result.mvb.save_yloc = result.mvb.yloc
-                result.mvb.load_count += 1
-                InteractionListener.listeners[(result.mva.auuid, result.mvb.auuid)] = \
-                    InteractionListener(result.mva, result.mvb, result)
-                floor_found = True
-            return floor_found
-        else:
-            self.check_sides(result)
+        self.check_sides(result)
 
         if result.result == Result.CONTACT \
             and result.facing != 0 \

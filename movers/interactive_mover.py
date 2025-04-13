@@ -57,8 +57,11 @@ class InteractiveMover(Mover):
     def procInteractionEvents(self):
 
         if Events.HALT_PUSHING in self.interaction_events:
-            self.max_xvel = self.MAX_XVEL_WALK
-            self.xaccl = self.base_xaccl
+            if self.xvel < self.MAX_XVEL_WALK:
+                self.max_xvel = self.MAX_XVEL_WALK
+                self.xaccl = self.base_xaccl
+            else:
+                self.xaccl = -0.05
 
         if Events.MOVER_LEAVE_COIL in self.interaction_events:
             pass
