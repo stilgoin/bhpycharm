@@ -42,6 +42,8 @@ class Mover:
     holding = 0
     lock = 0
 
+    angle = 0
+
     placeholder = False
 
     hb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
@@ -141,23 +143,6 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         self.restToStill()
         
         self.make_hitboxes()
-
-        if self.id == Id.GATE.value:
-            self.angle -= 2.5
-            #self.angle = -45
-            if self.angle < -165:
-                self.angle = 0
-            if self.angle >= -90:
-                self.xloc = self.default_xloc + int(self.angle / 16.0)
-
-        if  self.id == Id.GATERIGHT.value:
-            self.angle += 2.5
-            #self.angle = 45
-            if self.angle > 165:
-                self.angle = 0
-            if self.angle <= 90:
-                self.xloc = self.default_xloc + int(self.angle / 16.0)
-            #self.yloc = self.default_yloc - int(self.angle / 8.0) + 16
 
 
     def make_hitboxes(self):

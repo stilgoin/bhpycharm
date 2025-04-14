@@ -1,8 +1,11 @@
 import sys
 
+import pygame
+
 from game.overlap import spriteToBG
 from movers.blocks.block import Block
-from movers.blocks.spring import SpringBox
+from movers.blocks.spring import SpringBox, SideSpring
+from movers.gate import Gate
 from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Id, Mover
@@ -13,7 +16,7 @@ class GameMode:
     loopcounter = 0
     output = ""
 
-    def Loop(self, controls):
+    def Loop(self, controls, surface : pygame.Surface):
         self.loopcounter += 1
         self.display_list.clear()
 
@@ -21,6 +24,8 @@ class GameMode:
 
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.movers))
 
+        """ All movers must "go" before checking interactions
+        """
         for mover in self.movers:
             mover.go()
 
@@ -34,11 +39,6 @@ class GameMode:
                 floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
             mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
 
-        for mover in MiscMover.postproc_movers:
-            pass
-            #mover.misc_hitbox()
-            #mover.postproc()
-
         # self.output += \
         InteractionListener.evalInteractions()
 
@@ -47,6 +47,9 @@ class GameMode:
             self.display_list.extend(mover.animate())
             if mover.xvel > 0 and mover.id in (Id.PLAYER.value, Id.BLOCK.value, Id.SIDECOIL.value):
                 self.output += str(mover) + "\n"
+            """ Debug:  Draw hitboxes
+            """
+            #pygame.draw.rect(surface, "#FF0000FF", (mover.hb.x0,mover.hb.y0,mover.hb.width,mover.hb.height))
             # if mover.xvel > 0.0:
             #    self.output += str(mover)
             # if mover.push_state == Push.ROLLBACK:
@@ -66,61 +69,41 @@ class GameMode:
     def ids(self):
         return Id
 
-    """TODO: Replace with JSON data to load spawn positions of Movers based on round
-    """
-
-    def Init(self, anim_inits):
+    def Init(self, anim_inits : dict, movers_dict : dict):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0xA0
         Player.movers.append(self.mPlayer)
         self.movers.append(self.mPlayer)
 
-        hinge = Mover(anim_inits[self.ids.HINGE], self.ids.HINGE.value, True)
-        hinge.xloc = 0x60
-        hinge.yloc = 0x60
-        self.movers.append(hinge)
+        mover_datas = movers_dict[0]
 
-        gate = Mover(anim_inits[self.ids.GATE], self.ids.GATE.value, True)
-        gate.xloc = 0x80
-        gate.default_xloc = 0x80
-        gate.yloc = 0xA0
-        self.movers.append(gate)
-
-        rightgate = Mover(anim_inits[self.ids.GATERIGHT], self.ids.GATERIGHT.value, True)
-        rightgate.xloc = 0x90
-        rightgate.default_xloc = 0x90
-        rightgate.yloc = 0xA0
-        rightgate.default_yloc = 0xA0
-        self.movers.append(rightgate)
-
-        block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-        block.xloc = 0x60
-        block.yloc = 0xc0
-        block.test()
-        # InteractiveMover.movers.append(block)
-        self.movers.append(block)
-        Block.movers.append(block)
-
-        block2 = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-        block2.xloc = 0x60
-        block2.yloc = 0x80
-        block2.test()
-        # InteractiveMover.movers.append(block)
-        self.movers.append(block2)
-        Block.movers.append(block2)
-
-        springbox = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
+        for mover_data in mover_datas:
+            if "block" == mover_data.id:
+                new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+            if "springbox" == mover_data.id:
+                new_mover = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
                               facing=Facing.RIGHT)
-        springbox.xloc = 0x10
-        springbox.yloc = 0xA0
-        springbox.spring.xloc = 0x20
-        springbox.spring.yloc = 0xB0
-        springbox.spring.default_xloc = 0x20
-        # Block.movers.append(springbox)
-        self.movers.append(springbox)
-        Block.movers.append(springbox.spring)
-        self.movers.append(springbox.spring)
+            if "sidecoil" == mover_data.id:
+                new_mover = SideSpring(anim_inits[Id.SIDECOIL], Id.SIDECOIL.value, True
+                               , facing = Facing.RIGHT if mover_data.facing == 1 else Facing.LEFT)
+                new_mover.default_xloc = mover_data.xloc
+
+            if "gate" == mover_data.id:
+                new_mover = Gate(anim_inits[Id.GATE], Id.GATE.value, True
+                                , facing = Facing.RIGHT if mover_data.facing == 1 else Facing.LEFT)
+                new_mover.default_xloc = mover_data.xloc
+                new_mover.default_yloc = mover_data.yloc
+
+                self.interact_movers.append(new_mover)
+
+            new_mover.xloc = mover_data.xloc
+            new_mover.yloc = mover_data.yloc
+
+            if mover_data.id in ["sidecoil", "springbox", "block"]:
+                Block.movers.append(new_mover)
+
+            self.movers.append(new_mover)
 
     def __init__(self):
         self.display_list = []

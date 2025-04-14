@@ -16,8 +16,16 @@ def drawAnims(surfMgmt : sm, game : GameMode,
         xloc = entry.xloc
         yloc = entry.yloc
         sprite = pygame.transform.rotate(sprite, entry.angle)
-        sprite = pygame.transform.flip(sprite, entry.fliph, entry.flipv)
-        surfMgmt.drawSprite(sprite, xloc, yloc)
+        if entry.id == "gate":
+            rotated_rect = sprite.get_rect()
+            original_rect = animation[entry.animIdx].frames[entry.frameIdx].get_rect()
+            xoffs = rotated_rect.centerx - original_rect.centerx
+            yoffs = rotated_rect.centerx - original_rect.centery
+            sprite = pygame.transform.flip(sprite, entry.fliph, entry.flipv)
+            surfMgmt.drawSprite(sprite, xloc - xoffs - 16, yloc - yoffs - 12)
+        else:
+            sprite = pygame.transform.flip(sprite, entry.fliph, entry.flipv)
+            surfMgmt.drawSprite(sprite, xloc, yloc)
 
 def initMoverAnims(game : GameMode, animations : dict):
     anim_inits = {}
@@ -30,7 +38,8 @@ def initMoverAnims(game : GameMode, animations : dict):
             maxFrames.append(len(anim_seq.frames) )
             terminators.append(anim_seq.terminator)
         anim_inits[id] = (maxFrames, terminators)
-    game.Init( anim_inits )
+    return anim_inits
+    #game.Init( anim_inits )
 
 def initMap(surfMgmt : sm,
             tileMaps : list[TileMap],

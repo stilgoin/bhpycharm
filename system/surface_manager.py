@@ -8,9 +8,14 @@ class Surfaces(IntEnum):
     SPRITE = 1
     FINAL = 2
     SCALE = 3
+    HIT = 4
 
 
 class SurfaceManager:
+
+    @property
+    def get_surface(self) -> pygame.Surface:
+        return self.surfaces[Surfaces.HIT]
 
     @classmethod
     def surfaceFromImage(self, image: Image,
@@ -44,9 +49,11 @@ class SurfaceManager:
         map_surf = self.surfaces[Surfaces.MAP]
         sprite_surf = self.surfaces[Surfaces.SPRITE]
         scale_surf = self.surfaces[Surfaces.SCALE]
+        hit_surf = self.surfaces[Surfaces.HIT]
         final_surf.fill((BG_FILL))
         final_surf.blit(map_surf, (0, 0))
         final_surf.blit(sprite_surf, (0, 0))
+        final_surf.blit(hit_surf, (0,0))
         pygame.transform.scale(final_surf, (SCALE_W, SCALE_H), scale_surf)
         screen.blit(scale_surf, (0, 0) )
 

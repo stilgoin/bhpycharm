@@ -185,7 +185,6 @@ class InteractionListener:
                 listener = InteractionListener.listeners[(uuida, uuidb)]
                 #print("check sides in listener", ma, mb.id)
                 #self.check_sides(listener.result)
-                floor_found = self.check_fallplat(listener.result)
                 continue
 
             result : OverlapResult = moverToMover(ma, mb)

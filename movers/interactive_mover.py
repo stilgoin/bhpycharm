@@ -14,6 +14,7 @@ class InteractiveMover(Mover):
     ability = Ability.ITEM.value
     dash_xvel = 2.5
     onFallPlat = False
+    default_xloc = 0.0
 
     def dummy(self):
         pass
@@ -105,5 +106,6 @@ class InteractiveMover(Mover):
         self.snap_xloc = self.xloc - 8
         #self.xaccl = -0.05
 
-    def __init__(self, anim_init, id, placeholder):
+    def __init__(self, anim_init, id, placeholder, facing = Facing.LEFT):
         super().__init__(anim_init, id, placeholder)
+        self.facing = facing

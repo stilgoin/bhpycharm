@@ -44,7 +44,7 @@ class Hitbox(Rect):
         height = hitoffs[3]
         x1 = math.ceil(x0+width)
         y1 = math.ceil(y0+height)
-        x0 = math.  floor(x0)
+        x0 = math.floor(x0)
         y0 = math.floor(y0)
         self.nx0 = x0
         self.nx1 = x1

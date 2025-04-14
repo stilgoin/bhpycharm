@@ -88,7 +88,13 @@ class ResourceLoader:
     def loadScenery(self, idx, scenery : list):
         scenery.clear()
         scenery+=self.scenery[idx]
-        
+
+    def loadMovers(self):
+        movers_file = io.FileIO("data/movers.json", "r")
+        movers_dict = json.load(movers_file,
+                              object_hook=lambda d: SimpleNamespace(**d))
+        movers_file.close()
+        return movers_dict
 
     def loadAnims(self, animations : dict):
         sheet = Image.open("data/master.bmp")
@@ -127,7 +133,7 @@ class ResourceLoader:
                                     draw_polygon = True
                                     continue
                             if draw_polygon:
-                                sprite = sm.surfaceFromPlaceholder((0, 0, 1), (0, 0, 16, 16))
+                                sprite = sm.surfaceFromPlaceholder((0, 0, 1), (0, 0, 32, 32))
                                 pygame.draw.polygon(sprite, anim_data.color, anim_data.rects)
                             frames.append(sprite)
                         anim_seqs.append(AnimationSequence(frames, terminator))
@@ -155,10 +161,12 @@ class ResourceLoader:
         anim_file = io.FileIO("data/anims.json", "r")
         self.anim_dict = json.load(anim_file,
                               object_hook=lambda d: SimpleNamespace(**d))
+        anim_file.close()
                               
         scenery_file = io.FileIO("data/scenery.json", "r")
         self.scenery = json.load(scenery_file,
                               object_hook=lambda d: SimpleNamespace(**d))
+        scenery_file.close()
 
         gfx_file = io.FileIO(filename + ".images", "r")
         gfx_dict = json.load(gfx_file)

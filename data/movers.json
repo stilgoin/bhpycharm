@@ -1,8 +1,9 @@
 [
   [
-    {}
-
+    {"id": "block","xloc": 96,"yloc": 160,"facing": 1},
+    {"id": "springbox", "xloc":  16, "yloc": 160, "facing": 1},
+    {"id":  "sidecoil", "xloc": 32, "yloc":  160, "facing": 1},
+    {"id":  "gate", "xloc": 96, "yloc": 192, "facing": -1},
+    {"id":  "gate", "xloc": 128, "yloc": 192, "facing": 1}
   ]
-
-
 ]
