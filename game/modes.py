@@ -5,16 +5,19 @@ import pygame
 from game.overlap import spriteToBG
 from movers.blocks.block import Block
 from movers.blocks.spring import SpringBox, SideSpring
-from movers.gate import Gate
+from movers.events import MiscEvent
+from movers.gate import Gate, TrapDoorManager
 from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Id, Mover
-from system.defs import Facing
+from system.defs import Facing, TrapDoorStates
 
 
 class GameMode:
     loopcounter = 0
     output = ""
+
+    misc_events : [MiscEvent]
 
     def Loop(self, controls, surface : pygame.Surface):
         self.loopcounter += 1
@@ -23,6 +26,9 @@ class GameMode:
         self.mPlayer.procInput(controls)
 
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.movers))
+
+        for misc_event in self.misc_events:
+            misc_event.run_event()
 
         """ All movers must "go" before checking interactions
         """
@@ -78,6 +84,8 @@ class GameMode:
 
         mover_datas = movers_dict[0]
 
+        gates = []
+
         for mover_data in mover_datas:
             if "block" == mover_data.id:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
@@ -96,6 +104,12 @@ class GameMode:
                 new_mover.default_yloc = mover_data.yloc
 
                 self.interact_movers.append(new_mover)
+                gates.append(new_mover)
+
+                if len(gates) == 2:
+                    self.misc_events.append(TrapDoorManager(gates) )
+                    self.misc_events[len(self.misc_events)-1].move_state = TrapDoorStates.DROP_UPPER
+                    gates = []
 
             new_mover.xloc = mover_data.xloc
             new_mover.yloc = mover_data.yloc
@@ -111,3 +125,4 @@ class GameMode:
         self.push_movers = []
         self.interact_movers = []
         self.bghits = []
+        self.misc_events = []

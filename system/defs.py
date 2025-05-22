@@ -102,6 +102,12 @@ class Id(Enum):
     GATE = "gate"
     GATERIGHT = "gateright"
 
+class TrapDoorStates:
+    DROP_UPPER = 1
+    DROP_LOWER = 2
+    RAISE_UPPER = 4
+    RAISE_LOWER = 8
+
 class Ability(Enum):
     PUSHING = "pushing"
     ITEM = "item"

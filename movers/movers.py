@@ -125,13 +125,6 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
     def set_anim_idx(self, state):
         self.animation_state.set_anim_idx(state)
 
-    def restToStill(self):
-        if self.action_timer > 0:
-            self.action_timer -= 1
-            if self.action_timer <= 0:
-                self.push_state = Push.STILL
-
-
     def go(self):
         self.procEvents()
         self.animation_state.add_frameticks()
@@ -140,7 +133,6 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.move()
-        self.restToStill()
         
         self.make_hitboxes()
 
