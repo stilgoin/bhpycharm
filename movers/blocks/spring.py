@@ -37,9 +37,13 @@ class SideSpring(Block):
     def lockInPlace(self):
         if self.xloc > self.default_xloc:
             self.xloc = self.default_xloc
+            self.xvel = 0.0
+            self.xaccl = 0.0
             return True
         if self.xloc < self.default_xloc - 0xC:
             self.xloc = self.default_xloc - 0xC
+            self.xvel = 0.0
+            self.xaccl = 0.0
             return True
         
         return False

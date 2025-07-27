@@ -31,6 +31,11 @@ class InteractionListener:
         if not ma.xaccl and mb.xvel < mb.dash_xvel:
             ma.interaction_events.append(Events.MOVER_RECOIL)
             mb.interaction_events.append(Events.MOVER_RECOIL)
+        elif ma.hb.y0 > mb.hb.y1 \
+            or ma.hb.y1 < mb.hb.y0:
+            ma.interaction_events.append(Events.HALT_PUSHING)
+            mb.interaction_events.append(Events.MOVER_RECOIL)
+            self.expired = True
         else:
             if int(mb.xloc) != mb.default_xloc:
                 InteractionListener.check_sides(self.result)
@@ -60,7 +65,7 @@ class InteractionListener:
         if mb.xvel != ma.xvel:
             InteractionListener.check_sides(self.result)
 
-        #InteractionListener.check_sides(self.result)
+        InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
@@ -119,28 +124,28 @@ class InteractionListener:
             if result.facing == Facing.RIGHT:
                 pass
                 rollbackXLeft(result.mva, result.mvb.hb)
-                #print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
+                print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
             if result.facing == Facing.LEFT:
                 pass
                 rollbackXRight(result.mva, result.mvb.hb)
-                #print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
+                print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-                #print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
+                print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
-                #print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
+                print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
             else:
                 if result.vert == Vertical.DOWN:
                     return
 
                 if result.mva.xloc > result.mvb.xloc:
                     rollbackXRight(result.mva, result.mvb.hb)
-                    #print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
+                    print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
                 else:
                     rollbackXLeft(result.mva, result.mvb.hb)
-                    #print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
+                    print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
