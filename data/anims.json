@@ -95,5 +95,15 @@
         "sequences": [[{"xloc": 0, "yloc": 0}]],
         "color": "#80FF80FF",
         "terminators": [253]
+    },
+    {
+        "id": "goal",
+        "placeholder": true,
+        "complex": true,
+        "rects": [[0,0],[64,0],[64,4],[0,4]],
+        "size": "64",
+        "sequences": [[{"xloc": 0, "yloc": 0}]],
+        "color": "#80FF80FF",
+        "terminators": [253]
     }
 ]

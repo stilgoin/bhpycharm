@@ -3,7 +3,7 @@
 	[
 		{"xloc":16,"yloc":192,"width":80,"height":4,"color":"#263F72FF","collision": 2},
 		{"xloc":128,"yloc":192,"width":64,"height": 4,"color": "#263F72FF","collision": 2},
-		{"xloc": 16,"yloc": 224,"width": 144,"height": 4,"color": "#263F72FF","collision": 2}
+		{"xloc": 16,"yloc": 240,"width": 224,"height": 4,"color": "#263F72FF","collision": 2}
 	
 	
 	

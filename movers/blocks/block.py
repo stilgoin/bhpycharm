@@ -2,8 +2,6 @@ from movers.interactive_mover import InteractiveMover
 from system.defs import Status, Push, Events
 
 class Block(InteractiveMover):
-    pforce = 2
-    mass = 2
     movers = []
     friction = 0
     psteps = 0
@@ -24,7 +22,6 @@ class Block(InteractiveMover):
                 self.push_state = Push.STILL
                 self.xvel = 0.0
                 self.xaccl = 0.0
-                print("halt skidding")
 
     def procInteractionEvents(self):
         if Events.HALT_PUSHING in self.interaction_events:
@@ -32,7 +29,6 @@ class Block(InteractiveMover):
             self.xaccl = 0.0
             self.psteps = 0
             self.pushByHand = False
-            print("Halt")
 
         elif Events.CONTINUE_PUSHING in self.interaction_events:
             pass
@@ -49,7 +45,6 @@ class Block(InteractiveMover):
                 self.xvel = 1.75
                 self.move_state = Status.WALK
                 self.pushByHand = False
-                print("UGH")
 
         if Events.MOVER_RECOIL in self.interaction_events:
             self.xvel = self.MAX_XVEL_DASH
@@ -70,7 +65,7 @@ class Block(InteractiveMover):
         self.xvel = xvel * friction
         self.direction = direction
         self.pushByHand = pushByHand
-        if xaccl >= 0:
+        if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH

@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from game.handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.overlap import OverlapResult, moverToMover, Result
+from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
 from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump
@@ -23,7 +24,7 @@ class InteractionListener:
     def __str__(self):
         return "interaction: " + str(self.mva) + " " + str(self.mvb)
 
-    def processMoverToCoil(self):
+    def moverToCoilInteraction(self):
         
         ma : Mover = self.mva
         mb : Mover = self.mvb
@@ -46,21 +47,29 @@ class InteractionListener:
                     mb.xaccl = 0
                     mb.xvel = 0
                     return
-            self.processMoverToBlock()
+            self.moverToBlockInteraction()
 
-    def processMoverToBlock(self):
+    def moverToBlockInteraction(self):
 
         ma : Mover = self.mva
         mb : Mover = self.mvb
+
+        if mb.xaccl < 0:
+            ma.xaccl = mb.xaccl
+
+        if ma.xaccl < 0:
+            mb.xaccl = ma.xaccl
 
         if not ma.xaccl \
                 or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
                 or ma.hb.y1 < mb.hb.y0:
-            ma.interaction_events.append(Events.HALT_PUSHING)
-            mb.interaction_events.append(Events.HALT_PUSHING)
-            self.expired = True
-            return
+                if ma.xaccl >= 0:
+                    ma.interaction_events.append(Events.HALT_PUSHING)
+                if mb.xaccl >= 0:
+                    mb.interaction_events.append(Events.HALT_PUSHING)
+                self.expired = True
+                return
 
         if mb.xvel != ma.xvel:
             InteractionListener.check_sides(self.result)
@@ -69,8 +78,8 @@ class InteractionListener:
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
-    interactions = defaultdict(lambda : InteractionListener.processMoverToBlock,
-                               {Id.SIDECOIL.value : processMoverToCoil})
+    interactions = defaultdict(lambda : InteractionListener.moverToBlockInteraction,
+                               {Id.SIDECOIL.value : moverToCoilInteraction})
 
     @classmethod
     def evalInteractions(cls):
@@ -96,12 +105,18 @@ class InteractionListener:
         if not ma.xvel and not mb.xvel:
             return
 
+        if not mb.base_xaccl:
+            return
+
         InteractionListener.listeners[(uuida, uuidb)] = \
             InteractionListener(result.mva, result.mvb, result)
 
         if mb.xvel >= ma.MAX_XVEL_WALK:
             direction = mb.direction
-            xaccl = mb.base_xaccl / 8.0
+            if not mb.xaccl:
+                xaccl = mb.base_xaccl / 8.0
+            else:
+                xaccl = mb.xaccl
             friction = ma.friction
             xvel = mb.xvel
         else:
@@ -111,7 +126,7 @@ class InteractionListener:
                 xaccl = ma.base_xaccl / 8.0
             else:
                 friction = 1
-                xaccl = ma.xaccl    
+                xaccl = ma.xaccl
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl, xvel)
@@ -150,13 +165,22 @@ class InteractionListener:
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
                         result : OverlapResult) -> bool:
+
         floor_found = False
         if result.result == Result.CONTACT \
             and result.standing == Vertical.DOWN \
             or result.result == Result.OVERLAP \
             and result.vert == Vertical.DOWN:
 
-            rollbackYUp(ma, mb.hb)
+            if Id.GATE.value == mb.id:
+                if ma.yvel > 0.0:
+                    gate: Gate = mb
+                    gate.modify_interaction()
+                    return False
+
+            if ma.yloc < mb.yloc:
+                rollbackYUp(ma, mb.hb)
+
             floor_found = True
 
         self.check_sides(result)
@@ -186,13 +210,21 @@ class InteractionListener:
             if (uuida == uuidb):
                 continue
 
+            if Id.GATE.value == mb.id:
+                gate : Gate = mb
+                if not gate.fallthrough_trap_door:
+                    continue
+
             if (uuida, uuidb) in InteractionListener.listeners.keys():
                 listener = InteractionListener.listeners[(uuida, uuidb)]
                 #print("check sides in listener", ma, mb.id)
                 #self.check_sides(listener.result)
                 continue
 
-            result : OverlapResult = moverToMover(ma, mb)
+            if mb.xvel > ma.xvel:
+                result: OverlapResult = moverToMover(mb, ma)
+            else:
+                result : OverlapResult = moverToMover(ma, mb)
 
             floor_found = floor_found or \
                           InteractionListener \

@@ -19,6 +19,9 @@ class InteractiveMover(Mover):
     def dummy(self):
         pass
 
+    def modify_interaction(self):
+        pass
+
     def nudge_release(self):
 
         if self.push_state != Push.NUDGE:
@@ -83,7 +86,7 @@ class InteractiveMover(Mover):
         self.xaccl = xaccl
         self.xvel = xvel * friction
         self.direction = direction
-        if xaccl >= 0:
+        if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH
@@ -91,10 +94,6 @@ class InteractiveMover(Mover):
 
     def go(self):
         super().go()
-
-    def before_move(self):
-        pass
-        #self.clamp_pvel()
 
     def move(self):
         super().move()

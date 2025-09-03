@@ -31,6 +31,7 @@ class Push(IntEnum):
 class Move(IntEnum):
     NEUTRAL = 0
     DASH = 1
+    GOAL = 2
 
 
 class Facing(IntEnum):
@@ -101,6 +102,7 @@ class Id(Enum):
     HINGE = "gatehinge"
     GATE = "gate"
     GATERIGHT = "gateright"
+    GOAL = "goal"
 
 class TrapDoorStates:
     DROP_UPPER = 1

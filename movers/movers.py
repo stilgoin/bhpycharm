@@ -16,8 +16,6 @@ class Mover:
     xaccl = 0.0
     yaccl = 0.0
     base_xaccl = 0.1
-    pforce = 1
-    mass = 1
     friction = 1
     max_pvel = 0.5
     MAX_PVEL_CONST = 0.5
@@ -156,7 +154,10 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
             self.jump_state = Jump.FLOOR
             self.yvel = 0.0
             self.jump_lock = False
-            self.set_anim_idx(Anim.WALK)
+            if not self.xvel:
+                self.set_anim_idx(Anim.STILL)
+            else:
+                self.set_anim_idx(Anim.WALK)
 
         if not floor_found and self.jump_state == Jump.FLOOR:
             self.set_fall(JUMPVEL)

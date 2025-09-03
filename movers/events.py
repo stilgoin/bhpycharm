@@ -9,3 +9,4 @@ class MiscEvent:
     @property
     def move_state(self, move_state):
         self.move_state = move_state
+

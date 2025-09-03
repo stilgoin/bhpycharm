@@ -2,15 +2,16 @@ import sys
 
 import pygame
 
-from game.overlap import spriteToBG
+from game.overlap import spriteToBG, overlap
 from movers.blocks.block import Block
 from movers.blocks.spring import SpringBox, SideSpring
 from movers.events import MiscEvent
 from movers.gate import Gate, TrapDoorManager
+from movers.goal import Goal, GoalKeeper
 from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Id, Mover
-from system.defs import Facing, TrapDoorStates
+from system.defs import Facing, TrapDoorStates, Move
 
 
 class GameMode:
@@ -18,6 +19,8 @@ class GameMode:
     output = ""
 
     misc_events : [MiscEvent]
+
+    goal_keeper : GoalKeeper
 
     def Loop(self, controls, surface : pygame.Surface):
         self.loopcounter += 1
@@ -43,7 +46,13 @@ class GameMode:
 
             if mover.id in (Id.BLOCK.value):
                 floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
-            mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
+
+                if mover.move_state != Move.GOAL:
+                    if overlap(mover.hb, self.goal_keeper.goal.hb):
+                        mover.move_state = Move.GOAL
+
+            if mover.id not in (Id.GOAL.value):
+                mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
 
         # self.output += \
         InteractionListener.evalInteractions()
@@ -87,6 +96,7 @@ class GameMode:
         gates = []
 
         for mover_data in mover_datas:
+            addToMovers = True
             if "block" == mover_data.id:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
             if "springbox" == mover_data.id:
@@ -108,8 +118,13 @@ class GameMode:
 
                 if len(gates) == 2:
                     self.misc_events.append(TrapDoorManager(gates) )
-                    self.misc_events[len(self.misc_events)-1].move_state = TrapDoorStates.DROP_UPPER
+                    #self.misc_events[len(self.misc_events)-1].move_state = TrapDoorStates.DROP_UPPER
                     gates = []
+
+            if "goal" == mover_data.id:
+                new_mover = Goal(anim_inits[Id.GOAL], Id.GOAL.value, True)
+                #self.misc_events.append(GoalKeeper())
+                self.goal_keeper = GoalKeeper(new_mover)
 
             new_mover.xloc = mover_data.xloc
             new_mover.yloc = mover_data.yloc
@@ -117,7 +132,8 @@ class GameMode:
             if mover_data.id in ["sidecoil", "springbox", "block"]:
                 Block.movers.append(new_mover)
 
-            self.movers.append(new_mover)
+            if addToMovers:
+                self.movers.append(new_mover)
 
     def __init__(self):
         self.display_list = []
