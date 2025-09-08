@@ -1,14 +1,15 @@
 from movers.interactive_mover import InteractiveMover
-from system.defs import Status, Push, Events
+from system.defs import Status, Push, Events, Facing
+
 
 class Block(InteractiveMover):
-    movers = []
+    any_blocks = []
     friction = 0
     psteps = 0
     pushByHand = False
 
     def __str__(self):
-        return super().__str__() + f"psteps: {self.psteps}, pvel: {self.pvel}"
+        return super().__str__()
 
     def add_push_steps(self):
         if self.push_state == Push.NUDGE \
@@ -30,7 +31,7 @@ class Block(InteractiveMover):
             self.psteps = 0
             self.pushByHand = False
 
-        elif Events.CONTINUE_PUSHING in self.interaction_events:
+        if Events.CONTINUE_PUSHING in self.interaction_events:
             pass
             #self.xvel += self.xaccl
             #if self.xvel >= self.MAX_XVEL_PUSH:
@@ -73,6 +74,17 @@ class Block(InteractiveMover):
 
     def go(self):
         super().go()
+        snapped = False
+        if self.snap_xloc > 0:
+            if Facing.LEFT == self.direction and self.xloc <= self.snap_xloc:
+                snapped = True
+            if Facing.RIGHT == self.direction and self.xloc >= self.snap_xloc:
+                snapped = True
+
+            if snapped:
+                self.xloc = self.snap_xloc
+                self.xvel = 0.0
+                self.snap_xloc = 0
 
     def before_move(self):
         super().before_move()

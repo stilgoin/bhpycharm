@@ -33,7 +33,7 @@ class Statue(Block):
             self.hammer.xloc = 0xFFFF
 
         # self.hb = Hitbox(self.xloc, self.yloc, (-8,0,32,16))
-        for mover in InteractiveMover.movers + Player.movers:
+        for mover in InteractiveMover.any_blocks + Player.movers:
             if mover.id == Id.STATUE.value:
                 continue
 

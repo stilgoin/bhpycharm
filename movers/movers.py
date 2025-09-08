@@ -1,4 +1,5 @@
 from movers.helpers.animation_state import AnimationState
+from movers.helpers.display_entry import DisplayEntry
 from system.defs import *
 from game.maps import Hitbox
 from game.overlap import OverlapResult
@@ -15,6 +16,8 @@ class Mover:
     yvel = 0.0
     xaccl = 0.0
     yaccl = 0.0
+    snap_xloc = 0.0
+    snap_yloc = 0.0
     base_xaccl = 0.1
     friction = 1
     max_pvel = 0.5
@@ -91,16 +94,16 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
 
         self.xvel += self.xaccl
 
+        if self.xvel > self.max_xvel:
+            self.xvel = self.max_xvel
+
         if self.xaccl < 0:
             if self.xvel < self.MAX_XVEL_WALK:
                 self.max_xvel = self.MAX_XVEL_WALK
 
-        if self.xvel > self.max_xvel:
-            self.xvel = self.max_xvel
-        
         #if self.id == Id.BLOCK.value and self.xaccl != 0:
         #    print(self.xvel,self.xaccl)
-        
+
         if self.xvel <= 0.0:
             self.xvel = 0.0
             self.xaccl = 0.0
@@ -163,7 +166,7 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
             self.set_fall(JUMPVEL)
             self.set_anim_idx(Anim.STILL)
 
-    def animate(self):
+    def animate(self) -> [DisplayEntry]:
         return [self.animation_state\
             .display_entry(self.id, self.xloc, self.yloc,
                            True if self.facing == Facing.RIGHT else False,

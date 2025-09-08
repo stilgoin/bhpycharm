@@ -7,7 +7,6 @@ class SideSpring(Block):
     max_pvel = 0.25
     MAX_PVEL_CONST = 0.25
     default_xloc = 0.0
-    snap_xloc = 0.0
 
     def clamp_pvel(self):
         if self.push_state == Push.STILL \

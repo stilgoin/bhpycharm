@@ -3,6 +3,8 @@ from collections import defaultdict
 
 from game.handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.overlap import OverlapResult, moverToMover, Result
+from movers.blocks.block import Block
+from movers.blocks.stack import Stack
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
@@ -61,7 +63,7 @@ class InteractionListener:
             mb.xaccl = ma.xaccl
 
         if not ma.xaccl \
-                or ma.direction != mb.direction \
+        or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
                 or ma.hb.y1 < mb.hb.y0:
                 if ma.xaccl >= 0:
@@ -69,6 +71,7 @@ class InteractionListener:
                 if mb.xaccl >= 0:
                     mb.interaction_events.append(Events.HALT_PUSHING)
                 self.expired = True
+                print("halt to pushing")
                 return
 
         if mb.xvel != ma.xvel:
@@ -124,6 +127,9 @@ class InteractionListener:
             if ma.xaccl >= 0:
                 friction = mb.friction
                 xaccl = ma.base_xaccl / 8.0
+                #friction = 1
+                #xaccl = 0
+                print("push start")
             else:
                 friction = 1
                 xaccl = ma.xaccl
@@ -139,28 +145,28 @@ class InteractionListener:
             if result.facing == Facing.RIGHT:
                 pass
                 rollbackXLeft(result.mva, result.mvb.hb)
-                print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
+                #print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
             if result.facing == Facing.LEFT:
                 pass
                 rollbackXRight(result.mva, result.mvb.hb)
-                print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
+                #print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-                print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
+                #print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
-                print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
+                #print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
             else:
                 if result.vert == Vertical.DOWN:
                     return
 
                 if result.mva.xloc > result.mvb.xloc:
                     rollbackXRight(result.mva, result.mvb.hb)
-                    print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
+                    #print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
                 else:
                     rollbackXLeft(result.mva, result.mvb.hb)
-                    print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
+                    #print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
@@ -194,6 +200,48 @@ class InteractionListener:
                 .initInteraction(ma, mb, result)
 
         return floor_found
+
+    @classmethod
+    def blockToBlocks(self, ma : Block, blocks : [Block]) -> tuple[bool, OverlapResult]:
+        floor_found = False
+        result = OverlapResult()
+
+        for mb in blocks:
+            result: OverlapResult = moverToMover(ma, mb)
+
+            if ma.yloc > mb.yloc:
+                continue
+
+            if result.result == Result.CONTACT \
+                    and result.standing == Vertical.DOWN \
+                    or result.result == Result.OVERLAP \
+                    and result.vert == Vertical.DOWN:
+
+                floor_found = True
+
+                # mb already in a stack?
+                stack_found = False
+                stack : Stack = None
+                for stack in Stack.stacks:
+                    if mb in stack.blocks:
+                        stack_found = True
+                        break
+
+                if not stack_found:
+                    stack = Stack()
+                    stack.blocks.append(mb)
+                    Stack.stacks.append(stack)
+
+                if ma in stack.blocks:
+                    continue
+
+                ma.snap_xloc = mb.xloc
+                ma.xvel = 0.5
+                ma.direction = Facing.LEFT if ma.xloc > mb.xloc else Facing.RIGHT
+
+                stack.blocks.insert(0, ma)
+
+        return floor_found, result
 
 
     @classmethod

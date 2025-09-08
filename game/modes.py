@@ -28,7 +28,9 @@ class GameMode:
 
         self.mPlayer.procInput(controls)
 
-        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.movers))
+        springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.any_blocks))
+
+        blocks = list(filter(lambda item: item.id in (Id.BLOCK.value), Block.any_blocks))
 
         for misc_event in self.misc_events:
             misc_event.run_event()
@@ -42,10 +44,14 @@ class GameMode:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, Block.movers + self.interact_movers)
+                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers)
 
             if mover.id in (Id.BLOCK.value):
-                floor_found, result = InteractionListener.moverToMovers(mover, springs + self.interact_movers)
+                floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
+
+                if not floor_found:
+                    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers)
+
 
                 if mover.move_state != Move.GOAL:
                     if overlap(mover.hb, self.goal_keeper.goal.hb):
@@ -113,7 +119,7 @@ class GameMode:
                 new_mover.default_xloc = mover_data.xloc
                 new_mover.default_yloc = mover_data.yloc
 
-                self.interact_movers.append(new_mover)
+                self.event_movers.append(new_mover)
                 gates.append(new_mover)
 
                 if len(gates) == 2:
@@ -130,7 +136,7 @@ class GameMode:
             new_mover.yloc = mover_data.yloc
 
             if mover_data.id in ["sidecoil", "springbox", "block"]:
-                Block.movers.append(new_mover)
+                Block.any_blocks.append(new_mover)
 
             if addToMovers:
                 self.movers.append(new_mover)
@@ -139,6 +145,6 @@ class GameMode:
         self.display_list = []
         self.movers = []
         self.push_movers = []
-        self.interact_movers = []
+        self.event_movers = []
         self.bghits = []
         self.misc_events = []

@@ -4,14 +4,13 @@ from system.defs import Ability, Push, Vel, Facing, Status, Events
 
 class InteractiveMover(Mover):
 
-    movers = []
+    any_blocks = []
     springs = []
 
     hitoffs = (0, 0, 15, 15)
     snap_xloc = 0.0
     push_xloc = 0.0
-    pvel = 0.0
-    ability = Ability.ITEM.value
+    pcounter = 0
     dash_xvel = 2.5
     onFallPlat = False
     default_xloc = 0.0
@@ -60,12 +59,28 @@ class InteractiveMover(Mover):
             
     def procInteractionEvents(self):
 
+        if Events.CONTINUE_PUSHING in self.interaction_events:
+            pass
+            """
+            if not self.pcounter % 60:
+                self.xvel = 0.01
+                self.xaccl = 0.01
+            else:
+                self.xaccl = self.base_xaccl
+            self.pcounter -= 1
+            if self.pcounter <= 0:
+                self.pcounter = 0
+            print(self.pcounter)
+            """
+
+
         if Events.HALT_PUSHING in self.interaction_events:
             if self.xvel < self.MAX_XVEL_WALK:
                 self.max_xvel = self.MAX_XVEL_WALK
                 self.xaccl = self.base_xaccl
             else:
                 self.xaccl = -0.05
+                print("UGH")
 
         if Events.MOVER_LEAVE_COIL in self.interaction_events:
             pass
@@ -86,10 +101,12 @@ class InteractiveMover(Mover):
         self.xaccl = xaccl
         self.xvel = xvel * friction
         self.direction = direction
+        #self.max_xvel = self.MAX_XVEL_PUSH
         if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH
+        self.pcounter = 300
 
 
     def go(self):
