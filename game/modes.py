@@ -4,14 +4,18 @@ import pygame
 
 from game.overlap import spriteToBG, overlap
 from movers.blocks.block import Block
+from movers.blocks.gem import Gem
 from movers.blocks.spring import SpringBox, SideSpring
+from movers.blocks.stack import Stack
+from movers.cloud import Cloud, SpawnBlock
 from movers.events import MiscEvent
 from movers.gate import Gate, TrapDoorManager
 from movers.goal import Goal, GoalKeeper
 from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Id, Mover
-from system.defs import Facing, TrapDoorStates, Move
+from movers.pipe import Pipe
+from system.defs import Facing, TrapDoorStates, Move, Key
 
 
 class GameMode:
@@ -30,10 +34,15 @@ class GameMode:
 
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.any_blocks))
 
-        blocks = list(filter(lambda item: item.id in (Id.BLOCK.value), Block.any_blocks))
+        blocks = list(filter(lambda item: item.id in (Id.BLOCK.value, Id.GEM.value), Block.any_blocks))
 
         for misc_event in self.misc_events:
             misc_event.run_event()
+            if "SpawnBlock" in str(type(misc_event)):
+                if controls[3] & Key.FIRE:
+                    spawn_block : SpawnBlock = misc_event
+                    spawn_block.cloud.spawn_switch = True
+                    spawn_block.run_event()
 
         """ All movers must "go" before checking interactions
         """
@@ -46,12 +55,11 @@ class GameMode:
             if mover.id == Id.PLAYER.value:
                 floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers)
 
-            if mover.id in (Id.BLOCK.value):
+            if mover.id in (Id.BLOCK.value, Id.GEM.value):
                 floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
 
                 if not floor_found:
                     floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers)
-
 
                 if mover.move_state != Move.GOAL:
                     if overlap(mover.hb, self.goal_keeper.goal.hb):
@@ -62,6 +70,8 @@ class GameMode:
 
         # self.output += \
         InteractionListener.evalInteractions()
+
+        Stack.run_stacks()
 
         for mover in self.movers:
             mover.procInteractionEvents()
@@ -93,7 +103,7 @@ class GameMode:
     def Init(self, anim_inits : dict, movers_dict : dict):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
-        self.mPlayer.yloc = 0xA0
+        self.mPlayer.yloc = 0x50
         Player.movers.append(self.mPlayer)
         self.movers.append(self.mPlayer)
 
@@ -103,8 +113,24 @@ class GameMode:
 
         for mover_data in mover_datas:
             addToMovers = True
+            if "cloud" == mover_data.id:
+                new_mover = Cloud(anim_inits[self.ids.CLOUD], self.ids.CLOUD.value, False)
+                new_block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+                new_block.xloc = 0xFF
+                new_block.yloc = 0xFF
+                new_event = SpawnBlock(new_mover, new_block)
+                self.misc_events.append(new_event)
+                Block.any_blocks.append(new_block)
+                self.movers.append(new_block)
+
             if "block" == mover_data.id:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+            if "gem" == mover_data.id:
+                new_mover = Gem(anim_inits[self.ids.GEM], self.ids.GEM.value, False)
+            if "pipe" == mover_data.id:
+                new_mover = Pipe(anim_inits[self.ids.PIPE], self.ids.PIPE.value, False)
+                self.event_movers.append(new_mover)
+
             if "springbox" == mover_data.id:
                 new_mover = SpringBox(anim_inits, anim_inits[self.ids.SPRINGBOX], self.ids.SPRINGBOX.value, True,
                               facing=Facing.RIGHT)
@@ -135,7 +161,7 @@ class GameMode:
             new_mover.xloc = mover_data.xloc
             new_mover.yloc = mover_data.yloc
 
-            if mover_data.id in ["sidecoil", "springbox", "block"]:
+            if mover_data.id in ["sidecoil", "springbox", "block", "gem"]:
                 Block.any_blocks.append(new_mover)
 
             if addToMovers:

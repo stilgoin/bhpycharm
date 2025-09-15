@@ -1,5 +1,6 @@
 from movers.interactive_mover import InteractiveMover
-from system.defs import Status, Push, Events, Facing
+from movers.movers import JUMPVEL
+from system.defs import Status, Push, Events, Facing, Anim, Jump
 
 
 class Block(InteractiveMover):
@@ -93,3 +94,27 @@ class Block(InteractiveMover):
 
     def move(self):
         super().move()
+
+    def check(self, floor_found, moverToBGFunc):
+
+        #floor_found, result = self.moverToMovers()
+
+        floor_found = floor_found or moverToBGFunc()
+
+        if floor_found and self.onFallPlat:
+            moverToBGFunc()
+
+        if floor_found and self.jump_state == Jump.FALL:
+            self.jump_state = Jump.FLOOR
+            self.yvel = 0.0
+            self.jump_lock = False
+            if not self.xvel:
+                self.set_anim_idx(Anim.STILL)
+            else:
+                self.set_anim_idx(Anim.WALK)
+
+        if not floor_found and self.jump_state == Jump.FLOOR:
+            self.xvel = 0.0
+            self.xaccl = 0.0
+            self.set_fall(JUMPVEL)
+            self.set_anim_idx(Anim.STILL)

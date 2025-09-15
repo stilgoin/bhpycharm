@@ -20,6 +20,7 @@ class AnimationState:
             return 0
         if terminator == Terminators.EXPIRE:
             return Terminators.EXPIRE
+
     @property
     def current_frame(self):
         frameIdx = int(self.frameTicks / Tick.DELAY)

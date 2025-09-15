@@ -103,6 +103,9 @@ class Id(Enum):
     GATE = "gate"
     GATERIGHT = "gateright"
     GOAL = "goal"
+    GEM = "gem"
+    CLOUD = "cloud"
+    PIPE = "pipe"
 
 class TrapDoorStates:
     DROP_UPPER = 1

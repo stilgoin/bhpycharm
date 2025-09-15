@@ -8,7 +8,7 @@ from movers.blocks.stack import Stack
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
-from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump
+from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump, Move
 
 
 class InteractionListener:
@@ -65,7 +65,8 @@ class InteractionListener:
         if not ma.xaccl \
         or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
-                or ma.hb.y1 < mb.hb.y0:
+                or ma.hb.y1 < mb.hb.y0 \
+                or mb.move_state == Move.GOAL:
                 if ma.xaccl >= 0:
                     ma.interaction_events.append(Events.HALT_PUSHING)
                 if mb.xaccl >= 0:
@@ -81,8 +82,19 @@ class InteractionListener:
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
+    def blockToPipe(self):
+        ma: Mover = self.mva
+        mb: Mover = self.mvb
+
+        ma.snap_xloc = mb.xloc
+        ma.direction = Facing.LEFT if ma.xloc > mb.xloc else Facing.RIGHT
+        ma.xvel = 0.5
+        ma.xaccl = 0.0
+        ma.move_state = Move.GOAL
+
     interactions = defaultdict(lambda : InteractionListener.moverToBlockInteraction,
-                               {Id.SIDECOIL.value : moverToCoilInteraction})
+                               {Id.SIDECOIL.value : moverToCoilInteraction,
+                                Id.PIPE.value : blockToPipe})
 
     @classmethod
     def evalInteractions(cls):
@@ -113,6 +125,9 @@ class InteractionListener:
 
         InteractionListener.listeners[(uuida, uuidb)] = \
             InteractionListener(result.mva, result.mvb, result)
+
+        if mb.id == Id.PIPE.value:
+            return
 
         if mb.xvel >= ma.MAX_XVEL_WALK:
             direction = mb.direction
@@ -188,6 +203,7 @@ class InteractionListener:
                 rollbackYUp(ma, mb.hb)
 
             floor_found = True
+
 
         self.check_sides(result)
 
