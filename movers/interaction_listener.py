@@ -56,6 +56,11 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
 
+        if mb.move_state == Move.GOAL:
+            ma.interaction_events.append(Events.HALT_PUSHING)
+            self.expired = True
+            return
+
         if mb.xaccl < 0:
             ma.xaccl = mb.xaccl
 
@@ -65,8 +70,7 @@ class InteractionListener:
         if not ma.xaccl \
         or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
-                or ma.hb.y1 < mb.hb.y0 \
-                or mb.move_state == Move.GOAL:
+                or ma.hb.y1 < mb.hb.y0:
                 if ma.xaccl >= 0:
                     ma.interaction_events.append(Events.HALT_PUSHING)
                 if mb.xaccl >= 0:
@@ -91,6 +95,7 @@ class InteractionListener:
         ma.xvel = 0.5
         ma.xaccl = 0.0
         ma.move_state = Move.GOAL
+        self.expired = True
 
     interactions = defaultdict(lambda : InteractionListener.moverToBlockInteraction,
                                {Id.SIDECOIL.value : moverToCoilInteraction,
@@ -115,19 +120,24 @@ class InteractionListener:
         uuida = ma.auuid
         uuidb = mb.auuid
         if (uuida, uuidb) in InteractionListener.listeners.keys():
-            return
+            return True
 
         if not ma.xvel and not mb.xvel:
-            return
+            return True
 
         if not mb.base_xaccl:
-            return
+            return True
+
+        if ma.id == Id.PLAYER.value and mb.id == Id.PIPE.value:
+            return True
 
         InteractionListener.listeners[(uuida, uuidb)] = \
             InteractionListener(result.mva, result.mvb, result)
 
         if mb.id == Id.PIPE.value:
-            return
+            if ma.id == Id.BLOCK.value:
+                return False
+            return True
 
         if mb.xvel >= ma.MAX_XVEL_WALK:
             direction = mb.direction
@@ -153,6 +163,8 @@ class InteractionListener:
         ma.initPushing(direction, friction, xaccl, xvel)
         mb.initPushing(direction, friction, xaccl, xvel, pushByHand = True)
 
+        return True
+
     @classmethod
     def check_sides(cls, result: OverlapResult):
 
@@ -160,28 +172,28 @@ class InteractionListener:
             if result.facing == Facing.RIGHT:
                 pass
                 rollbackXLeft(result.mva, result.mvb.hb)
-                #print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
+                print("ROLLBACK LEFT 198", str(result.mva), str(result.mvb))
             if result.facing == Facing.LEFT:
                 pass
                 rollbackXRight(result.mva, result.mvb.hb)
-                #print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
+                print("ROLLBACK RIGHT 200", str(result.mva), str(result.mvb))
         elif result.result == Result.OVERLAP:
             if result.side == Facing.RIGHT:
                 rollbackXLeft(result.mva, result.mvb.hb)
-                #print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
+                print("ROLLBACK LEFT 205", str(result.mva), str(result.mvb))
             elif result.side == Facing.LEFT:
                 rollbackXRight(result.mva, result.mvb.hb)
-                #print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
+                print("ROLLBACK RIGHT 207", str(result.mva), str(result.mvb))
             else:
                 if result.vert == Vertical.DOWN:
                     return
 
                 if result.mva.xloc > result.mvb.xloc:
                     rollbackXRight(result.mva, result.mvb.hb)
-                    #print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
+                    print("ROLLBACK LEFT 218", str(result.mva), str(result.mvb))
                 else:
                     rollbackXLeft(result.mva, result.mvb.hb)
-                    #print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
+                    print("ROLLBACK RIGHT 218", str(result.mva), str(result.mvb))
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
@@ -204,16 +216,17 @@ class InteractionListener:
 
             floor_found = True
 
-
-        self.check_sides(result)
-
+        do_check_sides = False
         if result.result == Result.CONTACT \
             and result.facing != 0 \
             or result.result == Result.OVERLAP \
             and result.side != 0:
             pass
-            InteractionListener\
+            do_check_sides = InteractionListener\
                 .initInteraction(ma, mb, result)
+
+        if do_check_sides:
+            self.check_sides(result)
 
         return floor_found
 
@@ -277,6 +290,10 @@ class InteractionListener:
             if Id.GATE.value == mb.id:
                 gate : Gate = mb
                 if not gate.fallthrough_trap_door:
+                    continue
+
+            if Id.BLOCK.value == mb.id:
+                if mb.move_state == Move.GOAL:
                     continue
 
             if (uuida, uuidb) in InteractionListener.listeners.keys():

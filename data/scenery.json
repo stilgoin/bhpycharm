@@ -1,11 +1,15 @@
 [
 
 	[
-		{"xloc":16,"yloc":192,"width":80,"height":4,"color":"#263F72FF","collision": 2},
-		{"xloc":128,"yloc":192,"width":64,"height": 4,"color": "#263F72FF","collision": 2},
-		{"xloc": 16,"yloc": 240,"width": 224,"height": 4,"color": "#263F72FF","collision": 2},
-		{"xloc": 64,"yloc": 64,"width": 80,"height": 4,"color": "#263F72FF","collision": 2},
-		{"xloc": 16,"yloc": 112,"width": 128,"height": 4,"color": "#263F72FF","collision": 2}
+		{"xloc":0,"yloc":160,"width":96,"height":4,"color":"#263F72FF","collision": 2},
+		{"xloc":128,"yloc":160,"width":128,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 0,"yloc": 240,"width": 256,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 80,"yloc": 64,"width": 16,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 128,"yloc": 64,"width": 16,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 128,"yloc": 32,"width": 48,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 16,"yloc": 112,"width": 80,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 128,"yloc": 112,"width": 64,"height": 4,"color": "#263F72FF","collision": 2},
+		{"xloc": 224, "yloc": 128, "width": 32, "height":  4, "color":  "#263F72FF", "collision": 2}
 
 
 	

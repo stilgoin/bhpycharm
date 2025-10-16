@@ -110,8 +110,8 @@ class Block(InteractiveMover):
             self.jump_lock = False
             if not self.xvel:
                 self.set_anim_idx(Anim.STILL)
-            else:
-                self.set_anim_idx(Anim.WALK)
+            #else:
+            #    self.set_anim_idx(Anim.WALK)
 
         if not floor_found and self.jump_state == Jump.FLOOR:
             self.xvel = 0.0
