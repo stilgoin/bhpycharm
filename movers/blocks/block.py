@@ -8,6 +8,7 @@ class Block(InteractiveMover):
     friction = 0
     psteps = 0
     pushByHand = False
+    pcounterAction = 0x20
 
     def __str__(self):
         return super().__str__()
@@ -34,19 +35,20 @@ class Block(InteractiveMover):
 
         if Events.CONTINUE_PUSHING in self.interaction_events:
             pass
+            #self.pcounter += 1
+            #if self.pcounter == self.pcounterAction:
+            #    self.xvel = self.push_xvel
             #self.xvel += self.xaccl
             #if self.xvel >= self.MAX_XVEL_PUSH:
             #    self.xvel = self.MAX_XVEL_PUSH
 
         elif Events.PUSH_TO_SKID in self.interaction_events:
-            self.psteps = 0
-            if self.move_state != Status.DASH:
             #if True:
-                self.push_state = Push.SKID
-                self.xaccl = -0.05
-                self.xvel = 1.75
-                self.move_state = Status.WALK
-                self.pushByHand = False
+            self.xaccl = -0.05
+            self.xvel = 2.25
+            self.pushByHand = False
+            self.max_xvel = self.MAX_XVEL_DASH
+            print("Skid")
 
         if Events.MOVER_RECOIL in self.interaction_events:
             self.xvel = self.MAX_XVEL_DASH
@@ -63,15 +65,21 @@ class Block(InteractiveMover):
         self.events.clear()
 
     def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
-        self.xaccl = xaccl
-        self.xvel = xvel * friction
+        if 0 == self.pcounterAction:
+            self.xaccl = xaccl
+            self.xvel = xvel * friction
+        else:
+            self.xaccl = xaccl
+            self.xvel = 1.0
+        self.push_xvel = xvel * friction
         self.direction = direction
         self.pushByHand = pushByHand
         if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH
-        print("PUSHING")
+        self.pcounter = 0
+        #print("PUSHING")
 
     def go(self):
         super().go()

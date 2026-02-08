@@ -1,5 +1,5 @@
 from movers.movers import Mover
-from system.defs import Ability, Push, Vel, Facing, Status, Events
+from system.defs import Ability, Push, Vel, Facing, Status, Events, Id
 
 
 class InteractiveMover(Mover):
@@ -11,7 +11,9 @@ class InteractiveMover(Mover):
     snap_xloc = 0.0
     push_xloc = 0.0
     pcounter = 0
+    pcounterAction = 0
     dash_xvel = 2.5
+    push_xvel = 0.0
     onFallPlat = False
     default_xloc = 0.0
 
@@ -61,6 +63,9 @@ class InteractiveMover(Mover):
 
         if Events.CONTINUE_PUSHING in self.interaction_events:
             pass
+            #self.pcounter += 1
+            #if self.pcounter == self.pcounterAction:
+            #    self.xvel = self.push_xvel
             """
             if not self.pcounter % 60:
                 self.xvel = 0.01
@@ -100,13 +105,14 @@ class InteractiveMover(Mover):
     def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
         self.xaccl = xaccl
         self.xvel = xvel * friction
+        self.push_xvel = xvel * friction
         self.direction = direction
         #self.max_xvel = self.MAX_XVEL_PUSH
         if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH
-        self.pcounter = 300
+        self.pcounter = 0
 
 
     def go(self):
@@ -125,3 +131,9 @@ class InteractiveMover(Mover):
     def __init__(self, anim_init, id, placeholder, facing = Facing.LEFT):
         super().__init__(anim_init, id, placeholder)
         self.facing = facing
+
+    def __setattr__(self, key, value):
+        if key == "xvel" and self.xvel >= 2.0 and self.id == Id.BLOCK.value:
+            #print("xvel", value)
+            pass
+        self.__dict__[key] = value

@@ -7,6 +7,7 @@ class SideSpring(Block):
     max_pvel = 0.25
     MAX_PVEL_CONST = 0.25
     default_xloc = 0.0
+    pcounterAction = 0
 
     def clamp_pvel(self):
         if self.push_state == Push.STILL \
@@ -20,8 +21,13 @@ class SideSpring(Block):
     def procInteractionEvents(self):
         
         halt_pushing = False
+        """TODO:  duplicate pcounter logic here"""
         
         if Events.CONTINUE_PUSHING in self.interaction_events:
+
+            #self.pcounter += 1
+            #if self.pcounter == self.pcounterAction:
+            #    self.xvel = self.push_xvel
             
             halt_pushing = self.lockInPlace()
             

@@ -86,6 +86,18 @@ class InteractionListener:
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
+        ma.pcounter += 1
+        if 2 == ma.pcounter:
+            ma.xvel = ma.push_xvel
+            mb.xvel = mb.push_xvel
+
+        if ma.pcounter >= 0x20:
+            ma.interaction_events.append(Events.HALT_PUSHING)
+            mb.interaction_events.append(Events.PUSH_TO_SKID)
+            mb.interaction_events.remove(Events.CONTINUE_PUSHING)
+            self.expired = True
+            ma.pcounter = 0
+
     def blockToPipe(self):
         ma: Mover = self.mva
         mb: Mover = self.mvb
