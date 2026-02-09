@@ -63,6 +63,10 @@ class Status(IntEnum):
     SHAKE = 0x2
     EXPIRED = 0xFF
 
+class PushAction(IntEnum):
+    SHOVE = 0
+    SKID = 0x1
+
 class Terminators(IntEnum):
     HOLD = 0xFD
     REPEAT = 0xFE

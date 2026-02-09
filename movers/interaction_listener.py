@@ -8,7 +8,7 @@ from movers.blocks.stack import Stack
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
-from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump, Move
+from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump, Move, PushAction
 
 
 class InteractionListener:
@@ -31,7 +31,8 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
         
-        if not ma.xaccl and mb.xvel < mb.dash_xvel:
+        if not ma.xaccl and mb.xvel < mb.dash_xvel \
+                or ma.xaccl < 0 and mb.xloc <= mb.default_xloc - 0xC:
             ma.interaction_events.append(Events.MOVER_RECOIL)
             mb.interaction_events.append(Events.MOVER_RECOIL)
         elif ma.hb.y0 > mb.hb.y1 \
@@ -43,7 +44,8 @@ class InteractionListener:
             if int(mb.xloc) != mb.default_xloc:
                 InteractionListener.check_sides(self.result)
             else:
-                if ma.xvel >= mb.MAX_XVEL_PUSH:
+                if ma.xvel >= mb.MAX_XVEL_PUSH \
+                        and ma.xaccl >= 0:
                     ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
                     self.expired = True
                     mb.xaccl = 0
@@ -85,6 +87,9 @@ class InteractionListener:
         InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
+
+        if not mb.pcounterAction:
+            return
 
         ma.pcounter += 1
         if 2 == ma.pcounter:
@@ -160,6 +165,9 @@ class InteractionListener:
             friction = ma.friction
             xvel = mb.xvel
         else:
+            if ma.xaccl < 0:
+                mb.pcounterAction = PushAction.SHOVE
+
             direction = ma.direction
             if ma.xaccl >= 0:
                 friction = mb.friction

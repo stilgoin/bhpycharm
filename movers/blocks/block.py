@@ -1,6 +1,6 @@
 from movers.interactive_mover import InteractiveMover
 from movers.movers import JUMPVEL
-from system.defs import Status, Push, Events, Facing, Anim, Jump
+from system.defs import Status, Push, Events, Facing, Anim, Jump, PushAction
 
 
 class Block(InteractiveMover):
@@ -8,7 +8,10 @@ class Block(InteractiveMover):
     friction = 0
     psteps = 0
     pushByHand = False
-    pcounterAction = 0x20
+
+
+    defaultPushAction = PushAction.SKID
+    pcounterAction = defaultPushAction
 
     def __str__(self):
         return super().__str__()
@@ -32,6 +35,7 @@ class Block(InteractiveMover):
             self.xaccl = 0.0
             self.psteps = 0
             self.pushByHand = False
+            self.pcounterAction = self.defaultPushAction
 
         if Events.CONTINUE_PUSHING in self.interaction_events:
             pass
@@ -65,7 +69,9 @@ class Block(InteractiveMover):
         self.events.clear()
 
     def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
-        if 0 == self.pcounterAction:
+        if not self.xvel:
+            self.pcounter = 0
+        if not self.pcounterAction:
             self.xaccl = xaccl
             self.xvel = xvel * friction
         else:
@@ -78,7 +84,6 @@ class Block(InteractiveMover):
             self.max_xvel = self.MAX_XVEL_PUSH
         else:
             self.max_xvel = self.MAX_XVEL_DASH
-        self.pcounter = 0
         #print("PUSHING")
 
     def go(self):
