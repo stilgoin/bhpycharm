@@ -107,6 +107,9 @@ class Player(InteractiveMover):
             self.set_fall(1.75)
             self.set_anim_idx(Anim.STILL)
 
+        return keys_pressed & Key.FIRE
+
+
     def move(self):
         super().move()
         if self.jump_state == Jump.JUMP:

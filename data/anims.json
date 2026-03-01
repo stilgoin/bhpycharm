@@ -15,6 +15,24 @@
     "terminators": [253,254,253,253,253]
     },
     {
+        "id": "breath",
+        "size": 8,
+        "placeholder": false,
+        "complex": false,
+        "sequences":
+                [
+                    [{"xloc":16,"yloc": 32},
+                        {"xloc":8,"yloc": 32},
+                        {"xloc": 0,"yloc": 32},
+                        {"xloc": 8,"yloc": 32}],
+                    [{"xloc":16,"yloc": 40},
+                        {"xloc":8,"yloc": 40},
+                        {"xloc": 0,"yloc": 40}
+                    ]
+                ],
+        "terminators": [254,255]
+    },
+    {
         "id": "block",
         "size": "16",
         "placeholder" : false,
@@ -131,6 +149,16 @@
         "placeholder": true,
         "complex": true,
         "rects": [[0,0],[16,0],[16,16],[0,16]],
+        "size": 16,
+        "sequences": [[{"xloc": 0, "yloc": 0}]],
+        "color": "#800080FF",
+        "terminators": [253]
+    },
+    {
+        "id": "ramp",
+        "placeholder": true,
+        "complex": true,
+        "rects": [[8,8],[16,16],[8,16]],
         "size": 16,
         "sequences": [[{"xloc": 0, "yloc": 0}]],
         "color": "#800080FF",

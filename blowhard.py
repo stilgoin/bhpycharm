@@ -37,7 +37,7 @@ def main():
     game = GameMode()
     game.bghits = resource_store.tileMaps[0].hitboxes
     anim_inits = draw.initMoverAnims(game, resource_store.animations)
-    game.Init(anim_inits,movers_dict)
+    game.init(anim_inits, movers_dict)
 
 
     running = True
@@ -56,7 +56,7 @@ def main():
 
         control.control(pygame)
         sm.get_surface.fill((BG_CLEAR))
-        game.Loop(control.controls, sm.get_surface)
+        game.loop(control.controls, sm.get_surface)
         draw.drawAnims(sm, game, resource_store.animations)
         sm.drawScreen(pygame.display.get_surface() )
         pygame.display.flip()

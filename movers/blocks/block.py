@@ -7,8 +7,6 @@ class Block(InteractiveMover):
     any_blocks = []
     friction = 0
     psteps = 0
-    pushByHand = False
-
 
     defaultPushAction = PushAction.SKID
     pcounterAction = defaultPushAction
@@ -34,7 +32,6 @@ class Block(InteractiveMover):
             self.xvel = 0.0
             self.xaccl = 0.0
             self.psteps = 0
-            self.pushByHand = False
             self.pcounterAction = self.defaultPushAction
 
         if Events.CONTINUE_PUSHING in self.interaction_events:
@@ -50,7 +47,6 @@ class Block(InteractiveMover):
             #if True:
             self.xaccl = -0.05
             self.xvel = 2.25
-            self.pushByHand = False
             self.max_xvel = self.MAX_XVEL_DASH
             print("Skid")
 
@@ -62,13 +58,14 @@ class Block(InteractiveMover):
             
         if Events.MOVER_LEAVE_COIL in self.interaction_events:
             self.xaccl = -0.05
+            #self.set_jump(1.25)
 
         self.interaction_events.clear()
 
     def procEvents(self):
         self.events.clear()
 
-    def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
+    def initPushing(self, direction, friction, xaccl, xvel=0):
         if not self.xvel:
             self.pcounter = 0
         if not self.pcounterAction:
@@ -79,7 +76,6 @@ class Block(InteractiveMover):
             self.xvel = 1.0
         self.push_xvel = xvel * friction
         self.direction = direction
-        self.pushByHand = pushByHand
         if not friction:
             self.max_xvel = self.MAX_XVEL_PUSH
         else:

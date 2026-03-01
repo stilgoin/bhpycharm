@@ -2,11 +2,12 @@ import sys
 
 import pygame
 
-from game.overlap import spriteToBG, overlap
+from game.overlap import spriteToBG, overlap, Result
 from movers.blocks.block import Block
 from movers.blocks.gem import Gem
 from movers.blocks.spring import SpringBox, SideSpring
 from movers.blocks.stack import Stack
+from movers.breath import Breath
 from movers.cloud import Cloud, SpawnBlock
 from movers.events import MiscEvent
 from movers.gate import Gate, TrapDoorManager
@@ -15,7 +16,8 @@ from movers.interaction_listener import InteractionListener
 from movers.mover_classes import MiscMover, Player
 from movers.movers import Id, Mover
 from movers.pipe import Pipe
-from system.defs import Facing, TrapDoorStates, Move, Key
+from movers.ramp import Ramp
+from system.defs import Facing, TrapDoorStates, Move, Key, Terminators
 
 
 class GameMode:
@@ -26,11 +28,22 @@ class GameMode:
 
     goal_keeper : GoalKeeper
 
-    def Loop(self, controls, surface : pygame.Surface):
+    breath = None
+
+    def loop(self, controls, surface : pygame.Surface):
         self.loopcounter += 1
         self.display_list.clear()
 
-        self.mPlayer.procInput(controls)
+        if self.mPlayer.procInput(controls):
+            self.breath.xloc = self.mPlayer.xloc
+            self.breath.yloc = self.mPlayer.yloc
+            self.breath.xvel = 2.5
+            self.breath.yvel = 0
+            self.breath.xaccl = -0.05
+            self.breath.max_xvel = 3.5
+            self.breath.direction = self.mPlayer.facing
+
+        self.movers = list(filter(lambda mover: mover.move_state != Terminators.EXPIRE, self.movers))
 
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.any_blocks))
 
@@ -38,11 +51,14 @@ class GameMode:
 
         for misc_event in self.misc_events:
             misc_event.run_event()
+            """
             if "SpawnBlock" in str(type(misc_event)):
                 if controls[3] & Key.FIRE:
                     spawn_block : SpawnBlock = misc_event
                     spawn_block.cloud.spawn_switch = True
                     spawn_block.run_event()
+            """
+
 
         """ All movers must "go" before checking interactions
         """
@@ -54,6 +70,12 @@ class GameMode:
             floor_found = False
             if mover.id == Id.PLAYER.value:
                 floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers)
+
+            if mover.id == Id.BREATH.value:
+                check_movers = list(filter(lambda item: item.id in (Id.GEM.value), Block.any_blocks))
+                check_movers += list(filter(lambda item: item.id in (Id.CLOUD.value), self.movers))
+                spawn_events = list(filter(lambda item: "SpawnBlock" in str(type(item)), self.misc_events))
+                floor_found, result = InteractionListener.moverToMovers(mover, check_movers, spawn_events)
 
             if mover.id in (Id.BLOCK.value, Id.GEM.value):
                 floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
@@ -100,16 +122,22 @@ class GameMode:
     def ids(self):
         return Id
 
-    def Init(self, anim_inits : dict, movers_dict : dict):
+    def init(self, anim_inits : dict, movers_dict : dict, moversIdx = 0):
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0x50
         Player.movers.append(self.mPlayer)
         self.movers.append(self.mPlayer)
 
-        mover_datas = movers_dict[0]
+        mover_datas = movers_dict[moversIdx]
 
         gates = []
+
+        new_mover = Breath(anim_inits[self.ids.BREATH], Id.BREATH.value, False)
+        new_mover.xloc = 0xFFFF
+        new_mover.yloc = 0xFFFF
+        self.breath = new_mover
+        self.movers.append(new_mover)
 
         for mover_data in mover_datas:
             addToMovers = True
@@ -127,8 +155,19 @@ class GameMode:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
             if "gem" == mover_data.id:
                 new_mover = Gem(anim_inits[self.ids.GEM], self.ids.GEM.value, False)
+                new_block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+                new_block.xloc = 0xFFFF
+                new_block.yloc = 0xFFFF
+                new_event = SpawnBlock(new_mover, new_block)
+                self.misc_events.append(new_event)
+                Block.any_blocks.append(new_block)
+                Block.any_blocks.append(new_mover)
+                self.movers.append(new_block)
             if "pipe" == mover_data.id:
-                new_mover = Pipe(anim_inits[self.ids.PIPE], self.ids.PIPE.value, False)
+                new_mover = Pipe(anim_inits[self.ids.DISPOSAL], self.ids.DISPOSAL.value, False)
+                self.event_movers.append(new_mover)
+            if "ramp" == mover_data.id:
+                new_mover = Ramp(anim_inits[self.ids.RAMP], self.ids.RAMP.value, False)
                 self.event_movers.append(new_mover)
 
             if "springbox" == mover_data.id:

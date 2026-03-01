@@ -50,6 +50,9 @@ class Mover:
     hb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
     phb = Hitbox(0.0, 0.0, (0, 0, 0, 0))
 
+    spawn_switch = False
+    spawn_enable = True
+
     def __str__(self):
         #return str(self.animation_state)
         return f"id: {self.id} xloc: %.4f xvel: %.4f, xaccl: %.4f move: {self.move_state} push: {self.push_state} \

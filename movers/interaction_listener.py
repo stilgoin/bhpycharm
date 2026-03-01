@@ -5,6 +5,7 @@ from game.handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.overlap import OverlapResult, moverToMover, Result
 from movers.blocks.block import Block
 from movers.blocks.stack import Stack
+from movers.cloud import SpawnBlock
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
@@ -88,7 +89,7 @@ class InteractionListener:
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
 
-        if not mb.pcounterAction:
+        if mb.pcounterAction == PushAction.SHOVE:
             return
 
         ma.pcounter += 1
@@ -103,7 +104,7 @@ class InteractionListener:
             self.expired = True
             ma.pcounter = 0
 
-    def blockToPipe(self):
+    def blockToDisposal(self):
         ma: Mover = self.mva
         mb: Mover = self.mvb
 
@@ -116,7 +117,7 @@ class InteractionListener:
 
     interactions = defaultdict(lambda : InteractionListener.moverToBlockInteraction,
                                {Id.SIDECOIL.value : moverToCoilInteraction,
-                                Id.PIPE.value : blockToPipe})
+                                Id.DISPOSAL.value : blockToDisposal})
 
     @classmethod
     def evalInteractions(cls):
@@ -136,6 +137,17 @@ class InteractionListener:
                         result : OverlapResult ):
         uuida = ma.auuid
         uuidb = mb.auuid
+
+        if mb.id == Id.RAMP.value:
+            if ma.id == Id.BLOCK.value:
+                if ma.xaccl < 0:
+                    ma.set_jump(1.25)
+                return False
+
+        if ma.id == Id.PLAYER.value and mb.id in (\
+                Id.DISPOSAL.value, Id.RAMP.value):
+            return True if mb.id == Id.DISPOSAL.value else False
+
         if (uuida, uuidb) in InteractionListener.listeners.keys():
             return True
 
@@ -145,13 +157,10 @@ class InteractionListener:
         if not mb.base_xaccl:
             return True
 
-        if ma.id == Id.PLAYER.value and mb.id == Id.PIPE.value:
-            return True
-
         InteractionListener.listeners[(uuida, uuidb)] = \
             InteractionListener(result.mva, result.mvb, result)
 
-        if mb.id == Id.PIPE.value:
+        if mb.id == Id.DISPOSAL.value:
             if ma.id == Id.BLOCK.value:
                 return False
             return True
@@ -181,7 +190,7 @@ class InteractionListener:
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl, xvel)
-        mb.initPushing(direction, friction, xaccl, xvel, pushByHand = True)
+        mb.initPushing(direction, friction, xaccl, xvel)
 
         return True
 
@@ -231,10 +240,12 @@ class InteractionListener:
                     gate.modify_interaction()
                     return False
 
-            if ma.yloc < mb.yloc:
+            if ma.yloc < mb.yloc and mb.id != Id.RAMP.value:
                 rollbackYUp(ma, mb.hb)
 
             floor_found = True
+            if mb.id == Id.RAMP.value:
+                floor_found = False
 
         do_check_sides = False
         if result.result == Result.CONTACT \
@@ -295,7 +306,8 @@ class InteractionListener:
 
     @classmethod
     def moverToMovers(self, ma : Mover,
-                      movers : [Mover]) -> tuple[bool, OverlapResult]:
+                      movers : [Mover],
+                      spawn_events : [SpawnBlock] = []) -> tuple[bool, OverlapResult]:
 
         floor_found = False
         result = OverlapResult()
@@ -327,9 +339,14 @@ class InteractionListener:
             else:
                 result : OverlapResult = moverToMover(ma, mb)
 
-            floor_found = floor_found or \
-                          InteractionListener \
-                              .findInteraction(ma, mb, result)
+            for spawn_event in spawn_events:
+                if result.result in (Result.OVERLAP, Result.CONTACT):
+                    if spawn_event.mover.auuid == mb.auuid:
+                        mb.spawn_switch = True
+                        spawn_event.run_event()
+                        return floor_found, result
+
+            floor_found = InteractionListener.findInteraction(ma, mb, result) or floor_found
 
         return floor_found, result
 

@@ -102,7 +102,7 @@ class InteractiveMover(Mover):
 
         self.interaction_events.clear()
 
-    def initPushing(self, direction, friction, xaccl, xvel=0, pushByHand = False):
+    def initPushing(self, direction, friction, xaccl, xvel=0):
         self.xaccl = xaccl
         self.xvel = xvel * friction
         self.push_xvel = xvel * friction
@@ -133,7 +133,7 @@ class InteractiveMover(Mover):
         self.facing = facing
 
     def __setattr__(self, key, value):
-        if key == "xvel" and self.xvel >= 2.0 and self.id == Id.BLOCK.value:
+        if key == "xaccl" and self.id == Id.RAMP.value:
             #print("xvel", value)
             pass
         self.__dict__[key] = value

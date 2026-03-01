@@ -3,18 +3,20 @@
     {"id": "block","xloc": 64,"yloc": 160,"facing": 1},
     {"id": "gem","xloc": 80,"yloc": 48,"facing": 1},
     {"id": "gem","xloc": 224, "yloc":  112, "facing":  1},
-    {"id": "block", "xloc":  128, "yloc": 112, "facing": 1},
+    {"id": "block", "xloc":  160, "yloc": 112, "facing": 1},
+    {"id": "gate", "xloc": 96, "yloc": 112, "facing": -1},
+    {"id": "gate", "xloc": 128, "yloc": 112, "facing": 1},
     {"id": "springbox", "xloc":  16, "yloc": 112, "facing": 1},
     {"id": "sidecoil", "xloc": 32, "yloc":  112, "facing": 1},
+
     {"id": "cloud", "xloc":  144, "yloc":  16, "facing":  1},
     {"id": "gate", "xloc": 96, "yloc": 160, "facing": -1},
     {"id": "gate", "xloc": 128, "yloc": 160, "facing": 1},
     {"id": "gate", "xloc": 96, "yloc": 64, "facing": -1},
     {"id": "gate", "xloc": 128, "yloc": 64, "facing": 1},
-    {"id": "gate", "xloc": 96, "yloc": 112, "facing": -1},
-    {"id": "gate", "xloc": 128, "yloc": 112, "facing": 1},
     {"id": "goal", "xloc":  96, "yloc":  240, "facing":  1},
     {"id": "pipe", "xloc":  16, "yloc":  96, "facing":  1},
-    {"id": "block", "xloc":  64, "yloc":  96, "facing":  1}
+    {"id": "block", "xloc":  128, "yloc":  96, "facing":  -1},
+    {"id":  "ramp", "xloc":  80, "yloc": 144, "facing": 1}
   ]
 ]

@@ -4,7 +4,7 @@ from movers.blocks.block import Block
 from movers.events import MiscEvent
 from movers.helpers.animation_state import AnimationState
 from movers.movers import Mover
-from system.defs import Anim, Status
+from system.defs import Anim, Status, Id
 
 
 class Cloud(Mover):
@@ -26,26 +26,30 @@ class Cloud(Mover):
 
 class SpawnBlock(MiscEvent):
 
-    cloud : Cloud = None
+    mover : Mover = None
     block : Block = None
 
-    def __init__(self, cloud : Cloud, block : Block):
-        self.cloud = cloud
+    def __init__(self, mover : Mover, block : Block):
+        self.mover = mover
         self.block = block
 
     def run_event(self):
-        if self.cloud.spawn_switch:
-            self.cloud.spawn_switch = False
-            self.cloud.spawn_enable = False
-            self.block.xloc = self.cloud.xloc
-            self.block.yloc = self.cloud.yloc
+        if self.mover.spawn_switch:
+            self.mover.spawn_switch = False
+            self.mover.spawn_enable = False
+            self.block.xloc = self.mover.xloc
+            self.block.yloc = self.mover.yloc
             self.block.move_state = 0
             self.block.set_fall(1.75)
 
+            if self.mover.id != Id.CLOUD.value:
+                self.mover.xloc = 0xFFFF
+                self.mover.yloc = 0xFFFF
+
         if self.block.move_state == Status.EXPIRED:
-            self.block.xloc = 0xFF
-            self.block.yloc = 0xFF
-            self.cloud.spawn_enable = True
+            self.block.xloc = 0xFFFF
+            self.block.yloc = 0xFFFF
+            self.mover.spawn_enable = True
 
 
 

@@ -1,5 +1,5 @@
 from game.handlers import *
-from system.defs import Jump, Facing, Vertical
+from system.defs import Jump, Facing, Vertical, Id
 from enum import IntEnum
 
 class Result(IntEnum):
@@ -109,6 +109,11 @@ def moverToMover(mva, mvb) -> OverlapResult:
     result.hbb = mvb.hb
     result.phba = mva.phb
     result.phbb = mvb.phb
+
+    if mva.id == Id.BLOCK.value \
+        and mvb.id == Id.RAMP.value:
+        if mva.hb.y0 == mvb.hb.y0:
+            pass
 
     if overlap(mva.hb, mvb.hb):
         result.result = Result.OVERLAP
