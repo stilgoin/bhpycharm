@@ -2,22 +2,21 @@ import sys
 
 import pygame
 
-from game.overlap import spriteToBG, overlap, Result
-from movers.blocks.block import Block
+from game.overlap import spriteToBG, overlap
+from movers.blocks.block import Block, BlockNode
 from movers.blocks.gem import Gem
 from movers.blocks.spring import SpringBox, SideSpring
-from movers.blocks.stack import Stack
 from movers.breath import Breath
 from movers.cloud import Cloud, SpawnBlock
 from movers.events import MiscEvent
 from movers.gate import Gate, TrapDoorManager
 from movers.goal import Goal, GoalKeeper
 from movers.interaction_listener import InteractionListener
-from movers.mover_classes import MiscMover, Player
-from movers.movers import Id, Mover
+from movers.mover_classes import Player
+from movers.movers import Id
 from movers.pipe import Pipe
 from movers.ramp import Ramp
-from system.defs import Facing, TrapDoorStates, Move, Key, Terminators
+from system.defs import Facing, Move, Terminators
 
 
 class GameMode:
@@ -69,19 +68,21 @@ class GameMode:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers)
+                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers, BlockNode.nodes)
 
+            """
             if mover.id == Id.BREATH.value:
                 check_movers = list(filter(lambda item: item.id in (Id.GEM.value), Block.any_blocks))
                 check_movers += list(filter(lambda item: item.id in (Id.CLOUD.value), self.movers))
                 spawn_events = list(filter(lambda item: "SpawnBlock" in str(type(item)), self.misc_events))
-                floor_found, result = InteractionListener.moverToMovers(mover, check_movers, spawn_events)
+                floor_found, result = InteractionListener.moverToMovers(mover, check_movers, BlockNode.nodes, spawn_events)
+            """
 
             if mover.id in (Id.BLOCK.value, Id.GEM.value):
-                floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
+                floor_found, result = InteractionListener.blockToBlocks(mover, BlockNode.nodes)
 
                 if not floor_found:
-                    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers)
+                    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers, BlockNode.nodes)
 
                 if mover.move_state != Move.GOAL:
                     if overlap(mover.hb, self.goal_keeper.goal.hb):
@@ -91,9 +92,7 @@ class GameMode:
                 mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
 
         # self.output += \
-        InteractionListener.evalInteractions()
-
-        Stack.run_stacks()
+        InteractionListener.evalInteractions(BlockNode.nodes)
 
         for mover in self.movers:
             mover.procInteractionEvents()
@@ -107,6 +106,9 @@ class GameMode:
             #    self.output += str(mover)
             # if mover.push_state == Push.ROLLBACK:
             #    self.output += str(mover)
+
+        #InteractionListener.evalBlockNodes(BlockNode.nodes)
+
         if self.output != "" and self.loopcounter % 1 == 0:
             pass
             print(str(self.output), end="\n")
@@ -123,6 +125,13 @@ class GameMode:
         return Id
 
     def init(self, anim_inits : dict, movers_dict : dict, moversIdx = 0):
+
+        self.movers.clear()
+        Block.any_blocks.clear()
+        BlockNode.nodes.clear()
+        self.misc_events.clear()
+        self.event_movers.clear()
+
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80
         self.mPlayer.yloc = 0x50
@@ -144,8 +153,8 @@ class GameMode:
             if "cloud" == mover_data.id:
                 new_mover = Cloud(anim_inits[self.ids.CLOUD], self.ids.CLOUD.value, False)
                 new_block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-                new_block.xloc = 0xFF
-                new_block.yloc = 0xFF
+                new_block.xloc = 0xFFFF
+                new_block.yloc = 0xFFFF
                 new_event = SpawnBlock(new_mover, new_block)
                 self.misc_events.append(new_event)
                 Block.any_blocks.append(new_block)
@@ -153,6 +162,7 @@ class GameMode:
 
             if "block" == mover_data.id:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
+                BlockNode.nodes.append(BlockNode(new_mover))
             if "gem" == mover_data.id:
                 new_mover = Gem(anim_inits[self.ids.GEM], self.ids.GEM.value, False)
                 new_block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
@@ -163,6 +173,7 @@ class GameMode:
                 Block.any_blocks.append(new_block)
                 Block.any_blocks.append(new_mover)
                 self.movers.append(new_block)
+                BlockNode.nodes.append(BlockNode(new_mover))
             if "pipe" == mover_data.id:
                 new_mover = Pipe(anim_inits[self.ids.DISPOSAL], self.ids.DISPOSAL.value, False)
                 self.event_movers.append(new_mover)
@@ -209,7 +220,6 @@ class GameMode:
     def __init__(self):
         self.display_list = []
         self.movers = []
-        self.push_movers = []
         self.event_movers = []
         self.bghits = []
         self.misc_events = []

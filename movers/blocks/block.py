@@ -2,23 +2,24 @@ from movers.interactive_mover import InteractiveMover
 from movers.movers import JUMPVEL
 from system.defs import Status, Push, Events, Facing, Anim, Jump, PushAction
 
+class BlockNode:
+    nodes = []
+    block = None
+    right = None
+    left = None
+
+    def __init__(self, block):
+        self.block = block
 
 class Block(InteractiveMover):
     any_blocks = []
     friction = 0
-    psteps = 0
 
     defaultPushAction = PushAction.SKID
     pcounterAction = defaultPushAction
 
     def __str__(self):
         return super().__str__()
-
-    def add_push_steps(self):
-        if self.push_state == Push.NUDGE \
-                and self.move_state >= Status.NEUTRAL:
-            if self.xloc != self.oldXloc:
-                self.psteps += 1
 
     def halt_skidding(self):
         if self.push_state == Push.SKID:
@@ -27,11 +28,13 @@ class Block(InteractiveMover):
                 self.xvel = 0.0
                 self.xaccl = 0.0
 
+    def setPushXVel(self):
+        self.xvel = self.push_xvel
+
     def procInteractionEvents(self):
         if Events.HALT_PUSHING in self.interaction_events:
             self.xvel = 0.0
             self.xaccl = 0.0
-            self.psteps = 0
             self.pcounterAction = self.defaultPushAction
 
         if Events.CONTINUE_PUSHING in self.interaction_events:

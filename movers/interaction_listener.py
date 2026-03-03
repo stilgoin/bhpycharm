@@ -1,15 +1,13 @@
-import math
 from collections import defaultdict
 
 from game.handlers import rollbackYUp, rollbackXLeft, rollbackXRight
 from game.overlap import OverlapResult, moverToMover, Result
-from movers.blocks.block import Block
-from movers.blocks.stack import Stack
+from movers.blocks.block import Block, BlockNode
 from movers.cloud import SpawnBlock
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
-from system.defs import Push, Vertical, Facing, Id, Status, Events, Jump, Move, PushAction
+from system.defs import Vertical, Facing, Id, Events, Move, PushAction
 
 
 class InteractionListener:
@@ -27,7 +25,7 @@ class InteractionListener:
     def __str__(self):
         return "interaction: " + str(self.mva) + " " + str(self.mvb)
 
-    def moverToCoilInteraction(self):
+    def moverToCoilInteraction(self, nodes = []):
         
         ma : Mover = self.mva
         mb : Mover = self.mvb
@@ -54,7 +52,100 @@ class InteractionListener:
                     return
             self.moverToBlockInteraction()
 
-    def moverToBlockInteraction(self):
+    def nodeToNodeEventCascade(self, block, nodes, event):
+        if block.id not in (Id.BLOCK.value, Id.GEM.value):
+            return
+
+        nodea = None
+        for node in nodes:
+            if node.block == block:
+                nodea = node
+
+        if nodea.left and not nodea.right:
+            left_node = nodea.left
+            while left_node:
+                left_node.block.interaction_events.append(event)
+                left_node = left_node.left
+        if nodea.right and not nodea.left:
+            right_node = nodea.right
+            while right_node:
+                right_node.block.interaction_events.append(event)
+                right_node = right_node.right
+
+    def nodeToNodeEventRemove(self, block, nodes, event):
+        if block.id not in (Id.BLOCK.value, Id.GEM.value):
+            return
+
+        nodea = None
+        for node in nodes:
+            if node.block == block:
+                nodea = node
+
+        if nodea.left and not nodea.right:
+            left_node = nodea.left
+            while left_node:
+                left_node.block.interaction_events.remove(event)
+                left_node = left_node.left
+        if nodea.right and not nodea.left:
+            right_node = nodea.right
+            while right_node:
+                right_node.block.interaction_events.remove(event)
+                right_node = right_node.right
+
+    @classmethod
+    def nodeToNodeLambdaCascade(self, block, nodes, func):
+        if block.id not in (Id.BLOCK.value, Id.GEM.value):
+            return
+
+        nodea = None
+        for node in nodes:
+            if node.block == block:
+                nodea = node
+
+        func(nodea)
+
+        if nodea.left and not nodea.right:
+            left_node = nodea.left
+            while left_node:
+                func(left_node)
+                left_node = left_node.left
+        if nodea.right and not nodea.left:
+            right_node = nodea.right
+            while right_node:
+                func(right_node)
+                right_node = right_node.right
+
+    @classmethod
+    def evalBlockNodes(cls, nodes):
+        adjust_xloc = 0
+        for node in nodes:
+            if node.left and not node.right:
+                if node.block.direction == Facing.LEFT:
+                    left_node = node.left
+                    adjust_xloc = node.block.xloc
+                    while left_node:
+                        #left_node.block.xvel = node.block.xvel
+                        #left_node.block.xaccl = node.block.xaccl
+                        #left_node.block.max_xvel = node.block.max_xvel
+                        #left_node.block.direction = node.block.direction
+                        left_node.block.xloc = adjust_xloc - 16
+                        adjust_xloc -= 16
+                        left_node = left_node.left
+            if node.right and not node.left:
+                if node.block.direction == Facing.RIGHT:
+                    right_node = node.right
+                    adjust_xloc = node.block.xloc
+                    while right_node:
+                        #right_node.block.xvel = node.block.xvel
+                        #right_node.block.xaccl = node.block.xaccl
+                        #right_node.block.max_xvel = node.block.max_xvel
+                        #right_node.block.direction = node.block.direction
+                        right_node.block.xloc = adjust_xloc + 16
+                        adjust_xloc += 16
+                        right_node = right_node.right
+
+
+    def moverToBlockInteraction(self, nodes = []):
 
         ma : Mover = self.mva
         mb : Mover = self.mvb
@@ -78,6 +169,7 @@ class InteractionListener:
                     ma.interaction_events.append(Events.HALT_PUSHING)
                 if mb.xaccl >= 0:
                     mb.interaction_events.append(Events.HALT_PUSHING)
+                    self.nodeToNodeEventCascade(mb, nodes, Events.HALT_PUSHING)
                 self.expired = True
                 print("halt to pushing")
                 return
@@ -88,6 +180,7 @@ class InteractionListener:
         InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
+        self.nodeToNodeEventCascade(mb, nodes, Events.CONTINUE_PUSHING)
 
         if mb.pcounterAction == PushAction.SHOVE:
             return
@@ -96,15 +189,18 @@ class InteractionListener:
         if 2 == ma.pcounter:
             ma.xvel = ma.push_xvel
             mb.xvel = mb.push_xvel
+            self.nodeToNodeLambdaCascade(mb, nodes, lambda node : node.block.setPushXVel())
 
         if ma.pcounter >= 0x20:
             ma.interaction_events.append(Events.HALT_PUSHING)
             mb.interaction_events.append(Events.PUSH_TO_SKID)
+            self.nodeToNodeEventCascade(mb, nodes, Events.PUSH_TO_SKID)
             mb.interaction_events.remove(Events.CONTINUE_PUSHING)
+            self.nodeToNodeEventRemove(mb, nodes, Events.CONTINUE_PUSHING)
             self.expired = True
             ma.pcounter = 0
 
-    def blockToDisposal(self):
+    def blockToDisposal(self, nodes = []):
         ma: Mover = self.mva
         mb: Mover = self.mvb
 
@@ -120,12 +216,12 @@ class InteractionListener:
                                 Id.DISPOSAL.value : blockToDisposal})
 
     @classmethod
-    def evalInteractions(cls):
+    def evalInteractions(cls, nodes):
         out = ""
         for listener in cls.listeners.values():
             key = listener.mvb.id
             interaction = cls.interactions[key]
-            interaction(listener)
+            interaction(listener, nodes)
             out += str(listener) + "\n"
 
         # delete dict entry without exception
@@ -134,7 +230,8 @@ class InteractionListener:
 
     @classmethod
     def initInteraction(self, ma : InteractiveMover, mb : InteractiveMover,
-                        result : OverlapResult ):
+                        result : OverlapResult,
+                        nodes):
         uuida = ma.auuid
         uuidb = mb.auuid
 
@@ -190,7 +287,11 @@ class InteractionListener:
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl, xvel)
-        mb.initPushing(direction, friction, xaccl, xvel)
+        #mb.initPushing(direction, friction, xaccl, xvel)
+        if ma.id != Id.BLOCK:
+            #self.nodeToNodeInitPushing(mb, nodes, direction, friction, xaccl, xvel)
+            self.nodeToNodeLambdaCascade(mb, nodes,
+               lambda node : node.block.initPushing(direction, friction, xaccl, xvel))
 
         return True
 
@@ -226,7 +327,8 @@ class InteractionListener:
 
     @classmethod
     def findInteraction(self, ma : Mover, mb : Mover,
-                        result : OverlapResult) -> bool:
+                        result : OverlapResult,
+                        nodes) -> bool:
 
         floor_found = False
         if result.result == Result.CONTACT \
@@ -254,7 +356,7 @@ class InteractionListener:
             and result.side != 0:
             pass
             do_check_sides = InteractionListener\
-                .initInteraction(ma, mb, result)
+                .initInteraction(ma, mb, result, nodes)
 
         if do_check_sides:
             self.check_sides(result)
@@ -262,44 +364,60 @@ class InteractionListener:
         return floor_found
 
     @classmethod
-    def blockToBlocks(self, ma : Block, blocks : [Block]) -> tuple[bool, OverlapResult]:
+    def blockToBlocks(self, ma : Block
+                      , nodes : [BlockNode]) -> tuple[bool, OverlapResult]:
         floor_found = False
         result = OverlapResult()
 
-        for mb in blocks:
-            result: OverlapResult = moverToMover(ma, mb)
+        nodea = None
 
-            if ma.yloc > mb.yloc:
+        for node in nodes:
+            if node.block == ma:
+                nodea = node
+
+        if not nodea:
+            return False, OverlapResult()
+
+        if nodea.left and nodea.right:
+            return False, OverlapResult()
+
+        for nodeb in nodes:
+
+            if nodeb.left and nodeb.right:
                 continue
 
+            mb : Block = nodeb.block
+
+            if ma == mb:
+                continue
+
+            result: OverlapResult = moverToMover(ma, mb)
+
             if result.result == Result.CONTACT \
-                    and result.standing == Vertical.DOWN \
+                    and result.facing != 0 \
                     or result.result == Result.OVERLAP \
-                    and result.vert == Vertical.DOWN:
+                    and result.facing != 0:
 
-                floor_found = True
+                if mb.xloc > ma.xloc:
 
-                # mb already in a stack?
-                stack_found = False
-                stack : Stack = None
-                for stack in Stack.stacks:
-                    if mb in stack.blocks:
-                        stack_found = True
-                        break
+                    if nodeb.left or nodea.right:
+                        continue
 
-                if not stack_found:
-                    stack = Stack()
-                    stack.blocks.append(mb)
-                    Stack.stacks.append(stack)
+                    nodea.right = nodeb
+                    nodeb.left = nodea
+                else:
+                    if nodea.left or nodeb.right:
+                        continue
 
-                if ma in stack.blocks:
-                    continue
+                    nodea.left = nodeb
+                    nodeb.right = nodea
 
-                ma.snap_xloc = mb.xloc
-                ma.xvel = 0.5
-                ma.direction = Facing.LEFT if ma.xloc > mb.xloc else Facing.RIGHT
-
-                stack.blocks.insert(0, ma)
+                self.check_sides(result)
+                # mb.xvel = ma.xvel
+                # mb.xaccl = ma.xaccl
+                # mb.max_xvel = ma.max_xvel
+                ma.xvel = 0
+                ma.xaccl = 0
 
         return floor_found, result
 
@@ -307,6 +425,7 @@ class InteractionListener:
     @classmethod
     def moverToMovers(self, ma : Mover,
                       movers : [Mover],
+                      nodes,
                       spawn_events : [SpawnBlock] = []) -> tuple[bool, OverlapResult]:
 
         floor_found = False
@@ -346,7 +465,8 @@ class InteractionListener:
                         spawn_event.run_event()
                         return floor_found, result
 
-            floor_found = InteractionListener.findInteraction(ma, mb, result) or floor_found
+            floor_found = InteractionListener\
+                              .findInteraction(ma, mb, result, nodes) or floor_found
 
         return floor_found, result
 
