@@ -33,10 +33,12 @@ class InteractionListener:
         if not ma.xaccl and mb.xvel < mb.dash_xvel \
                 or ma.xaccl < 0 and mb.xloc <= mb.default_xloc - 0xC:
             ma.interaction_events.append(Events.MOVER_RECOIL)
+            self.nodeToNodeEventCascade(ma, nodes, Events.MOVER_RECOIL)
             mb.interaction_events.append(Events.MOVER_RECOIL)
         elif ma.hb.y0 > mb.hb.y1 \
             or ma.hb.y1 < mb.hb.y0:
             ma.interaction_events.append(Events.HALT_PUSHING)
+            self.nodeToNodeEventCascade(ma, nodes, Events.HALT_PUSHING)
             mb.interaction_events.append(Events.MOVER_RECOIL)
             self.expired = True
         else:
@@ -46,6 +48,7 @@ class InteractionListener:
                 if ma.xvel >= mb.MAX_XVEL_PUSH \
                         and ma.xaccl >= 0:
                     ma.interaction_events.append(Events.MOVER_LEAVE_COIL)
+                    self.nodeToNodeEventCascade(ma, nodes, Events.MOVER_LEAVE_COIL)
                     self.expired = True
                     mb.xaccl = 0
                     mb.xvel = 0
@@ -101,8 +104,6 @@ class InteractionListener:
         for node in nodes:
             if node.block == block:
                 nodea = node
-
-        func(nodea)
 
         if nodea.left and not nodea.right:
             left_node = nodea.left
@@ -237,8 +238,8 @@ class InteractionListener:
 
         if mb.id == Id.RAMP.value:
             if ma.id == Id.BLOCK.value:
-                if ma.xaccl < 0:
-                    ma.set_jump(1.25)
+                #if ma.xaccl < 0:
+                #    ma.set_jump(1.25)
                 return False
 
         if ma.id == Id.PLAYER.value and mb.id in (\
@@ -287,11 +288,9 @@ class InteractionListener:
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl, xvel)
-        #mb.initPushing(direction, friction, xaccl, xvel)
-        if ma.id != Id.BLOCK:
-            #self.nodeToNodeInitPushing(mb, nodes, direction, friction, xaccl, xvel)
-            self.nodeToNodeLambdaCascade(mb, nodes,
-               lambda node : node.block.initPushing(direction, friction, xaccl, xvel))
+        mb.initPushing(direction, friction, xaccl, xvel)
+        self.nodeToNodeLambdaCascade(mb, nodes,
+           lambda node : node.block.initPushing(direction, friction, xaccl, xvel))
 
         return True
 
