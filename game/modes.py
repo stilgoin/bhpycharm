@@ -96,7 +96,12 @@ class GameMode:
 
         for mover in self.movers:
             mover.procInteractionEvents()
+
+        InteractionListener.evalBlockNodes(BlockNode.nodes)
+
+        for mover in self.movers:
             self.display_list.extend(mover.animate())
+
             if mover.xvel > 0 and mover.id in (Id.PLAYER.value, Id.BLOCK.value, Id.SIDECOIL.value):
                 self.output += str(mover) + "\n"
             """ Debug:  Draw hitboxes
@@ -107,7 +112,7 @@ class GameMode:
             # if mover.push_state == Push.ROLLBACK:
             #    self.output += str(mover)
 
-        #InteractionListener.evalBlockNodes(BlockNode.nodes)
+
 
         if self.output != "" and self.loopcounter % 1 == 0:
             pass

@@ -288,6 +288,10 @@ class InteractionListener:
             xvel = ma.xvel
 
         ma.initPushing(direction, friction, xaccl, xvel)
+        if ma.id in (Id.BLOCK.value, Id.GEM.value):
+            self.nodeToNodeLambdaCascade(ma, nodes,
+                lambda node: node.block.initPushing(direction, friction, xaccl, xvel))
+
         mb.initPushing(direction, friction, xaccl, xvel)
         self.nodeToNodeLambdaCascade(mb, nodes,
            lambda node : node.block.initPushing(direction, friction, xaccl, xvel))
@@ -395,7 +399,7 @@ class InteractionListener:
             if result.result == Result.CONTACT \
                     and result.facing != 0 \
                     or result.result == Result.OVERLAP \
-                    and result.facing != 0:
+                    and result.side != 0:
 
                 if mb.xloc > ma.xloc:
 
@@ -417,6 +421,16 @@ class InteractionListener:
                 # mb.max_xvel = ma.max_xvel
                 ma.xvel = 0
                 ma.xaccl = 0
+
+                if ma.defaultPushAction == PushAction.SKID:
+                    pass
+                    #mb.defaultPushAction = PushAction.SKID
+                    #mb.pcounterAction = PushAction.SKID
+
+                if mb.defaultPushAction == PushAction.SKID:
+                    pass
+                    #ma.defaultPushAction = PushAction.SKID
+                    #ma.pcounterAction = PushAction.SKID
 
         return floor_found, result
 
