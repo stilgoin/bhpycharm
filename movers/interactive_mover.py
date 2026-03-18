@@ -133,7 +133,8 @@ class InteractiveMover(Mover):
         self.facing = facing
 
     def __setattr__(self, key, value):
-        if key == "xaccl" and self.id == Id.RAMP.value:
+        #if key == "xaccl" and self.id == Id.RAMP.value:
+        if key == 'max_xvel' or key == 'xvel' and self.id == Id.BLOCK.value:
             #print("xvel", value)
             pass
         self.__dict__[key] = value

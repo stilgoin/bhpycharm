@@ -71,12 +71,12 @@ class Block(InteractiveMover):
     def initPushing(self, direction, friction, xaccl, xvel=0):
         if not self.xvel:
             self.pcounter = 0
-        if not self.pcounterAction:
+        if not self.pcounterAction.value:
             self.xaccl = xaccl
             self.xvel = xvel * friction
         else:
             self.xaccl = xaccl
-            self.xvel = 1.0
+            self.xvel = 1.0 if not self.xvel else self.xvel
         self.push_xvel = xvel * friction
         self.direction = direction
         if not friction:

@@ -64,6 +64,9 @@ class InteractionListener:
             if node.block == block:
                 nodea = node
 
+        if not nodea:
+            return
+
         if nodea.left and not nodea.right:
             left_node = nodea.left
             while left_node:
@@ -83,6 +86,9 @@ class InteractionListener:
         for node in nodes:
             if node.block == block:
                 nodea = node
+
+        if not nodea:
+            return
 
         if nodea.left and not nodea.right:
             left_node = nodea.left
@@ -175,15 +181,16 @@ class InteractionListener:
                 print("halt to pushing")
                 return
 
-        if mb.xvel != ma.xvel:
-            InteractionListener.check_sides(self.result)
-
         InteractionListener.check_sides(self.result)
         ma.interaction_events.append(Events.CONTINUE_PUSHING)
+        self.nodeToNodeEventCascade(ma, nodes, Events.CONTINUE_PUSHING)
         mb.interaction_events.append(Events.CONTINUE_PUSHING)
         self.nodeToNodeEventCascade(mb, nodes, Events.CONTINUE_PUSHING)
 
         if mb.pcounterAction == PushAction.SHOVE:
+            return
+
+        if mb.id == Id.PLAYER.value:
             return
 
         ma.pcounter += 1
@@ -274,6 +281,8 @@ class InteractionListener:
         else:
             if ma.xaccl < 0:
                 mb.pcounterAction = PushAction.SHOVE
+            else:
+                mb.pcounterAction = mb.defaultPushAction
 
             direction = ma.direction
             if ma.xaccl >= 0:
