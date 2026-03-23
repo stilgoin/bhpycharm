@@ -1,15 +1,7 @@
 from movers.interactive_mover import InteractiveMover
 from movers.movers import JUMPVEL
-from system.defs import Status, Push, Events, Facing, Anim, Jump, PushAction
+from system.defs import Push, Events, Facing, Anim, Jump, PushAction, Id
 
-class BlockNode:
-    nodes = []
-    block = None
-    right = None
-    left = None
-
-    def __init__(self, block):
-        self.block = block
 
 class Block(InteractiveMover):
     any_blocks = []
@@ -20,13 +12,6 @@ class Block(InteractiveMover):
 
     def __str__(self):
         return super().__str__()
-
-    def halt_skidding(self):
-        if self.push_state == Push.SKID:
-            if self.xvel <= 0.0:
-                self.push_state = Push.STILL
-                self.xvel = 0.0
-                self.xaccl = 0.0
 
     def setPushXVel(self):
         self.xvel = self.push_xvel
@@ -99,11 +84,6 @@ class Block(InteractiveMover):
                 self.xvel = 0.0
                 self.snap_xloc = 0
 
-    def before_move(self):
-        super().before_move()
-        self.halt_skidding()
-        #self.add_push_steps()
-
     def move(self):
         super().move()
 
@@ -130,3 +110,68 @@ class Block(InteractiveMover):
             self.xaccl = 0.0
             self.set_fall(JUMPVEL)
             self.set_anim_idx(Anim.STILL)
+
+# Get it?  It's funny?
+class BlockChain(Block):
+    blocks : []
+    blockchains = []
+    auuid = 1
+    id = Id.BLOCKCHAIN.value
+    def __init__(self):
+        self.interaction_events = []
+        self.blocks = []
+        # Todo: needed for bad inheritance bug.  Maybe get rid of
+        self.events = []
+
+    def go(self):
+        self.blocks = sorted(self.blocks, key = lambda block : block.xloc)
+
+        self.oldXloc = self.xloc
+        self.oldYloc = self.yloc
+
+        for block in self.blocks:
+            block.oldXloc = block.xloc
+            block.oldYloc = block.yloc
+            block.move()
+            #print(str(block))
+
+        self.setattr_singluar("xloc", self.blocks[0].xloc)
+        self.setattr_singluar("yloc", self.blocks[0].yloc)
+        self.setattr_singluar("xvel", self.blocks[0].xvel)
+        self.setattr_singluar("yvel", self.blocks[0].yvel)
+        self.setattr_singluar("xaccl", self.blocks[0].xaccl)
+        x1 = self.blocks[len(self.blocks)-1].xloc + 0xF
+        self.hitoffs = (0, 0, 0xF * len(self.blocks), 0xF)
+        self.make_hitboxes()
+
+    #def initPushing(self, direction, friction, xaccl, xvel=0):
+    #    for block in self.blocks:
+    #        block.initPushing(direction, friction, xaccl, xvel)
+
+    def procInteractionEvents(self):
+        for block in self.blocks:
+            block.interaction_events.extend(self.interaction_events)
+            block.procInteractionEvents()
+        super().procInteractionEvents()
+        self.interaction_events.clear()
+
+    def setattr_singluar(self, name, value):
+        self.__dict__[name] = value
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        
+        if "blocks" not in self.__dict__.keys():
+            return
+
+        if name in ("xvel", \
+                    "xaccl", "max_xvel", "direction", "facing"
+                    , "push_xvel", "pcounterAction", "pcounter"):
+            for block in self.blocks:
+                block.__dict__[name] = value
+
+        offset = 0
+        if name in ("xloc"):
+            for block in self.blocks:
+                block.__dict__[name] = value + offset
+                offset += 0x10

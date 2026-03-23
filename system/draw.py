@@ -2,6 +2,7 @@ import pygame
 
 from game.maps import MapLayer, TilePlacement, TileMap, Hitbox
 from game.modes import GameMode
+from system.defs import Id
 from system.surface_manager import SurfaceManager as sm, Surfaces
 
 def drawAnims(surfMgmt : sm, game : GameMode,
@@ -31,6 +32,10 @@ def initMoverAnims(game : GameMode, animations : dict):
     anim_inits = {}
     for id in game.ids:
         #anim_seqs = self.animations[game.player_id.value]
+
+        if id == Id.BLOCKCHAIN:
+            continue
+
         anim_seqs = animations[id.value]
         maxFrames = []
         terminators = []

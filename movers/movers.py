@@ -88,9 +88,6 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
     def procInteractionEvents(self):
         pass
 
-    def before_move(self):
-        pass
-
     def move(self):
         self.xloc += (self.xvel * self.direction)
         self.yloc += (self.yvel * self.vertical)
@@ -132,8 +129,7 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
     def go(self):
         self.procEvents()
         self.animation_state.add_frameticks()
- 
-        self.before_move()
+
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
         self.move()

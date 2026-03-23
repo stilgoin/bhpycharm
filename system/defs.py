@@ -32,6 +32,7 @@ class Move(IntEnum):
     NEUTRAL = 0
     DASH = 1
     GOAL = 2
+    CHAIN = 4
 
 
 class Facing(IntEnum):
@@ -99,6 +100,7 @@ class Events(Enum):
 class Id(Enum):
     PLAYER = "player"
     BLOCK = "block"
+    BLOCKCHAIN = "blockchain"
     SIDECOIL = "sidecoil"
     VERTCOIL = "vertcoil"
     SPRINGBOX = "springbox"

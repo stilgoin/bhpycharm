@@ -3,7 +3,7 @@ import sys
 import pygame
 
 from game.overlap import spriteToBG, overlap
-from movers.blocks.block import Block, BlockNode
+from movers.blocks.block import Block, BlockChain
 from movers.blocks.gem import Gem
 from movers.blocks.spring import SpringBox, SideSpring
 from movers.breath import Breath
@@ -47,6 +47,11 @@ class GameMode:
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.any_blocks))
 
         blocks = list(filter(lambda item: item.id in (Id.BLOCK.value, Id.GEM.value), Block.any_blocks))
+        blocks = list(filter(lambda block: block.move_state != Move.CHAIN, blocks) )
+        for blockchain in BlockChain.blockchains:
+            blocks.append(blockchain)
+            if blockchain not in self.movers:
+                self.movers.append(blockchain)
 
         for misc_event in self.misc_events:
             misc_event.run_event()
@@ -64,11 +69,15 @@ class GameMode:
         for mover in self.movers:
             mover.go()
 
+        #for blockchain in BlockChain.blockchains:
+        #    blockchain.go()
+
         for mover in self.movers:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks + self.event_movers, BlockNode.nodes)
+                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks
+                                                                        + self.event_movers + BlockChain.blockchains)
 
             """
             if mover.id == Id.BREATH.value:
@@ -78,11 +87,15 @@ class GameMode:
                 floor_found, result = InteractionListener.moverToMovers(mover, check_movers, BlockNode.nodes, spawn_events)
             """
 
-            if mover.id in (Id.BLOCK.value, Id.GEM.value):
-                floor_found, result = InteractionListener.blockToBlocks(mover, BlockNode.nodes)
+            if mover.id in (Id.BLOCK.value, Id.GEM.value, Id.BLOCKCHAIN.value):
+                if (mover.id != Id.BLOCKCHAIN.value):
+                    floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
 
                 if not floor_found:
-                    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers, BlockNode.nodes)
+                    if mover.move_state == Move.CHAIN:
+                        continue
+
+                    floor_found, result = InteractionListener.moverToMovers(mover, springs + self.event_movers)
 
                 if mover.move_state != Move.GOAL:
                     if overlap(mover.hb, self.goal_keeper.goal.hb):
@@ -92,14 +105,21 @@ class GameMode:
                 mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
 
         # self.output += \
-        InteractionListener.evalInteractions(BlockNode.nodes)
+        InteractionListener.evalInteractions()
 
         for mover in self.movers:
+            if mover in blocks:
+                continue
             mover.procInteractionEvents()
 
-        InteractionListener.evalBlockNodes(BlockNode.nodes)
+        for block in blocks:
+            block.procInteractionEvents()
 
         for mover in self.movers:
+
+            if mover.id == Id.BLOCKCHAIN.value:
+                continue
+
             self.display_list.extend(mover.animate())
 
             if mover.xvel > 0 and mover.id in (Id.PLAYER.value, Id.BLOCK.value, Id.SIDECOIL.value):
@@ -116,8 +136,8 @@ class GameMode:
 
         if self.output != "" and self.loopcounter % 1 == 0:
             pass
-            print(str(self.output), end="\n")
-            print("----------------------------")
+            #print(str(self.output), end="\n")
+            #print("----------------------------")
         self.output = ""
         sys.stdout.flush()
 
@@ -133,7 +153,6 @@ class GameMode:
 
         self.movers.clear()
         Block.any_blocks.clear()
-        BlockNode.nodes.clear()
         self.misc_events.clear()
         self.event_movers.clear()
 
@@ -167,7 +186,6 @@ class GameMode:
 
             if "block" == mover_data.id:
                 new_mover = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
-                BlockNode.nodes.append(BlockNode(new_mover))
             if "gem" == mover_data.id:
                 new_mover = Gem(anim_inits[self.ids.GEM], self.ids.GEM.value, False)
                 new_block = Block(anim_inits[self.ids.BLOCK], self.ids.BLOCK.value, False)
@@ -178,7 +196,6 @@ class GameMode:
                 Block.any_blocks.append(new_block)
                 Block.any_blocks.append(new_mover)
                 self.movers.append(new_block)
-                BlockNode.nodes.append(BlockNode(new_mover))
             if "pipe" == mover_data.id:
                 new_mover = Pipe(anim_inits[self.ids.DISPOSAL], self.ids.DISPOSAL.value, False)
                 self.event_movers.append(new_mover)
