@@ -32,10 +32,6 @@ def initMoverAnims(game : GameMode, animations : dict):
     anim_inits = {}
     for id in game.ids:
         #anim_seqs = self.animations[game.player_id.value]
-
-        if id == Id.BLOCKCHAIN:
-            continue
-
         anim_seqs = animations[id.value]
         maxFrames = []
         terminators = []

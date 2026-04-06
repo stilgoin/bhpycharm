@@ -143,7 +143,7 @@ holding {self.holding} max_xvel {self.max_xvel} facing {self.facing} dir {self.d
         self.phb = Hitbox(self.oldXloc, self.oldYloc,
                           self.hitoffs)
 
-    def check(self, floor_found, moverToBGFunc):
+    def check(self, floor_found, moverToBGFunc, bghits = [], event_movers = []):
 
         #floor_found, result = self.moverToMovers()
 

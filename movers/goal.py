@@ -10,7 +10,7 @@ class Goal(Mover):
     
     hitoffs = (0,-40,32,40)
 
-    def check(self, floor_found, moverToBGFunc):
+    def check(self, floor_found, moverToBGFunc, bghits = []):
         pass
 
     def __init__(self, anim_init, id = Id.PLAYER.value, placeholder = False):

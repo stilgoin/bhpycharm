@@ -6,7 +6,7 @@ from movers.mover_classes import Player, MiscMover
 from movers.movers import Mover
 from system.defs import Facing, Id
 
-
+"""
 class Hammer(Mover):
     active = False
 
@@ -71,3 +71,4 @@ class Statue(Block):
         MiscMover.movers.append(self.hammer)
         super().__init__(anim_init, id, placeholder)
         MiscMover.postproc_movers.append(self)
+"""

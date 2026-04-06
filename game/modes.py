@@ -76,8 +76,8 @@ class GameMode:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, Block.any_blocks
-                                                                        + self.event_movers + BlockChain.blockchains)
+                floor_found, result = InteractionListener.moverToMovers(mover, blocks
+                                                                        + self.event_movers)
 
             """
             if mover.id == Id.BREATH.value:
@@ -88,7 +88,8 @@ class GameMode:
             """
 
             if mover.id in (Id.BLOCK.value, Id.GEM.value, Id.BLOCKCHAIN.value):
-                if (mover.id != Id.BLOCKCHAIN.value):
+                if mover.id != Id.BLOCKCHAIN.value \
+                    and mover.move_state != Move.CHAIN:
                     floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
 
                 if not floor_found:
@@ -101,8 +102,19 @@ class GameMode:
                     if overlap(mover.hb, self.goal_keeper.goal.hb):
                         mover.move_state = Move.GOAL
 
-            if mover.id not in (Id.GOAL.value):
-                mover.check(floor_found, moverToBGFunc=lambda: spriteToBG(mover, self.bghits))
+            if mover.id not in (Id.GOAL.value, Id.BLOCKCHAIN.value):
+                mover.check(floor_found, lambda: spriteToBG(mover, self.bghits),
+                            self.bghits, self.event_movers)
+
+            if mover.id == Id.BLOCKCHAIN.value:
+                floor_found = False
+                blockchain : BlockChain = mover
+                for block in blockchain.blocks:
+                    floor_found, result = InteractionListener.moverToMovers(block, self.event_movers)
+                    if not floor_found:
+                        break
+                mover.check(floor_found, lambda: spriteToBG(mover, self.bghits),
+                            self.bghits, self.event_movers)
 
         # self.output += \
         InteractionListener.evalInteractions()
@@ -155,6 +167,8 @@ class GameMode:
         Block.any_blocks.clear()
         self.misc_events.clear()
         self.event_movers.clear()
+
+        BlockChain.anim_dict = anim_inits[self.ids.BLOCKCHAIN]
 
         self.mPlayer = Player(anim_inits[self.ids.PLAYER], self.ids.PLAYER.value, False)
         self.mPlayer.xloc = 0x80

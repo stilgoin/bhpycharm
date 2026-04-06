@@ -1,6 +1,7 @@
+from game.overlap import spriteToBG
 from movers.interactive_mover import InteractiveMover
 from movers.movers import JUMPVEL
-from system.defs import Push, Events, Facing, Anim, Jump, PushAction, Id
+from system.defs import Events, Facing, Anim, Jump, PushAction, Id
 
 
 class Block(InteractiveMover):
@@ -87,14 +88,9 @@ class Block(InteractiveMover):
     def move(self):
         super().move()
 
-    def check(self, floor_found, moverToBGFunc):
-
-        #floor_found, result = self.moverToMovers()
+    def check(self, floor_found, moverToBGFunc, bighits = [], event_movers = []):
 
         floor_found = floor_found or moverToBGFunc()
-
-        if floor_found and self.onFallPlat:
-            moverToBGFunc()
 
         if floor_found and self.jump_state == Jump.FALL:
             self.jump_state = Jump.FLOOR
@@ -115,13 +111,18 @@ class Block(InteractiveMover):
 class BlockChain(Block):
     blocks : []
     blockchains = []
+    anim_dict = {}
     auuid = 1
+    save_xvel = 0
+    save_xaccl = 0
+    advancing_block : Block = None
     id = Id.BLOCKCHAIN.value
     def __init__(self):
         self.interaction_events = []
         self.blocks = []
         # Todo: needed for bad inheritance bug.  Maybe get rid of
         self.events = []
+        super().__init__(BlockChain.anim_dict, Id.BLOCKCHAIN.value, False)
 
     def go(self):
         self.blocks = sorted(self.blocks, key = lambda block : block.xloc)
@@ -130,19 +131,106 @@ class BlockChain(Block):
         self.oldYloc = self.yloc
 
         for block in self.blocks:
+            block.defaultPushAction = PushAction.SKID
+            block.pcounterAction = PushAction.SKID
             block.oldXloc = block.xloc
             block.oldYloc = block.yloc
+
+            if self.save_xvel > 0:
+                if not block.xvel and block != self.advancing_block:
+                    block.xvel = 0.5
+                    block.xaccl  = 0.1
+
             block.move()
+            block.make_hitboxes()
             #print(str(block))
 
+        if self.save_xvel > 0:
+            all_in_place = True
+            for block in self.blocks:
+                if block != self.advancing_block:
+                    if block.direction == Facing.LEFT \
+                        and block.xloc < self.advancing_block.xloc \
+                        or block.direction == Facing.RIGHT \
+                        and block.xloc > self.advancing_block.xloc:
+                        block.xloc = self.advancing_block.xloc
+                        block.xvel = 0
+                        block.xaccl = 0
+
+                if block.xloc != self.advancing_block.xloc:
+                    all_in_place = False
+
+            if all_in_place:
+                for block in self.blocks:
+                    block.set_fall(1.75)
+
+            self.hitoffs = (0, 0, 0xF, 0xF)
+        else:
+            self.hitoffs = (0, 0, 0xF * len(self.blocks), 0xF)
         self.setattr_singluar("xloc", self.blocks[0].xloc)
         self.setattr_singluar("yloc", self.blocks[0].yloc)
         self.setattr_singluar("xvel", self.blocks[0].xvel)
         self.setattr_singluar("yvel", self.blocks[0].yvel)
         self.setattr_singluar("xaccl", self.blocks[0].xaccl)
-        x1 = self.blocks[len(self.blocks)-1].xloc + 0xF
-        self.hitoffs = (0, 0, 0xF * len(self.blocks), 0xF)
+        self.blocks[len(self.blocks) - 1].xloc + 0xF
+
         self.make_hitboxes()
+
+    def check(self, floor_found, moverToBGFunc, bghits = [], event_movers = []):
+
+        floor_found = floor_found or moverToBGFunc()
+
+        advancing_block : Block = None
+        if self.xvel > 0:
+            if self.direction == Facing.LEFT:
+                advancing_block = self.blocks[0]
+            else:
+                advancing_block = self.blocks[len(self.blocks)-1]
+
+        if advancing_block and not self.save_xvel:
+            advancing_block.make_hitboxes()
+
+            if not floor_found and not spriteToBG(advancing_block, bghits):
+                self.save_xvel = advancing_block.xvel
+                self.save_xaccl = advancing_block.xaccl
+                advancing_block.xvel = 0
+                advancing_block.xaccl = 0
+                self.advancing_block = advancing_block
+
+        if self.save_xvel > 0:
+            if spriteToBG(self.advancing_block, bghits):
+                for block in self.blocks:
+                    spriteToBG(block, bghits)
+                offset = len(self.blocks) * 0x10
+                if self.direction == Facing.LEFT:
+                    offset *= -1
+                self.advancing_block.snap_xloc = self.xloc + offset
+                #self.advancing_block.xvel = 0.5
+                #self.advancing_block.xaccl = 0.1
+                self.save_xvel = 0
+
+                for block in self.blocks:
+                    self.yvel = 0
+                    self.yaccl = 0
+                    self.jump_state = Jump.FLOOR
+
+
+        """
+        if floor_found and self.jump_state == Jump.FALL:
+            self.jump_state = Jump.FLOOR
+            self.yvel = 0.0
+            self.jump_lock = False
+            if not self.xvel:
+                self.set_anim_idx(Anim.STILL)
+            #else:
+            #    self.set_anim_idx(Anim.WALK)
+
+        if not floor_found and self.jump_state == Jump.FLOOR:
+            self.xvel = 0.0
+            self.xaccl = 0.0
+            self.set_fall(JUMPVEL)
+            self.set_anim_idx(Anim.STILL)
+        """
 
     #def initPushing(self, direction, friction, xaccl, xvel=0):
     #    for block in self.blocks:
@@ -164,8 +252,8 @@ class BlockChain(Block):
         if "blocks" not in self.__dict__.keys():
             return
 
-        if name in ("xvel", \
-                    "xaccl", "max_xvel", "direction", "facing"
+        if name in ("xvel", "yvel", \
+                    "xaccl", "yaccl", "max_xvel", "direction", "facing"
                     , "push_xvel", "pcounterAction", "pcounter"):
             for block in self.blocks:
                 block.__dict__[name] = value

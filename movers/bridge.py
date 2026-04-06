@@ -1,7 +1,7 @@
 from movers.interactive_mover import InteractiveMover
 from system.defs import Id, Status
 
-
+"""
 class BridgeSegment(InteractiveMover):
     bounce_val = 0.0625
     shake_vel = 0.75
@@ -25,3 +25,4 @@ class BridgeSegment(InteractiveMover):
 
     def __init__(self, anim_init, id = Id.BRIDGEPLAT.value, placeholder = True):
         super().__init__(anim_init, id, placeholder)
+"""

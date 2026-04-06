@@ -7,7 +7,7 @@ from movers.cloud import SpawnBlock
 from movers.gate import Gate
 from movers.interactive_mover import InteractiveMover
 from movers.movers import Mover
-from system.defs import Vertical, Facing, Id, Events, Move, PushAction
+from system.defs import Vertical, Facing, Id, Events, Move, PushAction, Push
 
 
 class InteractionListener:
@@ -57,7 +57,7 @@ class InteractionListener:
         ma : Mover = self.mva
         mb : Mover = self.mvb
 
-        if mb.move_state == Move.GOAL:
+        if mb.move_state in (Move.GOAL, Move.CHAIN):
             ma.interaction_events.append(Events.HALT_PUSHING)
             self.expired = True
             return
@@ -290,6 +290,12 @@ class InteractionListener:
                     ma.move_state = Move.CHAIN
                     return floor_found, result
 
+                if ma.id == Id.BLOCKCHAIN.value:
+                    blockchain : BlockChain = ma
+                    blockchain.blocks.append(mb)
+                    mb.move_state = Move.CHAIN
+                    return floor_found, result
+
                 for blockchain in BlockChain.blockchains:
                     if ma in blockchain.blocks:
                         if mb not in blockchain.blocks:
@@ -308,6 +314,11 @@ class InteractionListener:
                     blockchain.blocks.append(mb)
                     ma.move_state = Move.CHAIN
                     mb.move_state = Move.CHAIN
+
+                #ma.pcounterAction = Push.SKID
+                #ma.defaultPushAction = Push.SKID
+                #mb.pcounterAction = Push.SKID
+                #mb.defaultPushAction = Push.SKID
 
         return floor_found, result
 
@@ -332,7 +343,7 @@ class InteractionListener:
                 if not gate.fallthrough_trap_door:
                     continue
 
-            if Id.BLOCK.value == mb.id:
+            if mb.id in (Id.BLOCK.value, Id.GEM.value):
                 if mb.move_state in (Move.GOAL, Move.CHAIN):
                     continue
 

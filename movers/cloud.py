@@ -21,7 +21,7 @@ class Cloud(Mover):
         self.placeholder = placeholder
         self.auuid = uuid.uuid4()
 
-    def check(self, floor_found, moverToBGFunc):
+    def check(self, floor_found, moverToBGFunc, bghits = [], event_movers = []):
         pass
 
 class SpawnBlock(MiscEvent):

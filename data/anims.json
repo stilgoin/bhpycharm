@@ -43,7 +43,14 @@
                 ],
         "terminators": [253,253]
     },
-
+    {
+        "id": "blockchain",
+        "size": "16",
+        "placeholder": true,
+        "complex": false,
+        "sequences": [],
+        "terminators": [253]
+    },
     {
         "id": "sidecoil",
         "placeholder" : true,
