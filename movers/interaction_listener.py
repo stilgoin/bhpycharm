@@ -68,6 +68,10 @@ class InteractionListener:
         if ma.xaccl < 0:
             mb.xaccl = ma.xaccl
 
+        #if not mb.xvel:
+        #    self.expired = True
+        #    return
+
         if not ma.xaccl \
         or ma.direction != mb.direction \
                 or ma.hb.y0 > mb.hb.y1 \
@@ -104,6 +108,24 @@ class InteractionListener:
     def blockToDisposal(self, nodes = []):
         ma: Mover = self.mva
         mb: Mover = self.mvb
+
+        if ma.id == Id.BLOCKCHAIN.value:
+            blockchain : BlockChain = ma
+            if blockchain.xloc > mb.xloc:
+                block_removed = blockchain.blocks[0]
+            else:
+                block_removed = blockchain.blocks[len(blockchain.blocks)-1]
+            blockchain.blocks.remove(block_removed)
+            blockchain.advancing_block = None
+            block_removed.move_state = Move.GOAL
+            block_removed.snap_loc = mb.xloc
+            block_removed.direction = Facing.LEFT if ma.xloc > mb.xloc else Facing.RIGH
+            block_removed.xvel = 0.5
+            block_removed.xaccl = 0.0
+            self.expired = True
+            ma.xvel = 0
+            ma.xaccl = 0
+            return
 
         ma.snap_xloc = mb.xloc
         ma.direction = Facing.LEFT if ma.xloc > mb.xloc else Facing.RIGHT
@@ -154,11 +176,14 @@ class InteractionListener:
         if not mb.base_xaccl:
             return True
 
+        if mb.snap_xloc > 0:
+            return True
+
         InteractionListener.listeners[(uuida, uuidb)] = \
             InteractionListener(result.mva, result.mvb, result)
 
         if mb.id == Id.DISPOSAL.value:
-            if ma.id == Id.BLOCK.value:
+            if ma.id in (Id.BLOCK.value, Id.BLOCKCHAIN.value):
                 return False
             return True
 
@@ -270,7 +295,10 @@ class InteractionListener:
             if ma == mb:
                 continue
 
-            result: OverlapResult = moverToMover(ma, mb)
+            if ma.xvel > mb.xvel:
+                result: OverlapResult = moverToMover(ma, mb)
+            else:
+                result: OverlapResult = moverToMover(mb, ma)
 
             if result.result == Result.CONTACT \
                     and result.facing != 0 \
@@ -283,6 +311,8 @@ class InteractionListener:
                 # mb.max_xvel = ma.max_xvel
                 ma.xvel = 0
                 ma.xaccl = 0
+                mb.xvel = 0
+                mb.xaccl = 0
 
                 if mb.id == Id.BLOCKCHAIN.value:
                     blockchain : BlockChain = mb
@@ -365,8 +395,15 @@ class InteractionListener:
                         spawn_event.run_event()
                         return floor_found, result
 
+            #if (ma.id == Id.BLOCKCHAIN.value or ma.id == Id.BLOCK.value) \
+            #    and mb.id == Id.GATE.value:
+            #    print (str(result))
+
             floor_found = InteractionListener\
                               .findInteraction(ma, mb, result) or floor_found
+
+            if floor_found:
+                break
 
         return floor_found, result
 

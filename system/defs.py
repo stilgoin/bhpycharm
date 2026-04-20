@@ -33,6 +33,7 @@ class Move(IntEnum):
     DASH = 1
     GOAL = 2
     CHAIN = 4
+    EXPIRED = 0xFF
 
 
 class Facing(IntEnum):

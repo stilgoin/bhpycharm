@@ -47,7 +47,9 @@ class GameMode:
         springs = list(filter(lambda item: item.id in (Id.SIDECOIL.value, Id.VERTCOIL), Block.any_blocks))
 
         blocks = list(filter(lambda item: item.id in (Id.BLOCK.value, Id.GEM.value), Block.any_blocks))
-        blocks = list(filter(lambda block: block.move_state != Move.CHAIN, blocks) )
+        blocks = list(filter(lambda block: block.move_state not in (Move.CHAIN, Move.GOAL, Move.EXPIRED), blocks) )
+        BlockChain.blockchains = [blockchain for blockchain in BlockChain.blockchains
+                                  if blockchain.move_state != Move.EXPIRED and len(blockchain.blocks) > 0]
         for blockchain in BlockChain.blockchains:
             blocks.append(blockchain)
             if blockchain not in self.movers:
@@ -76,7 +78,7 @@ class GameMode:
 
             floor_found = False
             if mover.id == Id.PLAYER.value:
-                floor_found, result = InteractionListener.moverToMovers(mover, blocks
+                floor_found, result = InteractionListener.moverToMovers(mover, blocks + springs
                                                                         + self.event_movers)
 
             """
@@ -88,6 +90,10 @@ class GameMode:
             """
 
             if mover.id in (Id.BLOCK.value, Id.GEM.value, Id.BLOCKCHAIN.value):
+
+                if (mover.move_state in (Move.GOAL, Move.EXPIRED)):
+                    continue
+
                 if mover.id != Id.BLOCKCHAIN.value \
                     and mover.move_state != Move.CHAIN:
                     floor_found, result = InteractionListener.blockToBlocks(mover, blocks)
@@ -109,12 +115,9 @@ class GameMode:
             if mover.id == Id.BLOCKCHAIN.value:
                 floor_found = False
                 blockchain : BlockChain = mover
-                for block in blockchain.blocks:
-                    floor_found, result = InteractionListener.moverToMovers(block, self.event_movers)
-                    if not floor_found:
-                        break
-                mover.check(floor_found, lambda: spriteToBG(mover, self.bghits),
-                            self.bghits, self.event_movers)
+                blockToGateCheck = lambda block: InteractionListener.moverToMovers(block, self.event_movers)
+                blockchain.check_falling_chain(floor_found, lambda: spriteToBG(mover, self.bghits),
+                            blockToGateCheck, self.bghits)
 
         # self.output += \
         InteractionListener.evalInteractions()
@@ -138,7 +141,7 @@ class GameMode:
                 self.output += str(mover) + "\n"
             """ Debug:  Draw hitboxes
             """
-            #pygame.draw.rect(surface, "#FF0000FF", (mover.hb.x0,mover.hb.y0,mover.hb.width,mover.hb.height))
+            #pygame.draw.rect(surface, "#FF0000FF", (mover.hb.x0,mover.hb.y0,mover.hb.x1-mover.hb.x0,mover.hb.y1-mover.hb.y0))
             # if mover.xvel > 0.0:
             #    self.output += str(mover)
             # if mover.push_state == Push.ROLLBACK:

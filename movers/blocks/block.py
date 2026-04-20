@@ -1,8 +1,9 @@
 from game.overlap import spriteToBG
 from movers.interactive_mover import InteractiveMover
 from movers.movers import JUMPVEL
-from system.defs import Events, Facing, Anim, Jump, PushAction, Id
+from system.defs import Events, Facing, Anim, Jump, PushAction, Id, Move
 
+from math import floor, ceil
 
 class Block(InteractiveMover):
     any_blocks = []
@@ -83,7 +84,10 @@ class Block(InteractiveMover):
             if snapped:
                 self.xloc = self.snap_xloc
                 self.xvel = 0.0
+                self.xaccl = 0.0
                 self.snap_xloc = 0
+                if self.move_state == Move.GOAL:
+                    self.move_state = Move.EXPIRED
 
     def move(self):
         super().move()
@@ -117,6 +121,8 @@ class BlockChain(Block):
     save_xaccl = 0
     advancing_block : Block = None
     id = Id.BLOCKCHAIN.value
+    floor_found_count = 0
+
     def __init__(self):
         self.interaction_events = []
         self.blocks = []
@@ -125,10 +131,13 @@ class BlockChain(Block):
         super().__init__(BlockChain.anim_dict, Id.BLOCKCHAIN.value, False)
 
     def go(self):
-        self.blocks = sorted(self.blocks, key = lambda block : block.xloc)
 
         self.oldXloc = self.xloc
         self.oldYloc = self.yloc
+
+        if not len(self.blocks):
+            self.move_state = Move.EXPIRED
+            return
 
         for block in self.blocks:
             block.defaultPushAction = PushAction.SKID
@@ -167,6 +176,7 @@ class BlockChain(Block):
             self.hitoffs = (0, 0, 0xF, 0xF)
         else:
             self.hitoffs = (0, 0, 0xF * len(self.blocks), 0xF)
+        self.blocks = sorted(self.blocks, key=lambda block: block.xloc)
         self.setattr_singluar("xloc", self.blocks[0].xloc)
         self.setattr_singluar("yloc", self.blocks[0].yloc)
         self.setattr_singluar("xvel", self.blocks[0].xvel)
@@ -176,7 +186,8 @@ class BlockChain(Block):
 
         self.make_hitboxes()
 
-    def check(self, floor_found, moverToBGFunc, bghits = [], event_movers = []):
+    def check_falling_chain(self, floor_found, moverToBGFunc
+                            ,blockToGateCheck, bghits = []):
 
         floor_found = floor_found or moverToBGFunc()
 
@@ -189,13 +200,23 @@ class BlockChain(Block):
 
         if advancing_block and not self.save_xvel:
             advancing_block.make_hitboxes()
+            floor_found, result = blockToGateCheck(advancing_block)
 
-            if not floor_found and not spriteToBG(advancing_block, bghits):
-                self.save_xvel = advancing_block.xvel
-                self.save_xaccl = advancing_block.xaccl
-                advancing_block.xvel = 0
-                advancing_block.xaccl = 0
-                self.advancing_block = advancing_block
+            if result.mvb.id == Id.DISPOSAL.value:
+                self.blocks.remove(advancing_block)
+                for block in self.blocks:
+                    block.xvel = 0
+                    block.xaccl = 0
+                    self.xvel = 0
+                    self.xaccl = 0
+            else:
+                if not floor_found:
+                    if not spriteToBG(advancing_block, bghits):
+                        self.save_xvel = advancing_block.xvel
+                        self.save_xaccl = advancing_block.xaccl
+                        advancing_block.xvel = 0
+                        advancing_block.xaccl = 0
+                        self.advancing_block = advancing_block
 
         if self.save_xvel > 0:
             if spriteToBG(self.advancing_block, bghits):
@@ -208,13 +229,39 @@ class BlockChain(Block):
                 #self.advancing_block.xvel = 0.5
                 #self.advancing_block.xaccl = 0.1
                 self.save_xvel = 0
+                self.advancing_block = None
 
                 for block in self.blocks:
                     self.yvel = 0
                     self.yaccl = 0
                     self.jump_state = Jump.FLOOR
+                    block.yvel = 0
+                    block.yaccl = 0
+                    block.jump_state = Jump.FLOOR
 
-
+                if self.direction == Facing.RIGHT:
+                    lent = int(floor(len(self.blocks) / 2 ))
+                    bmid = int(ceil(len(self.blocks) / 2 ))
+                    bi = 0
+                    offs = lent
+                    while bi < lent:
+                        if lent == 1 and lent == bmid:
+                            break
+                        block = self.blocks[bi]
+                        block.snap_xloc = int(block.xloc - (offs * 0x10))
+                        block.xvel = 0.5
+                        block.direction = Facing.LEFT
+                        bi += 1
+                        offs -= 1
+                    bi = bmid
+                    offs = 1
+                    while bi < len(self.blocks):
+                        block = self.blocks[bi]
+                        block.snap_xloc = int(block.xloc + (offs * 0x10))
+                        block.xvel = 0.5
+                        block.direction = Facing.RIGHT
+                        offs += 1
+                        bi += 1
         """
         if floor_found and self.jump_state == Jump.FALL:
             self.jump_state = Jump.FLOOR
@@ -237,6 +284,10 @@ class BlockChain(Block):
     #        block.initPushing(direction, friction, xaccl, xvel)
 
     def procInteractionEvents(self):
+
+        if self.advancing_block:
+            return
+
         for block in self.blocks:
             block.interaction_events.extend(self.interaction_events)
             block.procInteractionEvents()
